@@ -149,3 +149,9 @@ Se retoma la fase 0. La web comercial y el logo ya están. Falta la base del pro
 Nginx se queda: ya sirve https://impersia.cloud. No se cambia por Caddy.
 La contraseña de la base se guarda solo en el servidor, en /etc/impersia/api.env. No entra en el repositorio ni en este diario.
 api.impersia.cloud todavía no tiene DNS. Hasta que exista, la API solo se comprueba dentro del servidor.
+
+1 de octubre de 2026, 14:56
+Quedó creada la base impersia. La API responde dentro del servidor: {"status":"ok","database":"ok"}.
+PostgreSQL sigue cerrado al exterior: solo escucha en 127.0.0.1.
+Se probó una copia y su restauración. A partir de ahora la copia se hace sola cada noche a las 03:15.
+La fase 0 no se cierra hasta que https://api.impersia.cloud/health responda desde fuera. Falta el DNS.
