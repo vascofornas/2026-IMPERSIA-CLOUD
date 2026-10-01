@@ -189,3 +189,7 @@ El aviso queda en castellano: hay que escribir una dirección de verdad.
 1 de octubre de 2026, 15:41
 Modesto pide poder ver la contraseña en claro.
 Junto a la casilla queda el botón Mostrar, y al pulsarlo pasa a Ocultar.
+
+1 de octubre de 2026, 15:47
+Modesto creó su cuenta en https://impersia.cloud/app y guardó una cita. Dice que funciona.
+La fase 1 ya tiene el camino principal: entrar, escribir, proponer y guardar en privado.
