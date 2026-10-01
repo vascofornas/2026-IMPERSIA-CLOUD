@@ -177,3 +177,6 @@ La propuesta de esta primera versión la hace una clasificación sencilla en el 
 Modesto abrió https://impersia.cloud/app y vio un 404.
 La causa: esa dirección no llevaba la barra final, y Nginx solo servía /app/.
 Se añade una redirección de /app a /app/.
+
+1 de octubre de 2026, 15:34
+Modesto abrió la caja y vio la pantalla «Entra en Impersia», con correo y contraseña. El acceso ya no da 404.
