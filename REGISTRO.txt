@@ -88,3 +88,8 @@ Los documentos de docs/ siguen siendo el producto y la ruta. Este archivo es el 
 Modesto pidió un diario único y preguntó si es viable.
 Sí. Este archivo es ese diario. Lo de arriba es el arranque del proyecto. Lo de aquí en adelante son las entradas del día.
 Siguiente: clonar este repositorio en el VPS cuando empiece el montaje.
+
+1 de octubre de 2026, 14:16
+Modesto comprobó que https://impersia.cloud ya no abre. Es correcto.
+El puerto 443 está cerrado a propósito: al quitar la web antigua no quedó nada escuchando en HTTPS.
+http://impersia.cloud sí responde, con una página de una línea: «Impersia OS. Servidor listo.» No es la web anterior.
