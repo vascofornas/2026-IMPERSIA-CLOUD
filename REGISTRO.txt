@@ -166,3 +166,9 @@ Lo siguiente en la hoja de ruta es la fase 1: una cuenta y la caja.
 1 de octubre de 2026, 15:10
 Modesto abrió https://api.impersia.cloud/health y vio {"status":"ok","database":"ok"}.
 La fase 0 queda comprobada en el navegador.
+
+1 de octubre de 2026, 15:15
+Modesto pide seguir con la fase 1: cuenta y caja.
+Se añade registro, entrada, una propuesta que se puede corregir, y el guardado en privado.
+La pantalla queda en https://impersia.cloud/app para poder usarla ya, sin esperar otro nombre de dominio.
+La propuesta de esta primera versión la hace una clasificación sencilla en el servidor, no un modelo de lenguaje. El flujo es el de la fase 1: proponer, corregir y guardar. El modelo se conectará cuando haya una clave de API.
