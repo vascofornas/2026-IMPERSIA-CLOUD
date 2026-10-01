@@ -155,3 +155,10 @@ Quedó creada la base impersia. La API responde dentro del servidor: {"status":"
 PostgreSQL sigue cerrado al exterior: solo escucha en 127.0.0.1.
 Se probó una copia y su restauración. A partir de ahora la copia se hace sola cada noche a las 03:15.
 La fase 0 no se cierra hasta que https://api.impersia.cloud/health responda desde fuera. Falta el DNS.
+
+1 de octubre de 2026, 15:08
+Modesto creó el registro DNS: api apunta a 217.76.158.141.
+Se pidió el certificado y Nginx publica la API.
+Comprobado desde fuera: https://api.impersia.cloud/health responde {"status":"ok","database":"ok"}.
+Con esto se cumple el cierre de la fase 0: la API responde por HTTPS, la base no se ve desde internet y la copia ya se restauró con éxito.
+Lo siguiente en la hoja de ruta es la fase 1: una cuenta y la caja.
