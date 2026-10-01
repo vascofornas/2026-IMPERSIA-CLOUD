@@ -36,9 +36,11 @@ body {
   align-items: center;
   gap: 10px;
   color: var(--ink);
-  font-weight: 560;
+  font-family: Literata, Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 680;
+  letter-spacing: -0.02em;
   text-decoration: none;
-  letter-spacing: 0.01em;
 }
 
 .mark img { display: block; }

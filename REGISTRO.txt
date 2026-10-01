@@ -129,3 +129,8 @@ Sigue siendo apps/comercial/logo.svg, ahora en la cabecera un poco más grande p
 Modesto ve el logo y lo encuentra demasiado simple. Pide que se defina qué pretende significar.
 Significado previsto: la caja cerrada es el sitio de la persona. El corte de arriba es la única puerta de entrada. La línea es lo que acaba de entrar. El punto verde es la confirmación, y el color dice que se queda en privado.
 El problema: sin esta explicación, el dibujo parece un interruptor. El significado no se entiende solo.
+
+1 de octubre de 2026, 14:42
+Modesto pidió un logo profesional.
+El símbolo nuevo es un cuaderno cerrado, con una sola línea escrita y un sello verde en la esquina. El cuaderno es el registro personal. La línea es la única cosa que entra. El sello dice que queda confirmada y en privado.
+El nombre junto al símbolo pasa a ser «Impersia», en la misma letra de los títulos. Archivo: apps/comercial/logo.svg.
