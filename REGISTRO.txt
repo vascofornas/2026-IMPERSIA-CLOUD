@@ -1,0 +1,82 @@
+REGISTRO DE IMPERSIA OS
+Un solo diario del proyecto. Se actualiza cada vez que hacemos algo.
+No guarda contraseñas ni claves privadas.
+
+1 de octubre de 2026
+
+QUÉ ES EL PROYECTO
+Impersia OS es un centro de control para una persona. Lo que escribe entra por una sola caja. La IA propone si es nota, tarea o cita, y con qué privacidad. La persona confirma. La pantalla de inicio se llama Hoy.
+La versión 1 lleva solo nota, tarea y cita. El resto (voz, imagen, hábitos, viajes, deseos, memoria y muro social) espera.
+Los documentos de definición están en docs/. El PDF de partida sigue en la raíz: impersia 2026.pdf.
+
+CÓMO TRABAJAMOS
+Español, claro y sencillo.
+Si hay algo que tenga que hacer Modesto, se pide un solo paso y se espera a que lo termine.
+Las decisiones y el trabajo del agente se hacen enteros y se anotan aquí.
+La forma de trabajar también está en .cursor/rules/como-trabajar.mdc.
+
+REPOSITORIO
+GitHub: https://github.com/vascofornas/2026-IMPERSIA-CLOUD
+Carpeta local: IMPERSIA CLOUD 2026
+Rama main.
+El 1 de octubre se clonó el repositorio (solo tenía el README) y se subió el PDF y el archivo Pages de la visión, commit 8529519.
+
+SERVIDOR
+Proveedor: IONOS, VPS llamado My VPS.
+Sistema: Ubuntu 24.04.
+Tamaño: VPS 6-8-240 (6 CPU, 8 GB de RAM, 240 GB).
+Dirección: 217.76.158.141
+Usuario: root
+Clave de este Mac: ~/.ssh/impersia_ionos
+La clave pública ya estaba en el servidor. ssh-copy-id lo confirmó y la conexión funciona.
+En el panel de IONOS este VPS no tiene menú de claves SSH. La entrada se hizo por la consola remota (Acciones, Abrir consola remota) y después desde la Terminal del Mac.
+La contraseña de root no se ha copiado a este documento ni al chat.
+
+QUÉ HABÍA Y QUÉ SE QUITÓ EL 1 DE OCTUBRE DE 2026
+Modesto pidió no conservar nada del proyecto anterior. Se miró antes de borrar, para no perder SSH.
+Se apagó y se eliminó:
+- La web impersia.cloud y www, faro.impersia.cloud, n8n.impersia.cloud, paperclip.impersia.cloud y ai-command-center.
+- Los servicios impersia-admin-api e impersia-contact-api.
+- Los contenedores n8n, Paperclip y las demos que ya estaban paradas, con sus datos.
+- Las bases aicc_faro_red, aicc_platform, impersia_admin y n8n_db, y sus usuarios.
+- La carpeta /root/impersia.cloud, las webs en /var/www y la copia de seguridad automática de ese proyecto.
+- El usuario cursor, que era del proyecto anterior.
+Se dejó en pie:
+- El sistema Ubuntu, SSH y la clave de acceso.
+- Nginx, ahora con una página mínima: "Impersia OS. Servidor listo." Solo responde por el puerto 80.
+- PostgreSQL 16, vacío, escuchando solo dentro del servidor. No se abre al exterior.
+- Docker, sin contenedores.
+- Los certificados viejos de Let's Encrypt, sin usar. Las webs antiguas ya no se sirven.
+Comprobado después: SSH sigue entrando y la página nueva responde en el propio servidor.
+
+CÓMO SE MANTIENE EL REPOSITORIO
+El repositorio es uno: https://github.com/vascofornas/2026-IMPERSIA-CLOUD
+No se divide en un trozo del Mac y otro trozo del VPS.
+
+Hay dos copias de ese mismo repositorio.
+- En el SSD del Mac está la copia donde se escribe.
+- En el VPS estará otra copia, igual, que es la que se ejecuta.
+GitHub las mantiene iguales. Al cerrar un paso, el agente sube la copia del Mac y después actualiza la del VPS. En el servidor no se edita el proyecto.
+
+Lo que hay en el VPS y no está en el Mac no forma parte del repositorio: la base de datos, las contraseñas y los certificados. Eso se queda solo en el servidor.
+
+La primera vez, el VPS aún no tiene su copia. Se clonará cuando empiece el montaje. Hasta entonces, los cambios solo están en el Mac.
+
+PRIMERA SUBIDA A GITHUB
+Modesto confirmó subir la copia del Mac y pidió que cada envío quede explicado, para poder entenderlo.
+
+Este envío deja en GitHub lo escrito hoy, que aún no estaba en la nube:
+- README.md: qué es Impersia OS, en una página.
+- docs/01-definicion-de-producto.md: el producto y el corte de la versión 1.
+- docs/02-arquitectura.md: cómo se usa el VPS.
+- docs/03-roadmap.md: las fases de construcción.
+- REGISTRO.txt: este diario.
+- .cursor/rules/como-trabajar.mdc: cómo trabajamos.
+- .gitignore: evita subir archivos basura del Mac, como .DS_Store.
+
+No van contraseñas, ni la clave privada, ni la base de datos.
+El PDF y el archivo Pages de la visión ya estaban en GitHub desde el commit 8529519.
+El VPS todavía no tiene su copia. Esta subida solo iguala el Mac con GitHub.
+
+SIGUIENTE
+Cuando empiece el montaje, clonar este mismo repositorio en el VPS. Esa será la segunda copia. Fase 0 de docs/03-roadmap.md.

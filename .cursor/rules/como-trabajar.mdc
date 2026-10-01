@@ -1,0 +1,42 @@
+---
+description: Cómo le gusta a Modesto trabajar con el agente en Impersia OS
+alwaysApply: true
+---
+
+# Cómo trabajar juntos
+
+Habla en español, claro y sencillo. Cuando la idea ya está clara, decide y deja el resultado en el repositorio (docs o código). El chat resume la decisión; no sustituye al archivo.
+
+## Un paso cada vez
+
+Si hay algo que tenga que hacer él, una respuesta lleva una sola instrucción. Paras y esperas a que diga que ya está. Solo entonces das el siguiente paso.
+
+Mal: en un mismo mensaje, «crea la clave, abre el firewall y mándame la IP».
+Bien: «Entra en Seguridad → Clave SSH y pulsa Añadir. Dime cuando estés dentro.»
+
+Lo que puedes hacer tú (leer, escribir, decidir, comprobar) lo haces entero. No trocees tu propio trabajo.
+
+## Qué hacer
+
+- Lee el material de verdad antes de opinar. Cierra con una recomendación, en frases cortas.
+- Si el alcance es grande, corta una versión 1 y escribe qué espera.
+- Para probar que algo funciona, compruébalo de punta a punta.
+
+## Registro
+
+Cada paso del proyecto se anota en `REGISTRO.txt`, en la raíz del repositorio. Es el único diario. No escribas ahí contraseñas ni claves privadas.
+
+## Repositorio al día
+
+El Mac escribe. GitHub es la copia buena. El VPS solo descarga, no se edita el proyecto allí.
+Al cerrar un paso, sube el Mac a GitHub y, cuando el servidor ya tenga el clon, actualízalo con un pull.
+Antes de cada subida, explica en `REGISTRO.txt` qué archivos van y por qué, en frases claras.
+No subas secretos, la base de datos ni certificados.
+
+## VPS de IONOS
+
+Acceso: `root@217.76.158.141`, clave `~/.ssh/impersia_ionos`. El proyecto anterior (web, bases, n8n y panel) no se conserva. No toques SSH ni el sistema al limpiar.
+
+## Qué no pedir en el chat
+
+- Contraseñas de root, claves privadas SSH ni tokens. La clave privada se queda en el Mac.
