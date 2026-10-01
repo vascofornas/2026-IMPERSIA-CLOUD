@@ -119,3 +119,8 @@ En pantalla sale el título «Un solo lugar para lo que tienes en la cabeza», e
 Modesto pidió crear el logo antes de seguir. Es su costumbre y queda como norma del proyecto.
 El símbolo es una caja redondeada con una sola línea dentro: una entrada. Sin letras dentro del dibujo, para que no se deforme.
 El archivo oficial es apps/comercial/logo.svg. También aparece en la cabecera de https://impersia.cloud y como icono de la pestaña.
+
+1 de octubre de 2026, 14:38
+Modesto pidió un logo más sofisticado, que se entienda la personalidad del proyecto.
+Se sustituye el símbolo anterior. El nuevo es una caja cerrada con una abertura arriba: solo entra una cosa. Dentro, una línea termina en un punto verde: lo que entró queda confirmado y en privado.
+Sigue siendo apps/comercial/logo.svg, ahora en la cabecera un poco más grande para que se lea el detalle.
