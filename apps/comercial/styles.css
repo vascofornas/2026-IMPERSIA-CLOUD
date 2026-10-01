@@ -34,16 +34,15 @@ body {
 .mark {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
   color: var(--ink);
-  font-family: Literata, Georgia, serif;
-  font-size: 1.35rem;
-  font-weight: 680;
-  letter-spacing: -0.02em;
   text-decoration: none;
 }
 
-.mark img { display: block; }
+.mark img {
+  display: block;
+  width: 132px;
+  height: auto;
+}
 
 .top-note, .kicker, .sample-label {
   margin: 0;
