@@ -44,7 +44,8 @@ def classify(text: str) -> dict:
     raw = " ".join(text.strip().split())
     low = raw.lower()
     starts = _when(low)
-    if starts or any(word in low for word in EVENT_WORDS) or re.search(r"\ba las \d", low):
+    timed = bool(re.search(r"\ba las \d", low))
+    if any(word in low for word in EVENT_WORDS) or timed:
         kind = "event"
     elif any(word in low for word in TASK_WORDS):
         kind = "task"
