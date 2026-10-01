@@ -97,3 +97,8 @@ http://impersia.cloud sí responde, con una página de una línea: «Impersia OS
 1 de octubre de 2026, 14:18
 Modesto abrió impersia.cloud en el navegador y vio «This site can't be reached», error ERR_CONNECTION_REFUSED.
 Es lo esperado. El navegador intenta la dirección segura y el puerto 443 no acepta conexiones. La página de una línea solo sale si se entra por http://impersia.cloud y el navegador no fuerza la versión segura.
+
+1 de octubre de 2026, 14:21
+Modesto escribió http://impersia.cloud y el navegador lo cambió solo a https://impersia.cloud.
+El servidor no hace ese cambio: por HTTP responde la página de una línea y no manda a nadie a HTTPS.
+Lo hace el navegador, porque recuerda que la web antigua exigía la dirección segura. Hasta que publiquemos la nueva web con HTTPS, en ese navegador el dominio seguirá saltando y fallando. No hay que tocar nada ahora.
