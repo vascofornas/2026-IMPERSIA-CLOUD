@@ -1,0 +1,132 @@
+:root {
+  --paper: #f3efe6;
+  --ink: #1c1915;
+  --muted: #5c564c;
+  --line: #ddd6c8;
+  --card: #fffdf8;
+  --mark: #0f5c4c;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: Outfit, "Segoe UI", sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.top, main, footer {
+  width: min(880px, calc(100% - 40px));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 28px 0 8px;
+}
+
+.mark {
+  color: var(--ink);
+  font-weight: 560;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+
+.top-note, .kicker, .sample-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.hero { padding: 48px 0 24px; }
+
+h1, h2 {
+  font-family: Literata, Georgia, serif;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+h1 {
+  max-width: 14ch;
+  margin: 12px 0 16px;
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+}
+
+.lead {
+  max-width: 38rem;
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.sample {
+  margin-top: 36px;
+  max-width: 32rem;
+  padding: 18px 20px 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.sample-text {
+  margin: 8px 0 14px;
+  font-family: Literata, Georgia, serif;
+  font-size: 1.35rem;
+}
+
+.sample-result {
+  display: inline-block;
+  margin: 0;
+  padding: 4px 10px;
+  color: var(--mark);
+  background: #e7f3ef;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 560;
+}
+
+.steps, .privacy { padding: 28px 0; }
+
+h2 { margin: 0 0 18px; font-size: 1.8rem; }
+
+ol {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+li strong, li span { display: block; }
+
+li span { margin-top: 6px; color: var(--muted); }
+
+.privacy p {
+  max-width: 36rem;
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+footer {
+  padding: 12px 0 48px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+footer p { margin: 0 0 4px; }
+
+@media (max-width: 720px) {
+  ol { grid-template-columns: 1fr; }
+}

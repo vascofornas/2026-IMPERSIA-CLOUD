@@ -102,3 +102,9 @@ Es lo esperado. El navegador intenta la dirección segura y el puerto 443 no ace
 Modesto escribió http://impersia.cloud y el navegador lo cambió solo a https://impersia.cloud.
 El servidor no hace ese cambio: por HTTP responde la página de una línea y no manda a nadie a HTTPS.
 Lo hace el navegador, porque recuerda que la web antigua exigía la dirección segura. Hasta que publiquemos la nueva web con HTTPS, en ese navegador el dominio seguirá saltando y fallando. No hay que tocar nada ahora.
+
+1 de octubre de 2026, 14:23
+Modesto pidió una web comercial básica para ver algo funcionando.
+Se crea una página estática en apps/comercial: qué es Impersia OS, la caja y la privacidad. No tiene formulario ni aplicación.
+Se publica en el VPS con el certificado que ya existía para impersia.cloud, vigente hasta el 29 de diciembre de 2026. Así el navegador, que salta solo a HTTPS, puede abrirla.
+La copia del repositorio en el servidor queda en /opt/impersia-os. Nginx sirve esa carpeta. www.impersia.cloud pasa a https://impersia.cloud.
