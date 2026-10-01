@@ -124,3 +124,8 @@ El archivo oficial es apps/comercial/logo.svg. También aparece en la cabecera d
 Modesto pidió un logo más sofisticado, que se entienda la personalidad del proyecto.
 Se sustituye el símbolo anterior. El nuevo es una caja cerrada con una abertura arriba: solo entra una cosa. Dentro, una línea termina en un punto verde: lo que entró queda confirmado y en privado.
 Sigue siendo apps/comercial/logo.svg, ahora en la cabecera un poco más grande para que se lea el detalle.
+
+1 de octubre de 2026, 14:41
+Modesto ve el logo y lo encuentra demasiado simple. Pide que se defina qué pretende significar.
+Significado previsto: la caja cerrada es el sitio de la persona. El corte de arriba es la única puerta de entrada. La línea es lo que acaba de entrar. El punto verde es la confirmación, y el color dice que se queda en privado.
+El problema: sin esta explicación, el dibujo parece un interruptor. El significado no se entiende solo.
