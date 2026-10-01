@@ -114,3 +114,8 @@ Commit: a9b205a.
 1 de octubre de 2026, 14:35
 Modesto abrió https://impersia.cloud y confirmó que la página se ve bien. La da por válida como primer paso.
 En pantalla sale el título «Un solo lugar para lo que tienes en la cabeza», el ejemplo de la caja, los tres pasos y «Privado por defecto».
+
+1 de octubre de 2026, 14:36
+Modesto pidió crear el logo antes de seguir. Es su costumbre y queda como norma del proyecto.
+El símbolo es una caja redondeada con una sola línea dentro: una entrada. Sin letras dentro del dibujo, para que no se deforme.
+El archivo oficial es apps/comercial/logo.svg. También aparece en la cabecera de https://impersia.cloud y como icono de la pestaña.

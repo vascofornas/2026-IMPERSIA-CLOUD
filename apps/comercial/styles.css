@@ -32,11 +32,16 @@ body {
 }
 
 .mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   color: var(--ink);
   font-weight: 560;
   text-decoration: none;
   letter-spacing: 0.01em;
 }
+
+.mark img { display: block; }
 
 .top-note, .kicker, .sample-label {
   margin: 0;
