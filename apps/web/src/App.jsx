@@ -15,9 +15,23 @@ async function call(path, options = {}) {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.detail || "No se ha podido completar");
+    throw new Error(readableError(data));
   }
   return data;
+}
+
+function readableError(data) {
+  const detail = data.detail;
+  if (typeof detail === "string") return detail;
+  const first = Array.isArray(detail) ? detail[0] : null;
+  const field = first && Array.isArray(first.loc) ? first.loc.join(".") : "";
+  if (field.includes("email")) {
+    return "El correo tiene que ser una dirección de verdad, con arroba. Por ejemplo, tu@correo.com";
+  }
+  if (field.includes("password")) {
+    return "La contraseña tiene que tener al menos 8 caracteres";
+  }
+  return "No se ha podido completar";
 }
 
 export default function App() {
