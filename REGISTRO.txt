@@ -108,3 +108,5 @@ Modesto pidió una web comercial básica para ver algo funcionando.
 Se crea una página estática en apps/comercial: qué es Impersia OS, la caja y la privacidad. No tiene formulario ni aplicación.
 Se publica en el VPS con el certificado que ya existía para impersia.cloud, vigente hasta el 29 de diciembre de 2026. Así el navegador, que salta solo a HTTPS, puede abrirla.
 La copia del repositorio en el servidor queda en /opt/impersia-os. Nginx sirve esa carpeta. www.impersia.cloud pasa a https://impersia.cloud.
+Comprobado desde fuera del servidor: https://impersia.cloud responde 200 y muestra el título «Un solo lugar para lo que tienes en la cabeza.»
+Commit: a9b205a.
