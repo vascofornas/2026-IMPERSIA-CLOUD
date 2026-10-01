@@ -162,3 +162,7 @@ Se pidió el certificado y Nginx publica la API.
 Comprobado desde fuera: https://api.impersia.cloud/health responde {"status":"ok","database":"ok"}.
 Con esto se cumple el cierre de la fase 0: la API responde por HTTPS, la base no se ve desde internet y la copia ya se restauró con éxito.
 Lo siguiente en la hoja de ruta es la fase 1: una cuenta y la caja.
+
+1 de octubre de 2026, 15:10
+Modesto abrió https://api.impersia.cloud/health y vio {"status":"ok","database":"ok"}.
+La fase 0 queda comprobada en el navegador.
