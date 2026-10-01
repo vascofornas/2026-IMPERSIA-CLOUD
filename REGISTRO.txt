@@ -172,3 +172,8 @@ Modesto pide seguir con la fase 1: cuenta y caja.
 Se añade registro, entrada, una propuesta que se puede corregir, y el guardado en privado.
 La pantalla queda en https://impersia.cloud/app para poder usarla ya, sin esperar otro nombre de dominio.
 La propuesta de esta primera versión la hace una clasificación sencilla en el servidor, no un modelo de lenguaje. El flujo es el de la fase 1: proponer, corregir y guardar. El modelo se conectará cuando haya una clave de API.
+
+1 de octubre de 2026, 15:24
+Modesto abrió https://impersia.cloud/app y vio un 404.
+La causa: esa dirección no llevaba la barra final, y Nginx solo servía /app/.
+Se añade una redirección de /app a /app/.
