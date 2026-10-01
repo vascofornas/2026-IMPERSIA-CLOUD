@@ -185,3 +185,7 @@ Modesto abrió la caja y vio la pantalla «Entra en Impersia», con correo y con
 Al pulsar Crear cuenta con el correo «modesto», la página mostró [object Object].
 Era el aviso de error mal escrito: ese texto no es un correo porque no tiene arroba.
 El aviso queda en castellano: hay que escribir una dirección de verdad.
+
+1 de octubre de 2026, 15:41
+Modesto pide poder ver la contraseña en claro.
+Junto a la casilla queda el botón Mostrar, y al pulsarlo pasa a Ocultar.

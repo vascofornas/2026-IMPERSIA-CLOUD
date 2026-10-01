@@ -53,6 +53,7 @@ export default function App() {
 function Auth({ onEnter }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [visible, setVisible] = useState(false);
   const [error, setError] = useState("");
 
   async function submit(path) {
@@ -78,7 +79,16 @@ function Auth({ onEnter }) {
       </label>
       <label>
         Contraseña
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <span className="secret">
+          <input
+            type={visible ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button type="button" className="secondary" onClick={() => setVisible(!visible)}>
+            {visible ? "Ocultar" : "Mostrar"}
+          </button>
+        </span>
       </label>
       {error && <p className="error">{error}</p>}
       <div className="actions">

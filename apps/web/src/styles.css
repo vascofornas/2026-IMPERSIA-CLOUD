@@ -79,6 +79,20 @@ button.secondary {
 
 .actions { display: flex; gap: 10px; }
 
+.secret {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.secret input {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.secret button { white-space: nowrap; }
+
 .error { color: #8a2a2a; }
 
 .proposal {
