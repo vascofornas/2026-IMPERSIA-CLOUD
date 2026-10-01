@@ -1,0 +1,14 @@
+[Unit]
+Description=Impersia API
+After=network.target postgresql.service
+
+[Service]
+User=impersia
+Group=impersia
+WorkingDirectory=/opt/impersia-os/services/api
+EnvironmentFile=/etc/impersia/api.env
+ExecStart=/opt/impersia-os/services/api/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -142,3 +142,10 @@ La palabra queda escrita en la página del cuaderno, encima de la línea. El nom
 1 de octubre de 2026, 14:49
 Modesto confirma el logo. También convence como marca de esta etapa: se entiende sin explicación.
 Queda aceptado. Es el cuaderno con la palabra Impersia dentro, la línea debajo y el sello verde en la esquina. Archivo: apps/comercial/logo.svg.
+
+1 de octubre de 2026, 14:53
+Modesto pide seguir la hoja de ruta. Confirma que no hay cuenta de persona ni base de Impersia.
+Se retoma la fase 0. La web comercial y el logo ya están. Falta la base del proyecto, la API y la copia de seguridad.
+Nginx se queda: ya sirve https://impersia.cloud. No se cambia por Caddy.
+La contraseña de la base se guarda solo en el servidor, en /etc/impersia/api.env. No entra en el repositorio ni en este diario.
+api.impersia.cloud todavía no tiene DNS. Hasta que exista, la API solo se comprueba dentro del servidor.
