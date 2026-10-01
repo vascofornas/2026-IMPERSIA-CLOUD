@@ -110,3 +110,7 @@ Se publica en el VPS con el certificado que ya existía para impersia.cloud, vig
 La copia del repositorio en el servidor queda en /opt/impersia-os. Nginx sirve esa carpeta. www.impersia.cloud pasa a https://impersia.cloud.
 Comprobado desde fuera del servidor: https://impersia.cloud responde 200 y muestra el título «Un solo lugar para lo que tienes en la cabeza.»
 Commit: a9b205a.
+
+1 de octubre de 2026, 14:35
+Modesto abrió https://impersia.cloud y confirmó que la página se ve bien. La da por válida como primer paso.
+En pantalla sale el título «Un solo lugar para lo que tienes en la cabeza», el ejemplo de la caja, los tres pasos y «Privado por defecto».
