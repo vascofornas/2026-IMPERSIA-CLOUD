@@ -24,7 +24,7 @@ Lo que puedes hacer tú (leer, escribir, decidir, comprobar) lo haces entero. No
 
 ## Registro
 
-Cada paso del proyecto se anota en `REGISTRO.txt`, en la raíz del repositorio. Es el único diario. No escribas ahí contraseñas ni claves privadas.
+El diario único es `REGISTRO.txt`, en la raíz. Cada paso se añade al final: fecha, qué se hizo, por qué y qué quedó. No abras otro documento para contarlo. No escribas ahí contraseñas ni claves privadas.
 
 ## Repositorio al día
 

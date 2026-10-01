@@ -78,5 +78,13 @@ No van contraseñas, ni la clave privada, ni la base de datos.
 El PDF y el archivo Pages de la visión ya estaban en GitHub desde el commit 8529519.
 El VPS todavía no tiene su copia. Esta subida solo iguala el Mac con GitHub.
 
-SIGUIENTE
-Cuando empiece el montaje, clonar este mismo repositorio en el VPS. Esa será la segunda copia. Fase 0 de docs/03-roadmap.md.
+EL DIARIO
+A partir de ahora, todo lo que hagamos se anota en este archivo, REGISTRO.txt.
+No se abre otro documento para contarlo.
+Cada anotación lleva la fecha, qué se hizo, por qué, y qué quedó.
+Los documentos de docs/ siguen siendo el producto y la ruta. Este archivo es el diario.
+
+1 de octubre de 2026, 14:14
+Modesto pidió un diario único y preguntó si es viable.
+Sí. Este archivo es ese diario. Lo de arriba es el arranque del proyecto. Lo de aquí en adelante son las entradas del día.
+Siguiente: clonar este repositorio en el VPS cuando empiece el montaje.
