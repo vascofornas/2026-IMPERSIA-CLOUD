@@ -93,3 +93,7 @@ Siguiente: clonar este repositorio en el VPS cuando empiece el montaje.
 Modesto comprobó que https://impersia.cloud ya no abre. Es correcto.
 El puerto 443 está cerrado a propósito: al quitar la web antigua no quedó nada escuchando en HTTPS.
 http://impersia.cloud sí responde, con una página de una línea: «Impersia OS. Servidor listo.» No es la web anterior.
+
+1 de octubre de 2026, 14:18
+Modesto abrió impersia.cloud en el navegador y vio «This site can't be reached», error ERR_CONNECTION_REFUSED.
+Es lo esperado. El navegador intenta la dirección segura y el puerto 443 no acepta conexiones. La página de una línea solo sale si se entra por http://impersia.cloud y el navegador no fuerza la versión segura.
