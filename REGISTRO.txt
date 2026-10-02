@@ -333,3 +333,7 @@ La ruta queda así: Vida personal, luego Profesional, luego Social. Dentro de Vi
 2 de octubre de 2026, 22:46
 Modesto acepta la primera versión de Agenda. Si la persona conecta Google Calendar, Impersia lo lee y lo muestra en Agenda y en Hoy, marcado como Google, junto a lo que entró por Entrada. Lo escrito se queda en Impersia. Escribir en Google queda para cuando esta lectura ya se use.
 Queda en la definición y en la ruta. Para conectarlo hace falta un cliente de Google, que todavía no existe.
+
+2 de octubre de 2026, 22:51
+Modesto pregunta si la consola de Google la abre cada persona o solo él.
+Solo él, una vez, para registrar Impersia. Cada persona después solo acepta leer su calendario. Queda en la definición.
