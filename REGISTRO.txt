@@ -243,3 +243,7 @@ Modesto dice que avance yo, con la base ya clara, y que pregunte solo si falta a
 La caja deja de proponer. Un botón, Dejar, archiva la frase en un módulo del PDF: agenda, casa, hábitos, viajes, diario, deseos, proyectos, reuniones, segunda memoria, ideas, muro, listas, círculos o espacios. Cambiar corrige el módulo, el título, el día y la hora.
 Todavía no hay modelo: lo coloca un juego de reglas. Lo ya guardado como cita pasa a Agenda, lo guardado como tarea a Proyectos, lo guardado como nota a Diario.
 En la base, items gana las columnas axis y module.
+
+2 de octubre de 2026, 14:36
+Modesto escribe «Tengo que avanzar en la parte Foros de la web26 del proyecto Capenergy 2026». Queda en Proyectos. Dice que por ahora está bien.
+El siguiente paso será Hoy: lo que tiene fecha aparece en el día, no solo en la lista de archivado. No se cambia la caja en este paso.
