@@ -406,3 +406,7 @@ En esta subida solo va el diario. El mes, los colores y la marca de Google ya es
 3 de octubre de 2026, 01:28
 Modesto pide los iconos de ejes y módulos también en las pantallas de cada módulo, para que el usuario se acostumbre.
 Sí. La pantalla del módulo abre con el icono del eje y el del cajón, este en el mismo color que en el mes. Cada ficha y cada ejemplo repiten ese icono. Google, en su lista, lleva su marca.
+
+3 de octubre de 2026, 01:34
+Modesto pregunta si es complicado añadir Día, Semana y Mes en el calendario, con Mes por defecto.
+No. Encima del calendario están las tres opciones. Al abrir se ve el mes. Anterior y Siguiente mueven un día, una semana o un mes, según la vista. Pulsar un número abre ese día. Los colores y los iconos se mantienen. Arrastrar una cita sigue para más adelante.
