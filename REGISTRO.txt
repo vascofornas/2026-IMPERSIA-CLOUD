@@ -193,3 +193,11 @@ Junto a la casilla queda el botón Mostrar, y al pulsarlo pasa a Ocultar.
 1 de octubre de 2026, 15:47
 Modesto creó su cuenta en https://impersia.cloud/app y guardó una cita. Dice que funciona.
 La fase 1 ya tiene el camino principal: entrar, escribir, proponer y guardar en privado.
+
+2 de octubre de 2026, 12:10
+Modesto pide seguir con la fase 1.
+La propuesta ya enseñaba el tipo y el título, y se podían corregir. Faltaba la fecha: se proponía, pero no se veía ni se podía cambiar antes de guardar.
+Ahora la propuesta tiene una fecha editable. Lo guardado muestra el día y la hora. Una hora escrita sin zona se guarda como hora de Madrid.
+«Esta mañana» ya no se lee como el día siguiente.
+Sigue sin modelo de lenguaje: la propuesta la hacen reglas. El modelo entra cuando haya una clave de API.
+La fase 1 no está cerrada: falta que Modesto corrija una propuesta mala y que diez frases queden en el tipo correcto después de confirmar.

@@ -62,7 +62,9 @@ def classify(text: str) -> dict:
 def _when(low: str) -> datetime | None:
     now = datetime.now(MADRID)
     day = None
-    if "pasado mañana" in low or "pasado manana" in low:
+    if "esta mañana" in low or "esta manana" in low:
+        day = now.date()
+    elif "pasado mañana" in low or "pasado manana" in low:
         day = (now + timedelta(days=2)).date()
     elif "mañana" in low or "manana" in low:
         day = (now + timedelta(days=1)).date()

@@ -1,3 +1,5 @@
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import hashlib
 import hmac
 import json
@@ -220,7 +222,7 @@ def confirm_capture(capture_id: str, body: ConfirmIn, request: Request):
                 VALUES (%s, %s, %s, %s, %s, 'private')
                 RETURNING id, kind, title, starts_at, privacy, created_at
                 """,
-                (user_id, capture_id, body.kind, body.title.strip(), body.starts_at),
+                (user_id, capture_id, body.kind, body.title.strip(), _as_madrid(body.starts_at)),
             )
             item = cur.fetchone()
             cur.execute("UPDATE captures SET status = 'confirmed' WHERE id = %s", (capture_id,))
@@ -245,6 +247,15 @@ def list_items(request: Request):
             )
             rows = cur.fetchall()
     return [_public_item(row) for row in rows]
+
+
+def _as_madrid(value: str | None):
+    if not value or not value.strip():
+        return None
+    parsed = datetime.fromisoformat(value.strip())
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=ZoneInfo("Europe/Madrid"))
+    return parsed
 
 
 def _public_suggestion(suggestion: dict) -> dict:

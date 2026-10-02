@@ -171,6 +171,14 @@ function Box({ email, onLeave }) {
             Título
             <input value={proposal.title} onChange={(e) => setProposal({ ...proposal, title: e.target.value })} />
           </label>
+          <label>
+            Fecha
+            <input
+              type="datetime-local"
+              value={toLocalInput(proposal.starts_at)}
+              onChange={(e) => setProposal({ ...proposal, starts_at: e.target.value || null })}
+            />
+          </label>
           <p className="private">Privado. Solo tú lo ves.</p>
           <button type="button" onClick={confirm}>Guardar</button>
         </section>
@@ -181,6 +189,7 @@ function Box({ email, onLeave }) {
           <li key={item.id}>
             <strong>{labelOf(item.kind)}</strong>
             <span>{item.title}</span>
+            {item.starts_at && <span>{whenLabel(item.starts_at)}</span>}
           </li>
         ))}
       </ul>
@@ -190,4 +199,16 @@ function Box({ email, onLeave }) {
 
 function labelOf(kind) {
   return KINDS.find(([value]) => value === kind)?.[1] || kind;
+}
+
+function toLocalInput(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value).slice(0, 16);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function whenLabel(value) {
+  return new Date(value).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" });
 }
