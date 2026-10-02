@@ -216,3 +216,8 @@ Modesto ve la propuesta de «Llamar al taller el viernes» y no le encuentra uti
 La utilidad de Proponer es decir si aquello es nota, tarea o cita, para no elegir la aplicación al escribir. Si acierta, se guarda con un toque. Si falla, se corrige antes de que quede en el sitio equivocado.
 La hora ya no se inventa. La tarjeta muestra la frase y Guardar. Corregir abre el tipo, el título, el día y la hora solo si hace falta.
 En la base, items gana la columna time_known. Lo ya guardado conserva la hora que tenía.
+
+2 de octubre de 2026, 14:15
+Modesto dice que no entiende lo que se pretende con la caja, que no sabe si es lo que quiere, y que no está satisfecho con la dirección. Siente que se está decidiendo el producto sin consultarle.
+Se para. No se toca más la pantalla ni la clasificación hasta que él diga qué tiene que pasar cuando escribe una frase.
+Lo que sí está escrito, y él aprobó el 1 de octubre, sigue en docs/01-definicion-de-producto.md: un solo sitio donde se deja lo que hay en la cabeza, sin elegir antes la aplicación. La pantalla de hoy no es ese producto todavía. La propuesta la hacen reglas, no un modelo.
