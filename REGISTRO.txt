@@ -360,3 +360,6 @@ La aplicación de Google pasa de interna a externa, en pruebas. Mientras siga en
 3 de octubre de 2026, 00:20
 modestovasco@gmail.com queda como usuario de prueba.
 Agenda tiene el enlace para conectar Google Calendar. Hoy y Agenda muestran esas citas marcadas como Google, sin copiarlas a la cuenta. La lectura usa la llave que ya está en el servidor.
+
+3 de octubre de 2026, 00:24
+Al entrar salía «Failed to fetch». La tabla del enlace con Google se había creado sin permiso para la aplicación. El permiso ya está dado. La entrada vuelve a funcionar.
