@@ -398,3 +398,7 @@ Sí. El mes es el tiempo de la persona, no una lista de cajones. Cualquier entra
 3 de octubre de 2026, 01:20
 Modesto pide colores en el calendario: una marca para los calendarios ajenos, y color o distintivo para cada cajón de Impersia.
 Cada módulo tiene un color fijo y su icono, en la ficha del día y en una leyenda del mes. Google lleva un calendario con la letra G, para distinguirlo de lo escrito en Impersia. El color no cambia con la apariencia.
+
+3 de octubre de 2026, 01:24
+Modesto deja el calendario como está por hoy. Lo ve casi perfecto. Mañana se sigue con Agenda.
+En esta subida solo va el diario. El mes, los colores y la marca de Google ya están en el repositorio.
