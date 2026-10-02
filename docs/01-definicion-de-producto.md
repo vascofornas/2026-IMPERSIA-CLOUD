@@ -15,7 +15,7 @@ No hay un paso de confirmar antes de guardar. El PDF lo llama entrada de fricci�
 
 Personal, profesional y social son destino y permiso de cada elemento. La persona ve un solo flujo. Esas tres palabras organizan el almacenamiento y quién puede verlo. No son tres aplicaciones dentro de Impersia.
 
-La caja solo archiva la frase en su módulo. No adivina si esa frase crea un proyecto o si entra dentro de uno que ya existe. Esa relación se hace después, al abrir Proyectos. Lo mismo para un viaje, un hábito o un deseo: la estructura interna del módulo no se deduce de la frase.
+La caja es siempre el inicio. Decide qué hacer con cada frase: abrir algo nuevo o meterlo dentro de algo que ya existe. «Proyecto Capenergy 2026» abre el proyecto. «Avanzar en los foros de Capenergy» entra dentro. Abrir Proyectos sirve para verlo y para corregirlo, no para armarlo a mano. Lo mismo para un viaje, un hábito o un deseo.
 
 ## Privacidad
 

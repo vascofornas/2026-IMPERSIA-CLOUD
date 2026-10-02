@@ -265,3 +265,8 @@ La pantalla de ahora no hace eso. Solo guarda la frase y le pone la etiqueta Pro
 Modesto considera que esa forma de trabajar será muy complicada de implementar.
 Tiene razón en la parte difícil: que la caja adivine si una frase crea un proyecto o entra dentro de otro, y que lo haga también con viajes, hábitos o deseos.
 Eso no se construye ahora. La caja sigue archivando la frase en un módulo. La relación entre un proyecto y sus partes se hará al abrir ese módulo. Queda corregido en la definición.
+
+2 de octubre de 2026, 14:47
+Modesto señala la contradicción: si todo empieza en la caja, un proyecto con partes no puede armarse al abrir Proyectos.
+Tiene razón. La frase anterior era un atajo de construcción, escrito como si fuera el producto.
+La regla queda así: la caja es siempre el inicio. Decide si la frase abre algo nuevo o entra en algo que ya existe. Abrir el módulo es para verlo y corregirlo. Implementarlo bien es difícil, y todavía no está en la pantalla. La definición vuelve a decir esto.
