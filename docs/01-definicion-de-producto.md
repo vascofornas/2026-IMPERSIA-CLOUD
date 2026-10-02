@@ -7,12 +7,11 @@ El problema que resuelve es la fragmentación: notas, agenda, tareas, diario, li
 ## Cómo se usa
 
 1. La persona escribe, y más adelante dicta o adjunta una imagen, en un único campo.
-2. El backend pide al modelo una clasificación estructurada: tipo de elemento, título, fecha si la hay, y nivel de privacidad.
-3. La interfaz muestra la propuesta en una frase. Ejemplo: «Tarea privada, para el viernes: llamar al taller».
-4. La persona acepta o corrige con un gesto.
-5. El elemento queda guardado y aparece en Hoy, o en su lista.
+2. La IA, en el servidor, archiva esa entrada en el eje y el módulo que le corresponden, en privado.
+3. Aparece ya guardada en su sitio.
+4. Más tarde la persona puede editar lo que haga falta: el módulo, el título, la fecha o la privacidad.
 
-La confirmación es parte del producto. El modelo propone. La persona decide. Así una cita médica no acaba en una wishlist, y el diario no se mezcla con una nota de trabajo.
+No hay un paso de confirmar antes de guardar. El PDF lo llama entrada de fricción cero. Si el archivo queda mal, se corrige después, sin volver a escribir la frase.
 
 Personal, profesional y social son destino y permiso de cada elemento. La persona ve un solo flujo. Esas tres palabras organizan el almacenamiento y quién puede verlo. No son tres aplicaciones dentro de Impersia.
 
@@ -61,8 +60,8 @@ Para una persona que quiere dejar de repartir su día entre notas, calendario y 
 
 ## Cómo se sabe que la versión 1 funciona
 
-- Una entrada de texto acaba en nota, tarea o cita sin elegir el módulo antes.
-- Corregir una clasificación mala lleva un gesto y el elemento queda bien guardado.
+- Una entrada de texto queda archivada sola en su eje y su módulo, sin elegir antes.
+- Si el archivo queda mal, se edita después y el elemento queda en su sitio.
 - Hoy muestra el día sin mezclar datos de otra cuenta.
 - Un elemento nuevo es privado hasta que la persona cambie ese nivel.
 - La misma cuenta funciona en la web app y, cuando exista, en Flutter, contra la misma API.

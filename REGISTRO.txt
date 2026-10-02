@@ -232,3 +232,8 @@ Modesto señala impersia 2026.pdf. Se vuelve a leer.
 El PDF define tres ejes. Vida personal: agenda, casa, hábitos, viajes, diario y deseos. Profesional: proyectos y tareas, reuniones, segunda memoria, ideas. Social: muro, listas públicas, círculos y espacios compartidos.
 La caja es una sola. La IA en el servidor envía cada entrada al módulo, dentro de personal, profesional o social. Privado por defecto.
 Eso no es lo que hace la pantalla de ahora. No se toca el código. Queda por decidir con Modesto si el archivado es automático, como dice el PDF, o con una confirmación, como se escribió después en docs/.
+
+2 de octubre de 2026, 14:28
+Modesto dice que lo ideal es archivar solo, y que más tarde se pueda editar y cambiar lo necesario.
+Queda escrito en la definición, en el resumen y en la fase 1 de la ruta. Se quita el paso de confirmar antes de guardar.
+La pantalla en https://impersia.cloud/app/ sigue con Proponer y Guardar. El código no se cambia en este paso.

@@ -41,7 +41,7 @@ La web app es un cliente más de la API, igual que Flutter. Construirla como SPA
 
 Flutter (iOS y Android) consume la misma API. No hay versión web de Flutter: el navegador ya tiene la web app.
 
-El modelo de lenguaje se contrata por API. No corre dentro del VPS. Cada captura envía solo su texto. La respuesta se guarda como sugerencia hasta que la persona confirma.
+El modelo de lenguaje se contrata por API. No corre dentro del VPS. Cada captura envía solo su texto. La respuesta crea el elemento ya guardado. La persona lo cambia después.
 
 ## Forma del repositorio
 
@@ -59,18 +59,17 @@ Un solo repositorio. Un solo contrato HTTP para web y móvil.
 ## Datos de la versión 1
 
 - **users** — cuenta, correo, clave hasheada.
-- **captures** — texto crudo, sugerencia del modelo, estado (pendiente o confirmada).
-- **items** — elemento confirmado: tipo (`note`, `task`, `event`), título, cuerpo, inicio, fin, estado, privacidad (`private`, `shared`, `public`), etiqueta de proyecto opcional, y la captura de origen.
+- **captures** — texto crudo y lo que el modelo entendió.
+- **items** — elemento ya archivado: eje, módulo, título, cuerpo, inicio, fin, estado, privacidad (`private`, `shared`, `public`) y la captura de origen. Se edita después.
 
 Privacidad y tipo viven en columnas desde el primer esquema. Los valores `shared` y `public` se aceptan y se guardan. Ninguna pantalla los publica hasta la fase de compartir.
 
 ## API de la versión 1
 
 - `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `GET /me`
-- `POST /captures` — guarda el texto y devuelve la sugerencia
-- `POST /captures/{id}/confirm` — crea el elemento, con los campos corregidos si hace falta
-- `GET /items` — filtro por fechas y tipo, para pintar Hoy
-- `PATCH /items/{id}`, `DELETE /items/{id}`
+- `POST /captures` — guarda el texto y crea el elemento ya archivado
+- `GET /items` — filtro por fechas y módulo, para pintar Hoy
+- `PATCH /items/{id}`, `DELETE /items/{id}` — corregir o borrar después
 
 La web guarda la sesión en cookie `HttpOnly`. Flutter guarda el refresh token en almacenamiento seguro del sistema y manda el access token en `Authorization`.
 

@@ -22,11 +22,11 @@ Duración orientativa: 2 semanas.
 
 - Registro e inicio de sesión.
 - Un campo de texto.
-- El modelo devuelve tipo, título, fecha y privacidad.
-- La pantalla muestra la propuesta y permite corregirla antes de guardar.
-- El elemento queda en PostgreSQL, privado.
+- El modelo archiva solo: eje, módulo, título, fecha si la hay, y privacidad.
+- El elemento queda en PostgreSQL, privado, sin un paso de confirmar.
+- Después se puede editar el módulo, el título, la fecha y la privacidad.
 
-**Listo cuando:** diez frases de prueba (una cita, una tarea, una nota, y alguna ambigua) acaban en el tipo correcto después de confirmar, y una clasificación mala se corrige sin reescribir el flujo.
+**Listo cuando:** diez frases de prueba quedan archivadas solas en su módulo, y una clasificación mala se cambia después sin volver a escribir la frase.
 
 ## Fase 2 — Hoy en la web app
 
@@ -54,7 +54,7 @@ Duración orientativa: 1 semana.
 Duración orientativa: 3 semanas.
 
 - Misma cuenta, misma API.
-- Caja, confirmación y Hoy en iOS y Android.
+- Caja, edición y Hoy en iOS y Android.
 - El token de refresco en el almacenamiento seguro del teléfono.
 
 **Listo cuando:** una captura hecha en el móvil aparece en la web, y una tarea cerrada en la web desaparece de Hoy en el móvil.
@@ -67,7 +67,7 @@ Duración orientativa: 2 semanas.
 - El servidor transcribe o describe, y a partir de ahí el flujo es el de la fase 1.
 - Archivos en almacenamiento de objetos, no en el disco del sistema.
 
-**Listo cuando:** un audio de una cita y una foto de una nota acaban en un elemento confirmado, igual que un texto.
+**Listo cuando:** un audio de una cita y una foto de una nota quedan archivados, igual que un texto.
 
 ## Fase 6 — Compartir de verdad
 
