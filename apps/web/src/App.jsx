@@ -1,28 +1,7 @@
 import { useEffect, useState } from "react";
+import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
-const MODULES = [
-  ["Vida personal", [
-    ["agenda", "Agenda"],
-    ["casa", "Casa"],
-    ["habitos", "Hábitos"],
-    ["viajes", "Viajes"],
-    ["diario", "Diario"],
-    ["deseos", "Deseos"],
-  ]],
-  ["Profesional", [
-    ["proyectos", "Proyectos"],
-    ["reuniones", "Reuniones"],
-    ["memoria", "Segunda memoria"],
-    ["ideas", "Ideas"],
-  ]],
-  ["Social", [
-    ["muro", "Muro"],
-    ["listas", "Listas"],
-    ["circulos", "Círculos"],
-    ["espacios", "Espacios"],
-  ]],
-];
 
 async function call(path, options = {}) {
   const response = await fetch(API + path, {
@@ -64,7 +43,7 @@ export default function App() {
 
   if (!ready) return <main className="wait">Cargando…</main>;
   if (!me) return <Auth onEnter={setMe} />;
-  return <Box email={me.email} onLeave={() => setMe(null)} />;
+  return <Home email={me.email} onLeave={() => setMe(null)} />;
 }
 
 function Auth({ onEnter }) {
@@ -116,11 +95,13 @@ function Auth({ onEnter }) {
   );
 }
 
-function Box({ email, onLeave }) {
+function Home({ email, onLeave }) {
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState("");
+  const screen = useHash();
+  const current = findModule(screen);
 
   useEffect(() => {
     call("/items").then(setItems).catch((err) => setError(err.message));
@@ -164,81 +145,158 @@ function Box({ email, onLeave }) {
     onLeave();
   }
 
+  const todayKey = dayKey(new Date());
+  const dated = items.filter((item) => item.starts_at);
+  const todayItems = dated.filter((item) => dayKey(item.starts_at) === todayKey);
+  const laterItems = dated.filter((item) => dayKey(item.starts_at) > todayKey);
+
   return (
     <main>
       <header>
         <p>{email}</p>
         <button type="button" className="secondary" onClick={leave}>Salir</button>
       </header>
-      <h1>La caja</h1>
-      <p className="lead">Escribe lo que tengas en la cabeza. Impersia lo archiva en su eje. Si no es el sitio, lo cambias.</p>
-      <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Llamar al taller el viernes" />
-      <button type="button" onClick={archive} disabled={!text.trim()}>Dejar</button>
-      {error && <p className="error">{error}</p>}
-      <h2>Archivado</h2>
-      <ul>
-        {items.map((item) => (
-          <li key={item.id}>
-            {editing && editing.id === item.id ? (
-              <>
-                <label>
-                  Módulo
-                  <select value={editing.module} onChange={(e) => setEditing({ ...editing, module: e.target.value })}>
-                    {MODULES.map(([axis, options]) => (
-                      <optgroup key={axis} label={axis}>
-                        {options.map(([value, label]) => (
-                          <option key={value} value={value}>{label}</option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Título
-                  <input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
-                </label>
-                <label>
-                  Día
-                  <input
-                    type="date"
-                    value={datePart(editing.starts_at)}
-                    onChange={(e) => setEditing(withWhen(editing, e.target.value, timePart(editing)))}
-                  />
-                </label>
-                <label>
-                  Hora
-                  <input
-                    type="time"
-                    value={editing.time_known ? timePart(editing) : ""}
-                    onChange={(e) => setEditing(withWhen(editing, datePart(editing.starts_at), e.target.value))}
-                  />
-                </label>
-                <div className="actions">
-                  <button type="button" onClick={saveEdit}>Guardar cambio</button>
-                  <button type="button" className="secondary" onClick={() => setEditing(null)}>Cancelar</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <strong>{labelOf(item.module)}</strong>
-                <span>{item.title}</span>
-                {item.starts_at && <span>{whenLabel(item)}</span>}
-                <button type="button" className="secondary" onClick={() => setEditing({ ...item })}>Cambiar</button>
-              </>
-            )}
-          </li>
+      <nav className="nav">
+        <a className={screen === "hoy" ? "on" : ""} href="#hoy">Hoy</a>
+        <a className={screen === "caja" ? "on" : ""} href="#caja">Caja</a>
+        {AXES.map((axis) => (
+          <span className="axis" key={axis.id}>
+            <em>{axis.name}</em>
+            {axis.modules.map((mod) => (
+              <a key={mod.id} className={screen === mod.id ? "on" : ""} href={`#${mod.id}`}>{mod.label}</a>
+            ))}
+          </span>
         ))}
-      </ul>
+      </nav>
+      {error && <p className="error">{error}</p>}
+      {screen === "caja" && (
+        <>
+          <h1>La caja</h1>
+          <p className="lead">Escribe lo que tengas en la cabeza. Impersia lo archiva en su eje. Si no es el sitio, lo cambias.</p>
+          <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Llamar al taller el viernes" />
+          <button type="button" onClick={archive} disabled={!text.trim()}>Dejar</button>
+          <h2>Archivado</h2>
+          <ItemList items={items} editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
+        </>
+      )}
+      {screen === "hoy" && (
+        <>
+          <h1>Hoy</h1>
+          <p className="lead">Lo que tiene fecha y cae hoy. Lo demás, con fecha, queda debajo. Todo ha entrado por la caja.</p>
+          <h2>Para hoy</h2>
+          {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} /> : <p className="private">Hoy no hay nada con fecha.</p>}
+          <h2>Después</h2>
+          {laterItems.length ? <ItemList items={laterItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} /> : <p className="private">No hay nada fechado más adelante.</p>}
+        </>
+      )}
+      {current && (
+        <>
+          <p className="private">{current.axis}</p>
+          <h1>{current.label}</h1>
+          <p className="lead">{current.blurb}</p>
+          <h2>Tuyo</h2>
+          {items.some((item) => item.module === current.id) ? (
+            <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
+          ) : (
+            <p className="private">Todavía no hay nada tuyo aquí. Entra por la caja.</p>
+          )}
+          <h2>Ejemplos</h2>
+          <p className="private">Inventados, para ver la forma de esta pantalla. No están en tu cuenta.</p>
+          <ul>
+            {current.examples.map(([title, note]) => (
+              <li key={title}>
+                <strong>Ejemplo</strong>
+                <span>{title}</span>
+                {note && <span>{note}</span>}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {screen !== "hoy" && screen !== "caja" && !current && (
+        <>
+          <h1>Hoy</h1>
+          <p className="lead">Esa pantalla no existe. Vuelve a Hoy.</p>
+        </>
+      )}
     </main>
   );
 }
 
-function labelOf(module) {
-  for (const [, options] of MODULES) {
-    const found = options.find(([value]) => value === module);
-    if (found) return found[1];
-  }
-  return module;
+function ItemList({ items, editing, setEditing, saveEdit }) {
+  return (
+    <ul>
+      {items.map((item) => (
+        <li key={item.id}>
+          {editing && editing.id === item.id ? (
+            <>
+              <label>
+                Módulo
+                <select value={editing.module} onChange={(e) => setEditing({ ...editing, module: e.target.value })}>
+                  {AXES.map((axis) => (
+                    <optgroup key={axis.id} label={axis.name}>
+                      {axis.modules.map((mod) => (
+                        <option key={mod.id} value={mod.id}>{mod.label}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Título
+                <input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+              </label>
+              <label>
+                Día
+                <input
+                  type="date"
+                  value={datePart(editing.starts_at)}
+                  onChange={(e) => setEditing(withWhen(editing, e.target.value, timePart(editing)))}
+                />
+              </label>
+              <label>
+                Hora
+                <input
+                  type="time"
+                  value={editing.time_known ? timePart(editing) : ""}
+                  onChange={(e) => setEditing(withWhen(editing, datePart(editing.starts_at), e.target.value))}
+                />
+              </label>
+              <div className="actions">
+                <button type="button" onClick={saveEdit}>Guardar cambio</button>
+                <button type="button" className="secondary" onClick={() => setEditing(null)}>Cancelar</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <strong>{labelOf(item.module)}</strong>
+              <span>{item.title}</span>
+              {item.starts_at && <span>{whenLabel(item)}</span>}
+              <button type="button" className="secondary" onClick={() => setEditing({ ...item })}>Cambiar</button>
+            </>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function useHash() {
+  const read = () => window.location.hash.replace("#", "") || "hoy";
+  const [hash, setHash] = useState(read);
+  useEffect(() => {
+    if (!window.location.hash) window.location.hash = "hoy";
+    const onChange = () => setHash(read());
+    window.addEventListener("hashchange", onChange);
+    return () => window.removeEventListener("hashchange", onChange);
+  }, []);
+  return hash;
+}
+
+function dayKey(value) {
+  const date = new Date(value);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
 function datePart(value) {

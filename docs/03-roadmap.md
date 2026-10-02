@@ -18,6 +18,8 @@ La caja es siempre el inicio. El desarrollo no cambia esa regla. Cada paso añad
 
 Hasta terminar el paso 1, los siguientes no se improvisan en la misma pantalla.
 
+El 2 de octubre se adelanta el esqueleto de la web: todas las pantallas, con registros de ejemplo, para poder ver la estructura. Se pule después. Las apps móviles siguen para más tarde.
+
 ## Fase 0 — Servidor vacío que responde
 
 Duración orientativa: 1 semana.

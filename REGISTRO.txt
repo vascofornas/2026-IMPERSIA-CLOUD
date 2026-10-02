@@ -274,3 +274,7 @@ La regla queda así: la caja es siempre el inicio. Decide si la frase abre algo 
 2 de octubre de 2026, 14:50
 Modesto sigue sin ver cómo avanza el desarrollo, porque lo único que tiene delante es la caja.
 El orden queda escrito en la ruta, en «Lo que se ve»: caja, Hoy, Proyectos como sitio, la caja que relaciona, el resto de módulos de uno en uno, voz e imagen, y compartir. La caja no deja de ser el inicio en ningún paso.
+
+2 de octubre de 2026, 14:55
+Modesto pide crear ahora todas las pantallas de la web, con registros inventados de cada eje, y pulir después. Las apps móviles quedan para más tarde.
+Es viable como esqueleto, no como módulos terminados. Hoy, la caja y las catorce pantallas del PDF quedan en https://impersia.cloud/app/#hoy. Los ejemplos se ven en cada pantalla y no se guardan en su cuenta. Lo suyo sigue en la base.

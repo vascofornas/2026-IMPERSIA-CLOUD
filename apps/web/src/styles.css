@@ -18,9 +18,45 @@ body {
 }
 
 main {
-  width: min(640px, calc(100% - 32px));
+  width: min(760px, calc(100% - 32px));
   margin: 0 auto;
   padding: 32px 0 64px;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.nav a {
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: var(--card);
+}
+
+.nav a.on {
+  background: var(--mark);
+  color: white;
+  border-color: var(--mark);
+}
+
+.axis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.axis em {
+  font-style: normal;
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 h1 {
