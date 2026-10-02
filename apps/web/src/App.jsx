@@ -147,8 +147,9 @@ function Home({ email, onLeave }) {
 
   const todayKey = dayKey(new Date());
   const dated = items.filter((item) => item.starts_at);
-  const todayItems = dated.filter((item) => dayKey(item.starts_at) === todayKey);
-  const laterItems = dated.filter((item) => dayKey(item.starts_at) > todayKey);
+  const byDate = (a, b) => new Date(a.starts_at) - new Date(b.starts_at);
+  const todayItems = dated.filter((item) => dayKey(item.starts_at) === todayKey).sort(byDate);
+  const laterItems = dated.filter((item) => dayKey(item.starts_at) > todayKey).sort(byDate);
 
   return (
     <main>

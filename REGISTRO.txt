@@ -283,3 +283,8 @@ Es viable como esqueleto, no como módulos terminados. Hoy, la caja y las catorc
 Modesto abre Hoy. Ve la navegación de los tres ejes y, en Después, la frase del viernes 9 a las 18:00 y la cita del dentista.
 Para hoy está vacío: ninguna de las dos cae el 2 de octubre. Es lo esperado.
 La cita del dentista dice «lunes 19» en el título y el 5 de octubre en la fecha. El 19 no se leyó. Queda pendiente de corregir.
+
+2 de octubre de 2026, 15:08
+Modesto pide afinar y corregir.
+«El lunes 19» ya se lee como el día 19 de ese día de la semana. La cita del dentista pasa al lunes 19 de octubre a las 17:15, y el título queda «Cita en el dentista».
+En Hoy, lo fechado sale por orden de fecha. El botón Cambiar ya no ocupa todo el ancho.

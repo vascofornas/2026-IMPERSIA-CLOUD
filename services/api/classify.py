@@ -156,13 +156,17 @@ def _when(low: str) -> datetime | None:
     elif "hoy" in low:
         day = now.date()
     else:
-        for name, index in WEEKDAYS.items():
-            if re.search(rf"\b{name}\b", low):
-                ahead = (index - now.weekday()) % 7
-                if ahead == 0:
-                    ahead = 7
-                day = (now + timedelta(days=ahead)).date()
-                break
+        named = _weekday_number(low, now)
+        if named is not None:
+            day = named
+        else:
+            for name, index in WEEKDAYS.items():
+                if re.search(rf"\b{name}\b", low):
+                    ahead = (index - now.weekday()) % 7
+                    if ahead == 0:
+                        ahead = 7
+                    day = (now + timedelta(days=ahead)).date()
+                    break
     hour, minute = _clock(low)
     time_known = hour is not None
     if not time_known:
@@ -177,6 +181,32 @@ def _when(low: str) -> datetime | None:
     if hour is None:
         hour, minute = 0, 0
     return datetime(day.year, day.month, day.day, hour, minute, tzinfo=MADRID), time_known
+
+
+def _weekday_number(low: str, now: datetime):
+    match = re.search(
+        r"\b(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo)\s+(\d{1,2})\b",
+        low,
+    )
+    if not match:
+        return None
+    number = int(match.group(2))
+    if number < 1 or number > 31:
+        return None
+    weekday = WEEKDAYS[match.group(1)]
+    year, month = now.year, now.month
+    for _ in range(18):
+        try:
+            candidate = datetime(year, month, number, tzinfo=MADRID).date()
+        except ValueError:
+            candidate = None
+        if candidate and candidate.weekday() == weekday and candidate >= now.date():
+            return candidate
+        month += 1
+        if month == 13:
+            month = 1
+            year += 1
+    return None
 
 
 def _is_task(low: str) -> bool:

@@ -156,3 +156,5 @@ li {
 }
 
 li strong { color: var(--mark); font-weight: 600; }
+
+li button { width: auto; justify-self: start; }
