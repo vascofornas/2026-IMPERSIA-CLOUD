@@ -148,7 +148,7 @@ export const AXES = [
 export function findModule(id) {
   for (const axis of AXES) {
     const found = axis.modules.find((mod) => mod.id === id);
-    if (found) return { ...found, axis: axis.name };
+    if (found) return { ...found, axis: axis.name, axisId: axis.id };
   }
   return null;
 }

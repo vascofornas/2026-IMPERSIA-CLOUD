@@ -101,8 +101,10 @@ function Home({ email, onLeave }) {
   const [items, setItems] = useState([]);
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState("");
+  const [openAxis, setOpenAxis] = useState(null);
   const screen = useHash();
   const current = findModule(screen);
+  const shownAxis = AXES.find((axis) => axis.id === (current?.axisId || openAxis));
 
   useEffect(() => {
     call("/items").then(setItems).catch((err) => setError(err.message));
@@ -165,16 +167,25 @@ function Home({ email, onLeave }) {
         <a className={screen === "hoy" ? "on" : ""} href="#hoy">Hoy</a>
         <a className={screen === "entrada" ? "on" : ""} href="#entrada">Entrada</a>
       </nav>
-      <nav className="places">
+      <nav className="axes">
         {AXES.map((axis) => (
-          <div key={axis.id}>
-            <h2>{axis.name}</h2>
-            {axis.modules.map((mod) => (
-              <a key={mod.id} className={screen === mod.id ? "on" : ""} href={`#${mod.id}`}>{mod.label}</a>
-            ))}
-          </div>
+          <button
+            type="button"
+            key={axis.id}
+            className={shownAxis?.id === axis.id ? "text on" : "text"}
+            onClick={() => setOpenAxis(shownAxis?.id === axis.id && !current ? null : axis.id)}
+          >
+            {axis.name}
+          </button>
         ))}
       </nav>
+      {shownAxis && (
+        <nav className="modules">
+          {shownAxis.modules.map((mod) => (
+            <a key={mod.id} className={screen === mod.id ? "on" : ""} href={`#${mod.id}`}>{mod.label}</a>
+          ))}
+        </nav>
+      )}
       {error && <p className="error">{error}</p>}
       {screen === "entrada" && (
         <>
@@ -188,12 +199,14 @@ function Home({ email, onLeave }) {
       )}
       {screen === "hoy" && (
         <>
-          <h1>Hoy</h1>
-          <p className="lead">{todayLine()}</p>
-          <h2>Para hoy</h2>
+          <h1>{todayLine()}</h1>
           {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} /> : <p className="private">Hoy no hay nada con fecha.</p>}
-          <h2>Después</h2>
-          {laterItems.length ? <ItemList items={laterItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} /> : <p className="private">No hay nada fechado más adelante.</p>}
+          {laterItems.length > 0 && (
+            <>
+              <h2>Después</h2>
+              <ItemList items={laterItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
+            </>
+          )}
         </>
       )}
       {current && (
@@ -276,10 +289,12 @@ function ItemList({ items, editing, setEditing, saveEdit }) {
             </>
           ) : (
             <>
-              <p className="mod">{labelOf(item.module)}</p>
-              <p className="when">{item.starts_at ? whenLabel(item) : ""}</p>
+              {item.starts_at && <p className="when">{whenLabel(item)}</p>}
               <p className="title">{item.title}</p>
-              <button type="button" className="text" onClick={() => setEditing({ ...item })}>Cambiar</button>
+              <p className="meta">
+                <span>{labelOf(item.module)}</span>
+                <button type="button" className="text" onClick={() => setEditing({ ...item })}>Cambiar</button>
+              </p>
             </>
           )}
         </article>
