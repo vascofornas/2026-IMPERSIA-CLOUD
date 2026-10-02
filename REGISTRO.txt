@@ -288,3 +288,6 @@ La cita del dentista dice «lunes 19» en el título y el 5 de octubre en la fec
 Modesto pide afinar y corregir.
 «El lunes 19» ya se lee como el día 19 de ese día de la semana. La cita del dentista pasa al lunes 19 de octubre a las 17:15, y el título queda «Cita en el dentista».
 En Hoy, lo fechado sale por orden de fecha. El botón Cambiar ya no ocupa todo el ancho.
+
+2 de octubre de 2026, 15:21
+Modesto recarga Hoy. Ve el viernes 9 a las 18:00 primero, y debajo «Cita en el dentista» el 19 de octubre a las 17:15. El orden es el de las fechas. Para hoy sigue vacío, porque hoy es día 2.
