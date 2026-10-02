@@ -348,6 +348,26 @@ h1 {
   line-height: 1.05;
 }
 
+h1.with-icon {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+h1.with-icon .icon {
+  width: 0.7em;
+  height: 0.7em;
+  color: var(--chip, currentColor);
+}
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kicker .icon { width: 16px; height: 16px; }
+
 h2 {
   margin: 28px 0 10px;
   font-size: 1.35rem;
@@ -610,9 +630,18 @@ a.connect {
 }
 
 .mod {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin: 0;
-  color: var(--mark);
+  color: var(--chip, var(--mark));
   font-size: 0.85rem;
+}
+
+.mod .icon, .meta .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--chip, currentColor);
 }
 
 .meta {

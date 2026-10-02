@@ -402,3 +402,7 @@ Cada módulo tiene un color fijo y su icono, en la ficha del día y en una leyen
 3 de octubre de 2026, 01:24
 Modesto deja el calendario como está por hoy. Lo ve casi perfecto. Mañana se sigue con Agenda.
 En esta subida solo va el diario. El mes, los colores y la marca de Google ya están en el repositorio.
+
+3 de octubre de 2026, 01:28
+Modesto pide los iconos de ejes y módulos también en las pantallas de cada módulo, para que el usuario se acostumbre.
+Sí. La pantalla del módulo abre con el icono del eje y el del cajón, este en el mismo color que en el mes. Cada ficha y cada ejemplo repiten ese icono. Google, en su lista, lleva su marca.

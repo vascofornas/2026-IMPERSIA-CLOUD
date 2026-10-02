@@ -254,8 +254,8 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
       )}
       {current && (
         <>
-          <p className="private">{current.axis}</p>
-          <h1>{current.label}</h1>
+          <p className="private kicker"><Icon name={current.axisId} /> {current.axis}</p>
+          <h1 className={`with-icon m-${current.id}`}><Icon name={current.id} /> {current.label}</h1>
           <p className="lead">{current.blurb}</p>
           {current.id === "agenda" && (
             <>
@@ -292,7 +292,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
                   <div className="cards">
                     {current.examples.map(([title, note]) => (
                       <article className="card" key={title}>
-                        <p className="mod">Ejemplo</p>
+                        <p className={`mod m-${current.id}`}><Icon name={current.id} /> Ejemplo</p>
                         <p className="when">{note}</p>
                         <p className="title">{title}</p>
                       </article>
@@ -531,10 +531,10 @@ function ItemList({ items, editing, setEditing, saveEdit }) {
               <p className="title">{item.title}</p>
               <p className="meta">
                 {item.source === "google" ? (
-                  <span>Google</span>
+                  <span className="m-google"><GoogleMark /> Google</span>
                 ) : (
                   <>
-                    <span><Icon name={item.module} /> {labelOf(item.module)}</span>
+                    <span className={`m-${item.module}`}><Icon name={item.module} /> {labelOf(item.module)}</span>
                     <button type="button" className="text" onClick={() => setEditing({ ...item })}>Cambiar</button>
                   </>
                 )}
