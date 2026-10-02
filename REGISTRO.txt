@@ -255,3 +255,8 @@ La caja es la entrada. Falta Hoy, y que cada eje del PDF sea un sitio donde recu
 2 de octubre de 2026, 14:39
 Modesto pregunta si un proyecto profesional nuevo se crea en la caja o en otra zona.
 Se crea en la caja. Proyectos es donde se abre después, con sus tareas. No hay una segunda puerta para crearlo. Igual para una cita, un deseo o una entrada de diario. Queda en la definición.
+
+2 de octubre de 2026, 14:42
+Modesto no entiende, y pregunta si está claro.
+La idea sí: «Proyecto Capenergy 2026» escrito en la caja crea el proyecto. La frase de los foros entra dentro. Se abre en Proyectos.
+La pantalla de ahora no hace eso. Solo guarda la frase y le pone la etiqueta Proyectos. Se habían mezclado las dos cosas en la explicación.
