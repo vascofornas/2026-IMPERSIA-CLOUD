@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Icon } from "./icons.jsx";
+import { GoogleMark, Icon } from "./icons.jsx";
 import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
@@ -393,6 +393,8 @@ function MonthBoard({ items }) {
   byDay.forEach((list) => list.sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at)));
   const raw = first.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
   const title = raw.charAt(0).toUpperCase() + raw.slice(1);
+  const visible = cells.flatMap((date) => byDay.get(dayKey(date)) || []);
+  const legend = legendOf(visible);
 
   function shift(delta) {
     const next = new Date(cursor.year, cursor.month + delta, 1);
@@ -406,6 +408,19 @@ function MonthBoard({ items }) {
         <p className="month-name">{title}</p>
         <button type="button" className="secondary" onClick={() => shift(1)}>Siguiente</button>
       </div>
+      {legend.length > 0 && (
+        <div className="month-key">
+          {legend.map((item) => {
+            const id = item.source === "google" ? "google" : item.module;
+            return (
+              <span className={`key m-${id}`} key={id}>
+                {item.source === "google" ? <GoogleMark /> : <Icon name={id} />}
+                {item.source === "google" ? "Google" : labelOf(id)}
+              </span>
+            );
+          })}
+        </div>
+      )}
       <div className="month-grid">
         {WEEKDAYS.map((name) => <p className="dow" key={name}>{name}</p>)}
         {cells.map((date) => {
@@ -419,7 +434,10 @@ function MonthBoard({ items }) {
             <div className={classes.join(" ")} key={key}>
               <p className="num">{date.getDate()}</p>
               {shown.map((item) => (
-                <p className={chipClass(item)} key={item.id} title={chipTitle(item)}>{chipText(item)}</p>
+                <p className={chipClass(item)} key={item.id} title={chipTitle(item)}>
+                  {item.source === "google" ? <GoogleMark /> : <Icon name={item.module || "agenda"} />}
+                  <span>{chipText(item)}</span>
+                </p>
               ))}
               {list.length > 3 && <p className="more">+{list.length - 3}</p>}
             </div>
@@ -430,21 +448,31 @@ function MonthBoard({ items }) {
   );
 }
 
+function legendOf(items) {
+  const present = new Map();
+  items.forEach((item) => {
+    const id = item.source === "google" ? "google" : item.module;
+    if (id && !present.has(id)) present.set(id, item);
+  });
+  const order = AXES.flatMap((axis) => axis.modules.map((mod) => mod.id));
+  order.push("google");
+  return order.filter((id) => present.has(id)).map((id) => present.get(id));
+}
+
 function chipClass(item) {
-  if (item.source === "google") return "chip google";
-  if (item.module && item.module !== "agenda") return "chip other";
-  return "chip";
+  if (item.source === "google") return "chip google m-google";
+  return `chip m-${item.module || "agenda"}`;
 }
 
 function chipTitle(item) {
-  if (item.source === "google" || !item.module) return item.title;
-  return `${labelOf(item.module)}. ${item.title}`;
+  const clock = item.time_known ? `${clockOf(item.starts_at)} ` : "";
+  if (item.source === "google") return `${clock}Google. ${item.title}`;
+  return `${clock}${labelOf(item.module)}. ${item.title}`;
 }
 
 function chipText(item) {
-  const clock = item.time_known ? clockOf(item.starts_at) : "";
-  const where = item.source !== "google" && item.module ? `${labelOf(item.module)}. ` : "";
-  return `${clock ? `${clock} ` : ""}${where}${item.title}`;
+  const clock = item.time_known ? `${clockOf(item.starts_at)} ` : "";
+  return `${clock}${item.title}`;
 }
 
 function clockOf(value) {

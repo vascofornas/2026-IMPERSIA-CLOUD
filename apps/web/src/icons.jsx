@@ -14,6 +14,18 @@ export function Icon({ name }) {
   );
 }
 
+export function GoogleMark() {
+  return (
+    <svg className="icon google-mark" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="4.5" width="18" height="16" rx="3" fill="#ffffff" stroke="#4285F4" strokeWidth="1.7" />
+      <path d="M3 9.5h18" stroke="#4285F4" strokeWidth="1.7" />
+      <path d="M8 4.2v3.2" stroke="#EA4335" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M16 4.2v3.2" stroke="#34A853" strokeWidth="1.7" strokeLinecap="round" />
+      <text x="12" y="18" textAnchor="middle" fontSize="10" fontWeight="700" fill="#4285F4" fontFamily="Plus Jakarta Sans, Segoe UI, sans-serif">G</text>
+    </svg>
+  );
+}
+
 const draw = {
   hoy: <><rect {...common} x="3" y="5" width="18" height="16" rx="2" /><path {...common} d="M3 10h18M8 3v4M16 3v4" /></>,
   entrada: <><path {...common} d="M12 20h9" /><path {...common} d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" /></>,

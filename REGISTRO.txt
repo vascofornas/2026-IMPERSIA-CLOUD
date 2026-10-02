@@ -394,3 +394,7 @@ El mes solo pintaba el cajón Agenda. Una reunión se archivaba en Reuniones y d
 3 de octubre de 2026, 01:12
 Modesto pregunta si hay entradas de otros ejes que también deben verse en el calendario.
 Sí. El mes es el tiempo de la persona, no una lista de cajones. Cualquier entrada con fecha se pinta en su día, y delante se lee el cajón: Casa, Proyectos, Hábitos o el que sea. Sigue guardada en su sitio. Google, si está conectado, entra igual.
+
+3 de octubre de 2026, 01:20
+Modesto pide colores en el calendario: una marca para los calendarios ajenos, y color o distintivo para cada cajón de Impersia.
+Cada módulo tiene un color fijo y su icono, en la ficha del día y en una leyenda del mes. Google lleva un calendario con la letra G, para distinguirlo de lo escrito en Impersia. El color no cambia con la apariencia.
