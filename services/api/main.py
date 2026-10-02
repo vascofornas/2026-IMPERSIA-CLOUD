@@ -109,6 +109,7 @@ class ConfirmIn(BaseModel):
     kind: str
     title: str = Field(min_length=1, max_length=200)
     starts_at: str | None = None
+    time_known: bool = False
 
 
 @app.get("/health")
@@ -218,11 +219,18 @@ def confirm_capture(capture_id: str, body: ConfirmIn, request: Request):
                 raise HTTPException(status_code=404, detail="Esa propuesta ya no está pendiente")
             cur.execute(
                 """
-                INSERT INTO items (user_id, capture_id, kind, title, starts_at, privacy)
-                VALUES (%s, %s, %s, %s, %s, 'private')
-                RETURNING id, kind, title, starts_at, privacy, created_at
+                INSERT INTO items (user_id, capture_id, kind, title, starts_at, time_known, privacy)
+                VALUES (%s, %s, %s, %s, %s, %s, 'private')
+                RETURNING id, kind, title, starts_at, time_known, privacy, created_at
                 """,
-                (user_id, capture_id, body.kind, body.title.strip(), _as_madrid(body.starts_at)),
+                (
+                    user_id,
+                    capture_id,
+                    body.kind,
+                    body.title.strip(),
+                    _when_saving(body.starts_at, body.time_known),
+                    body.time_known,
+                ),
             )
             item = cur.fetchone()
             cur.execute("UPDATE captures SET status = 'confirmed' WHERE id = %s", (capture_id,))
@@ -237,7 +245,7 @@ def list_items(request: Request):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT id, kind, title, starts_at, privacy, created_at
+                SELECT id, kind, title, starts_at, time_known, privacy, created_at
                 FROM items
                 WHERE user_id = %s
                 ORDER BY created_at DESC
@@ -247,6 +255,13 @@ def list_items(request: Request):
             )
             rows = cur.fetchall()
     return [_public_item(row) for row in rows]
+
+
+def _when_saving(value: str | None, time_known: bool):
+    parsed = _as_madrid(value)
+    if parsed is None or time_known:
+        return parsed
+    return parsed.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 def _as_madrid(value: str | None):
@@ -264,6 +279,7 @@ def _public_suggestion(suggestion: dict) -> dict:
         "kind": suggestion["kind"],
         "title": suggestion["title"],
         "starts_at": starts.isoformat() if starts else None,
+        "time_known": bool(suggestion.get("time_known")),
         "privacy": "private",
     }
 
@@ -275,6 +291,7 @@ def _public_item(row: dict) -> dict:
         "kind": row["kind"],
         "title": row["title"],
         "starts_at": starts.isoformat() if starts else None,
+        "time_known": bool(row.get("time_known")),
         "privacy": row["privacy"],
         "created_at": row["created_at"].isoformat(),
     }

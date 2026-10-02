@@ -43,7 +43,7 @@ WEEKDAYS = {
 def classify(text: str) -> dict:
     raw = " ".join(text.strip().split())
     low = raw.lower()
-    starts = _when(low)
+    starts, time_known = _when(low)
     timed = bool(re.search(r"\ba las \d", low))
     task = _is_task(low)
     planned = _daypart(low) is not None and _explicit_day(low) and not task
@@ -57,6 +57,7 @@ def classify(text: str) -> dict:
         "kind": kind,
         "title": _title(raw),
         "starts_at": starts,
+        "time_known": time_known,
         "source": "rules",
     }
 
@@ -108,17 +109,19 @@ def _when(low: str) -> datetime | None:
                 day = (now + timedelta(days=ahead)).date()
                 break
     hour, minute = _clock(low)
-    if hour is None:
+    time_known = hour is not None
+    if not time_known:
         part = _daypart(low)
         if part is not None:
             hour, minute = part
-    if day is None and hour is None:
-        return None
+            time_known = True
+    if day is None and not time_known:
+        return None, False
     if day is None:
         day = now.date()
     if hour is None:
-        hour, minute = 9, 0
-    return datetime(day.year, day.month, day.day, hour, minute, tzinfo=MADRID)
+        hour, minute = 0, 0
+    return datetime(day.year, day.month, day.day, hour, minute, tzinfo=MADRID), time_known
 
 
 def _is_task(low: str) -> bool:

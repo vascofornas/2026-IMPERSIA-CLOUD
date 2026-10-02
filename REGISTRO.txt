@@ -210,3 +210,9 @@ Ahora, al pulsar Proponer, sale una frase: «Propongo una cita para el viernes�
 Modesto no ve para qué sirve Proponer: el título era la misma frase, y solo cambiaba la etiqueta de nota, tarea o cita.
 El objetivo del botón es partir la frase antes de guardar. Ejemplo del producto: «Tarea privada, para el viernes: llamar al taller». Guardar es el que escribe el registro.
 El título ya no repite el día ni la hora. «Llamar al taller el viernes» propone el título «Llamar al taller» y deja el viernes en la fecha.
+
+2 de octubre de 2026, 14:12
+Modesto ve la propuesta de «Llamar al taller el viernes» y no le encuentra utilidad: la tarjeta repetía la frase y ponía las 9:00 sin que él las hubiera dicho.
+La utilidad de Proponer es decir si aquello es nota, tarea o cita, para no elegir la aplicación al escribir. Si acierta, se guarda con un toque. Si falla, se corrige antes de que quede en el sitio equivocado.
+La hora ya no se inventa. La tarjeta muestra la frase y Guardar. Corregir abre el tipo, el título, el día y la hora solo si hace falta.
+En la base, items gana la columna time_known. Lo ya guardado conserva la hora que tenía.
