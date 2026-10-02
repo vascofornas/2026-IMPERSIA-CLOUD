@@ -329,3 +329,7 @@ La etiqueta es sesion-2026-10-02, sobre este punto del repositorio.
 2 de octubre de 2026, 22:40
 Modesto no quiere seguir por Proyectos suelto. Quiere perfeccionar los ejes uno por uno, y dentro de cada eje lo propio de cada grupo de contenido.
 La ruta queda así: Vida personal, luego Profesional, luego Social. Dentro de Vida personal el orden es Agenda, Casa, Hábitos, Viajes, Diario y Deseos. El primero es Agenda. Entrada sigue siendo el inicio.
+
+2 de octubre de 2026, 22:46
+Modesto acepta la primera versión de Agenda. Si la persona conecta Google Calendar, Impersia lo lee y lo muestra en Agenda y en Hoy, marcado como Google, junto a lo que entró por Entrada. Lo escrito se queda en Impersia. Escribir en Google queda para cuando esta lectura ya se use.
+Queda en la definición y en la ruta. Para conectarlo hace falta un cliente de Google, que todavía no existe.
