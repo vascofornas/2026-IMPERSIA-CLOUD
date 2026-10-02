@@ -350,3 +350,6 @@ La cuenta de Google del producto es impersia@impersia.cloud. Queda en la definic
 
 2 de octubre de 2026, 23:59
 La API de Google Calendar queda activada en el proyecto impersia. La cuenta impersia@impersia.cloud es propietaria. Falta la pantalla de permiso y el cliente con el que cada persona acepta leer su calendario.
+
+3 de octubre de 2026, 00:13
+Queda creado el cliente de la web. El retorno es https://api.impersia.cloud/auth/google/callback. El permiso pedido es solo lectura del calendario. La llave está en el servidor, en el entorno de la API, y no entra en el repositorio ni en este diario.
