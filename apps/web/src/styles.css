@@ -201,9 +201,16 @@ main.gate {
 .side .who a.session { max-width: none; }
 
 main.content {
-  width: min(860px, calc(100% - 72px));
-  margin: 0 auto;
-  padding: 36px 0 80px;
+  width: auto;
+  margin: 0;
+  padding: 32px 40px 80px;
+}
+
+.panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px 48px;
+  align-items: start;
 }
 
 h1, h2, .title, .primary a {
@@ -397,6 +404,7 @@ a.connect {
 
 .looks {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-top: 8px;
 }
@@ -502,6 +510,10 @@ a.connect {
   padding: 8px 0 16px;
 }
 
+@media (max-width: 1100px) {
+  .panes, .looks { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 800px) {
   .shell { grid-template-columns: 1fr; }
   .side {
@@ -510,4 +522,5 @@ a.connect {
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
+  main.content { padding: 24px 20px 64px; }
 }

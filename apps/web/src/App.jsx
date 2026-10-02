@@ -240,13 +240,16 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
       {screen === "hoy" && (
         <>
           <h1>{todayLine()}</h1>
-          {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} /> : <p className="private">Hoy no hay nada con fecha.</p>}
-          {laterItems.length > 0 && (
-            <>
+          <div className="panes">
+            <section>
+              <h2>Para hoy</h2>
+              {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} /> : <p className="private">Hoy no hay nada con fecha.</p>}
+            </section>
+            <section>
               <h2>Próximos</h2>
-              <ItemList items={laterItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
-            </>
-          )}
+              {laterItems.length ? <ItemList items={laterItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} /> : <p className="private">No hay nada con fecha después de hoy.</p>}
+            </section>
+          </div>
         </>
       )}
       {current && (
@@ -262,32 +265,41 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
               </a>
             </>
           )}
-          <h2>Tuyo</h2>
-          {items.some((item) => item.module === current.id) ? (
-            <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
-          ) : (
-            <p className="private">Todavía no hay nada tuyo aquí. Escríbelo en Entrada.</p>
-          )}
-          {current.id === "agenda" && googleEmail && (
-            <>
-              <h2>Google</h2>
-              {googleDated.length ? (
-                <ItemList items={googleDated} editing={null} setEditing={() => {}} saveEdit={() => {}} />
+          <div className="panes">
+            <section>
+              <h2>Tuyo</h2>
+              {items.some((item) => item.module === current.id) ? (
+                <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
               ) : (
-                <p className="private">No hay citas de Google en los próximos sesenta días.</p>
+                <p className="private">Todavía no hay nada tuyo aquí. Escríbelo en Entrada.</p>
               )}
-            </>
-          )}
-          <h2>Ejemplos</h2>
-          <p className="private">Inventados, para ver la forma de esta pantalla. No están en tu cuenta.</p>
-          <div className="cards">
-            {current.examples.map(([title, note]) => (
-              <article className="card" key={title}>
-                <p className="mod">Ejemplo</p>
-                <p className="when">{note}</p>
-                <p className="title">{title}</p>
-              </article>
-            ))}
+            </section>
+            <section>
+              {current.id === "agenda" && googleEmail ? (
+                <>
+                  <h2>Google</h2>
+                  {googleDated.length ? (
+                    <ItemList items={googleDated} editing={null} setEditing={() => {}} saveEdit={() => {}} />
+                  ) : (
+                    <p className="private">No hay citas de Google en los próximos sesenta días.</p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <h2>Ejemplos</h2>
+                  <p className="private">Inventados, para ver la forma de esta pantalla. No están en tu cuenta.</p>
+                  <div className="cards">
+                    {current.examples.map(([title, note]) => (
+                      <article className="card" key={title}>
+                        <p className="mod">Ejemplo</p>
+                        <p className="when">{note}</p>
+                        <p className="title">{title}</p>
+                      </article>
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
           </div>
         </>
       )}
