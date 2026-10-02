@@ -163,7 +163,7 @@ function Home({ email, onLeave }) {
       </header>
       <nav className="primary">
         <a className={screen === "hoy" ? "on" : ""} href="#hoy">Hoy</a>
-        <a className={screen === "caja" ? "on" : ""} href="#caja">Caja</a>
+        <a className={screen === "entrada" ? "on" : ""} href="#entrada">Entrada</a>
       </nav>
       <nav className="places">
         {AXES.map((axis) => (
@@ -176,9 +176,9 @@ function Home({ email, onLeave }) {
         ))}
       </nav>
       {error && <p className="error">{error}</p>}
-      {screen === "caja" && (
+      {screen === "entrada" && (
         <>
-          <h1>La caja</h1>
+          <h1>Entrada</h1>
           <p className="lead">Escribe lo que tengas en la cabeza. Impersia lo archiva en su eje. Si no es el sitio, lo cambias.</p>
           <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Llamar al taller el viernes" />
           <button type="button" onClick={archive} disabled={!text.trim()}>Dejar</button>
@@ -205,7 +205,7 @@ function Home({ email, onLeave }) {
           {items.some((item) => item.module === current.id) ? (
             <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
           ) : (
-            <p className="private">Todavía no hay nada tuyo aquí. Entra por la caja.</p>
+            <p className="private">Todavía no hay nada tuyo aquí. Escríbelo en Entrada.</p>
           )}
           <h2>Ejemplos</h2>
           <p className="private">Inventados, para ver la forma de esta pantalla. No están en tu cuenta.</p>
@@ -220,7 +220,7 @@ function Home({ email, onLeave }) {
           </div>
         </>
       )}
-      {screen !== "hoy" && screen !== "caja" && !current && (
+      {screen !== "hoy" && screen !== "entrada" && !current && (
         <>
           <h1>Hoy</h1>
           <p className="lead">Esa pantalla no existe. Vuelve a Hoy.</p>
@@ -289,10 +289,14 @@ function ItemList({ items, editing, setEditing, saveEdit }) {
 }
 
 function useHash() {
-  const read = () => window.location.hash.replace("#", "") || "hoy";
+  const read = () => {
+    const hash = window.location.hash.replace("#", "") || "hoy";
+    return hash === "caja" ? "entrada" : hash;
+  };
   const [hash, setHash] = useState(read);
   useEffect(() => {
     if (!window.location.hash) window.location.hash = "hoy";
+    if (window.location.hash === "#caja") window.location.replace("#entrada");
     const onChange = () => setHash(read());
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);

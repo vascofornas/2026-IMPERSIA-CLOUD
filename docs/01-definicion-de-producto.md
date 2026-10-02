@@ -15,7 +15,7 @@ No hay un paso de confirmar antes de guardar. El PDF lo llama entrada de fricci�
 
 Personal, profesional y social son destino y permiso de cada elemento. La persona ve un solo flujo. Esas tres palabras organizan el almacenamiento y quién puede verlo. No son tres aplicaciones dentro de Impersia.
 
-La caja es siempre el inicio. Decide qué hacer con cada frase: abrir algo nuevo o meterlo dentro de algo que ya existe. «Proyecto Capenergy 2026» abre el proyecto. «Avanzar en los foros de Capenergy» entra dentro. Abrir Proyectos sirve para verlo y para corregirlo, no para armarlo a mano. Lo mismo para un viaje, un hábito o un deseo.
+Entrada es siempre el inicio. Decide qué hacer con cada frase: abrir algo nuevo o meterlo dentro de algo que ya existe. «Proyecto Capenergy 2026» abre el proyecto. «Avanzar en los foros de Capenergy» entra dentro. Abrir Proyectos sirve para verlo y para corregirlo, no para armarlo a mano. Lo mismo para un viaje, un hábito o un deseo.
 
 ## Privacidad
 
@@ -39,7 +39,7 @@ Tres tipos de elemento, y una pantalla:
 - **Tarea.** Título, estado (pendiente o hecha) y fecha opcional. Un proyecto es solo una etiqueta de la tarea, no un tablero.
 - **Cita.** Título, inicio y fin. El recordatorio se guarda; la notificación push llega con las apps móviles.
 
-La pantalla de inicio se llama **Hoy**: la caja de entrada, las citas del día y las tareas pendientes o fechadas para hoy. Debajo, las notas recientes.
+La pantalla de inicio se llama **Hoy**: lo del día. **Entrada** es donde se escribe. Debajo, en cada módulo, lo archivado.
 
 Cuentas con correo y contraseña. Una persona, sus datos, en la web app.
 
@@ -47,14 +47,14 @@ Cuentas con correo y contraseña. Una persona, sus datos, en la web app.
 
 Cada módulo siguiente se añade cuando Hoy ya se usa a diario. El orden está en la ruta de desarrollo.
 
-- Voz e imagen en la caja.
+- Voz e imagen en Entrada.
 - Diario con estado de ánimo, hábitos, casa, viajes, deseos y segunda memoria.
 - Banco de ideas y proyectos con hitos.
 - Enlaces compartidos y círculos cerrados.
 - Muro público y build in public.
 - Búsqueda semántica. La base llevará `pgvector` desde el día uno; la función se enciende más tarde.
 
-Quedan fuera del producto, también a largo plazo: copiar el Drive o el correo entero del usuario, y convertir Impersia en la fuente de verdad de los archivos del cliente. Impersia guarda lo que la persona le confía por la caja.
+Quedan fuera del producto, también a largo plazo: copiar el Drive o el correo entero del usuario, y convertir Impersia en la fuente de verdad de los archivos del cliente. Impersia guarda lo que la persona le confía por Entrada.
 
 ## Para quién es la primera versión
 

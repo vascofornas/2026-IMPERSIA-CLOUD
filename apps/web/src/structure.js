@@ -95,7 +95,7 @@ export const AXES = [
         label: "Ideas",
         blurb: "Borradores, propuestas y lo que aún no es un proyecto.",
         examples: [
-          ["Impersia: todo entra por la caja", ""],
+          ["Impersia: todo entra por Entrada", ""],
           ["Una guía corta para el primer usuario", ""],
         ],
       },

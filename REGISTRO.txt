@@ -295,3 +295,7 @@ Modesto recarga Hoy. Ve el viernes 9 a las 18:00 primero, y debajo «Cita en el 
 2 de octubre de 2026, 15:22
 Modesto dice que no le gusta nada el aspecto.
 La web de uso pasa a la misma voz que la página comercial: logo, Literata, Outfit y papel. Hoy y Caja quedan arriba, en grande. Los tres ejes van debajo, en columnas, sin botones redondos. Cada cosa archivada es una tarjeta: módulo, título y fecha. Cambiar es un texto, no un botón ancho.
+
+2 de octubre de 2026, 15:31
+Modesto acepta el nombre Entrada en lugar de Caja. Caja sonaba a un cajón. Entrada es el sitio por donde llega cada frase.
+Queda en la pantalla, en la página comercial y en la definición. La dirección antigua #caja abre Entrada.

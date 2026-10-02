@@ -1,6 +1,6 @@
 # Impersia OS
 
-Centro de control personal, profesional y social. Todo entra por una sola caja. La IA lo archiva en su eje y su módulo. La persona puede corregirlo después. Privado hasta que se decida lo contrario.
+Centro de control personal, profesional y social. Todo entra por Entrada. La IA lo archiva en su eje y su módulo. La persona puede corregirlo después. Privado hasta que se decida lo contrario.
 
 Este repositorio es Impersia OS. La documentación de agencia, VPS de clientes y automatizaciones queda fuera de este producto.
 
@@ -25,4 +25,4 @@ El PDF `impersia 2026.pdf` es la visión de partida (PRD 1.0). Estos documentos 
 
 ## Versión 1, en una frase
 
-Una persona escribe en la caja y la entrada queda archivada sola. Después puede editarla. Los ejes son los de `impersia 2026.pdf`.
+Una persona escribe en Entrada y la frase queda archivada sola. Después puede editarla. Los ejes son los de `impersia 2026.pdf`.

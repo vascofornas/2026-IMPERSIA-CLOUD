@@ -12,7 +12,7 @@ Capacidad de partida: **4 vCPU y 8 GB de RAM**. Ahí caben la API, PostgreSQL y 
 | --- | --- |
 | Ubuntu 24.04 | Sistema del VPS |
 | Caddy | HTTPS y enrutado por dominio. Certificados automáticos |
-| API FastAPI | Cuentas, caja, clasificación y elementos |
+| API FastAPI | Cuentas, Entrada, clasificación y elementos |
 | PostgreSQL 16 + pgvector | Datos. La extensión queda instalada; la búsqueda semántica no se usa aún |
 | Web comercial | Sitio estático (Next.js exportado) |
 | Web app | Aplicación estática (Vite, React, TypeScript) |
@@ -33,7 +33,7 @@ El DNS apunta al VPS en IONOS. Si el dominio final es otro, cambian los nombres 
 
 ## Por qué este stack
 
-FastAPI encaja con la caja: una sola función que devuelve JSON con un esquema fijo (tipo, título, fechas, privacidad, confianza). Python mantiene cerca esa llamada al modelo.
+FastAPI encaja con Entrada: una sola función que devuelve JSON con un esquema fijo (eje, módulo, título, fechas, privacidad). Python mantiene cerca esa llamada al modelo.
 
 La web comercial pide SEO y páginas quietas. Exportarla y servirla con Caddy basta.
 
