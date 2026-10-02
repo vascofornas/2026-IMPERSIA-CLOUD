@@ -341,3 +341,6 @@ Solo él, una vez, para registrar Impersia. Cada persona después solo acepta le
 2 de octubre de 2026, 22:53
 La cuenta de Google con la que Modesto estaba en la consola no deja crear proyectos.
 Impersia se registra con una cuenta de Google del producto, no con la personal. Queda en la definición.
+
+2 de octubre de 2026, 23:53
+Modesto crea el proyecto Impersia en Google Cloud, con la cuenta del producto. La consola exigía una organización; al aceptar la prueba, el proyecto se pudo crear. Falta activar la API del calendario y el permiso de lectura.
