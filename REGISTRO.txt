@@ -321,3 +321,7 @@ El correo sale de esa fila. El enlace pasa a llamarse Apariencia, con icono de p
 Modesto quiere ver quién ha entrado, y una pantalla Perfil, sin llenarla todavía. «Después» le parece mal dicho, y cree que sale en todas las pantallas.
 «Después» solo estaba en Hoy, para lo fechado a partir de mañana. Pasa a llamarse Próximos.
 Arriba, el correo abre Perfil, con icono de persona. La pantalla dice la cuenta y deja el resto para más adelante.
+
+2 de octubre de 2026, 16:05
+Modesto cierra la sesión. El aspecto, Apariencia, el perfil y Próximos se quedan así hasta la siguiente.
+La etiqueta es sesion-2026-10-02, sobre este punto del repositorio.
