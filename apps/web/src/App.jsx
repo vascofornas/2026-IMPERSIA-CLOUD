@@ -67,6 +67,7 @@ function Auth({ onEnter }) {
 
   return (
     <main>
+      <a className="mark" href="#hoy"><img src={`${import.meta.env.BASE_URL}logo.svg`} alt="Impersia" width="168" height="116" /></a>
       <h1>Entra en Impersia</h1>
       <p className="lead">La contraseña tiene al menos 8 caracteres. La cuenta es solo tuya.</p>
       <label>
@@ -153,20 +154,25 @@ function Home({ email, onLeave }) {
 
   return (
     <main>
-      <header>
-        <p>{email}</p>
-        <button type="button" className="secondary" onClick={leave}>Salir</button>
+      <header className="top">
+        <a className="mark" href="#hoy"><img src={`${import.meta.env.BASE_URL}logo.svg`} alt="Impersia" width="168" height="116" /></a>
+        <div className="who">
+          <span>{email}</span>
+          <button type="button" className="text" onClick={leave}>Salir</button>
+        </div>
       </header>
-      <nav className="nav">
+      <nav className="primary">
         <a className={screen === "hoy" ? "on" : ""} href="#hoy">Hoy</a>
         <a className={screen === "caja" ? "on" : ""} href="#caja">Caja</a>
+      </nav>
+      <nav className="places">
         {AXES.map((axis) => (
-          <span className="axis" key={axis.id}>
-            <em>{axis.name}</em>
+          <div key={axis.id}>
+            <h2>{axis.name}</h2>
             {axis.modules.map((mod) => (
               <a key={mod.id} className={screen === mod.id ? "on" : ""} href={`#${mod.id}`}>{mod.label}</a>
             ))}
-          </span>
+          </div>
         ))}
       </nav>
       {error && <p className="error">{error}</p>}
@@ -183,7 +189,7 @@ function Home({ email, onLeave }) {
       {screen === "hoy" && (
         <>
           <h1>Hoy</h1>
-          <p className="lead">Lo que tiene fecha y cae hoy. Lo demás, con fecha, queda debajo. Todo ha entrado por la caja.</p>
+          <p className="lead">{todayLine()}</p>
           <h2>Para hoy</h2>
           {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} /> : <p className="private">Hoy no hay nada con fecha.</p>}
           <h2>Después</h2>
@@ -203,15 +209,15 @@ function Home({ email, onLeave }) {
           )}
           <h2>Ejemplos</h2>
           <p className="private">Inventados, para ver la forma de esta pantalla. No están en tu cuenta.</p>
-          <ul>
+          <div className="cards">
             {current.examples.map(([title, note]) => (
-              <li key={title}>
-                <strong>Ejemplo</strong>
-                <span>{title}</span>
-                {note && <span>{note}</span>}
-              </li>
+              <article className="card" key={title}>
+                <p className="mod">Ejemplo</p>
+                <p className="when">{note}</p>
+                <p className="title">{title}</p>
+              </article>
             ))}
-          </ul>
+          </div>
         </>
       )}
       {screen !== "hoy" && screen !== "caja" && !current && (
@@ -226,9 +232,9 @@ function Home({ email, onLeave }) {
 
 function ItemList({ items, editing, setEditing, saveEdit }) {
   return (
-    <ul>
+    <div className="cards">
       {items.map((item) => (
-        <li key={item.id}>
+        <article className={editing && editing.id === item.id ? "card editor" : "card"} key={item.id}>
           {editing && editing.id === item.id ? (
             <>
               <label>
@@ -270,15 +276,15 @@ function ItemList({ items, editing, setEditing, saveEdit }) {
             </>
           ) : (
             <>
-              <strong>{labelOf(item.module)}</strong>
-              <span>{item.title}</span>
-              {item.starts_at && <span>{whenLabel(item)}</span>}
-              <button type="button" className="secondary" onClick={() => setEditing({ ...item })}>Cambiar</button>
+              <p className="mod">{labelOf(item.module)}</p>
+              <p className="when">{item.starts_at ? whenLabel(item) : ""}</p>
+              <p className="title">{item.title}</p>
+              <button type="button" className="text" onClick={() => setEditing({ ...item })}>Cambiar</button>
             </>
           )}
-        </li>
+        </article>
       ))}
-    </ul>
+    </div>
   );
 }
 
@@ -322,6 +328,10 @@ function withWhen(proposal, day, time) {
   if (!day) return { ...proposal, starts_at: null, time_known: false };
   if (!time) return { ...proposal, starts_at: day, time_known: false };
   return { ...proposal, starts_at: `${day}T${time}`, time_known: true };
+}
+
+function todayLine() {
+  return new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
 }
 
 function whenLabel(item) {

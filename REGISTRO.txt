@@ -291,3 +291,7 @@ En Hoy, lo fechado sale por orden de fecha. El botón Cambiar ya no ocupa todo e
 
 2 de octubre de 2026, 15:21
 Modesto recarga Hoy. Ve el viernes 9 a las 18:00 primero, y debajo «Cita en el dentista» el 19 de octubre a las 17:15. El orden es el de las fechas. Para hoy sigue vacío, porque hoy es día 2.
+
+2 de octubre de 2026, 15:22
+Modesto dice que no le gusta nada el aspecto.
+La web de uso pasa a la misma voz que la página comercial: logo, Literata, Outfit y papel. Hoy y Caja quedan arriba, en grande. Los tres ejes van debajo, en columnas, sin botones redondos. Cada cosa archivada es una tarjeta: módulo, título y fecha. Cambiar es un texto, no un botón ancho.

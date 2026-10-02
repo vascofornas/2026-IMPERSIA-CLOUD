@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 116" fill="none" role="img" aria-label="Impersia">
+  <rect x="8" y="8" width="136" height="100" rx="6" stroke="currentColor" stroke-width="2.4"/>
+  <path d="M28 10.2v95.6" stroke="currentColor" stroke-width="2.4"/>
+  <text x="40" y="52" fill="currentColor" font-family="Literata, Georgia, serif" font-size="22" font-weight="680" letter-spacing="-0.3">Impersia</text>
+  <path d="M40 64h72" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="124" cy="92" r="18" fill="#0f5c4c"/>
+  <circle cx="124" cy="92" r="12.4" stroke="#f3efe6" stroke-width="1.6"/>
+</svg>
