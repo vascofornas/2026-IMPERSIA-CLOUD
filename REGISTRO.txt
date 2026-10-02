@@ -221,3 +221,8 @@ En la base, items gana la columna time_known. Lo ya guardado conserva la hora qu
 Modesto dice que no entiende lo que se pretende con la caja, que no sabe si es lo que quiere, y que no está satisfecho con la dirección. Siente que se está decidiendo el producto sin consultarle.
 Se para. No se toca más la pantalla ni la clasificación hasta que él diga qué tiene que pasar cuando escribe una frase.
 Lo que sí está escrito, y él aprobó el 1 de octubre, sigue en docs/01-definicion-de-producto.md: un solo sitio donde se deja lo que hay en la cabeza, sin elegir antes la aplicación. La pantalla de hoy no es ese producto todavía. La propuesta la hacen reglas, no un modelo.
+
+2 de octubre de 2026, 14:25
+Modesto corrige: no todo lo que tiene en la cabeza es nota, tarea o cita. Impersia OS tiene varios ejes de contenido.
+Esos ejes, en el PDF de partida, son agenda, casa, hábitos, viajes, diario, deseos, trabajo, conocimiento e ideas, además de lo que se comparte. Personal, profesional y social son el destino y el permiso, no tres aplicaciones.
+Nota, tarea y cita fueron el corte de la versión 1. Tratarlos como si fueran el producto entero fue el error de hoy. No se cambia código hasta que él confirme la lista de ejes.
