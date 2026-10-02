@@ -68,7 +68,7 @@ export default function App() {
       .finally(() => setReady(true));
   }, []);
 
-  if (!ready) return <main className="wait">Cargando…</main>;
+  if (!ready) return <main className="gate">Cargando…</main>;
   if (!me) return <Auth onEnter={(data) => { applyLook(data.look); setMe(data); }} />;
   return (
     <Home
@@ -101,7 +101,7 @@ function Auth({ onEnter }) {
   }
 
   return (
-    <main>
+    <main className="gate">
       <a className="mark" href="#hoy"><Logo /></a>
       <h1>Entra en Impersia</h1>
       <p className="lead">La contraseña tiene al menos 8 caracteres. La cuenta es solo tuya.</p>
@@ -137,10 +137,8 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
   const [googleEvents, setGoogleEvents] = useState([]);
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState("");
-  const [openAxis, setOpenAxis] = useState(null);
   const screen = useHash();
   const current = findModule(screen);
-  const shownAxis = AXES.find((axis) => axis.id === (current?.axisId || openAxis));
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -204,38 +202,30 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
   const laterItems = dated.filter((item) => dayKey(item.starts_at) > todayKey).sort(byDate);
 
   return (
-    <main>
-      <header className="top">
+    <div className="shell">
+      <aside className="side">
         <a className="mark" href="#hoy"><Logo /></a>
+        <nav className="primary">
+          <a className={screen === "hoy" ? "on" : ""} href="#hoy"><Icon name="hoy" /> Hoy</a>
+          <a className={screen === "entrada" ? "on" : ""} href="#entrada"><Icon name="entrada" /> Entrada</a>
+        </nav>
+        {AXES.map((axis) => (
+          <div key={axis.id}>
+            <p className="axis-name"><Icon name={axis.id} /> {axis.name}</p>
+            <nav className="modules">
+              {axis.modules.map((mod) => (
+                <a key={mod.id} className={screen === mod.id ? "on" : ""} href={`#${mod.id}`}><Icon name={mod.id} /> {mod.label}</a>
+              ))}
+            </nav>
+          </div>
+        ))}
         <div className="who">
           <a className={screen === "perfil" ? "session on" : "session"} href="#perfil"><Icon name="perfil" /> <span>{email}</span></a>
           <a className={screen === "apariencia" ? "on" : ""} href="#apariencia"><Icon name="apariencia" /> Apariencia</a>
           <button type="button" className="text" onClick={leave}>Salir</button>
         </div>
-      </header>
-      <nav className="primary">
-        <a className={screen === "hoy" ? "on" : ""} href="#hoy"><Icon name="hoy" /> Hoy</a>
-        <a className={screen === "entrada" ? "on" : ""} href="#entrada"><Icon name="entrada" /> Entrada</a>
-      </nav>
-      <nav className="axes">
-        {AXES.map((axis) => (
-          <button
-            type="button"
-            key={axis.id}
-            className={shownAxis?.id === axis.id ? "text on" : "text"}
-            onClick={() => setOpenAxis(shownAxis?.id === axis.id && !current ? null : axis.id)}
-          >
-            <Icon name={axis.id} /> {axis.name}
-          </button>
-        ))}
-      </nav>
-      {shownAxis && (
-        <nav className="modules">
-          {shownAxis.modules.map((mod) => (
-            <a key={mod.id} className={screen === mod.id ? "on" : ""} href={`#${mod.id}`}><Icon name={mod.id} /> {mod.label}</a>
-          ))}
-        </nav>
-      )}
+      </aside>
+      <main className="content">
       {error && <p className="error">{error}</p>}
       {screen === "entrada" && (
         <>
@@ -337,7 +327,8 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
           <p className="lead">Esa pantalla no existe. Vuelve a Hoy.</p>
         </>
       )}
-    </main>
+      </main>
+    </div>
   );
 }
 

@@ -119,8 +119,89 @@ body {
   line-height: 1.5;
 }
 
-main {
+main.gate {
   width: min(640px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 36px 0 80px;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.side {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 28px 16px 20px;
+  border-right: 1px solid var(--line);
+  background: var(--card);
+}
+
+.side .primary,
+.side .modules {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.side .primary { margin-top: 22px; }
+
+.side .primary a,
+.side .modules a,
+.side .who a,
+.side .who button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.side .primary a.on,
+.side .modules a.on,
+.side .who a.on {
+  background: var(--paper);
+}
+
+.axis-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 10px 4px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.side .who {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.side .who a.session { max-width: none; }
+
+main.content {
+  width: min(860px, calc(100% - 72px));
   margin: 0 auto;
   padding: 36px 0 80px;
 }
@@ -419,4 +500,14 @@ a.connect {
 
 .editor {
   padding: 8px 0 16px;
+}
+
+@media (max-width: 800px) {
+  .shell { grid-template-columns: 1fr; }
+  .side {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
 }

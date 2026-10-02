@@ -366,3 +366,7 @@ Al entrar salía «Failed to fetch». La tabla del enlace con Google se había c
 
 3 de octubre de 2026, 00:32
 Google enlazó el correo, pero no dio permiso para leer las citas. El botón de conectar desaparecía al quedar enlazado. Vuelve a salir, para pedir otra vez el permiso del calendario.
+
+3 de octubre de 2026, 00:36
+Modesto ve Agenda ya con datos y dice que una sola columna central no es óptima.
+La navegación pasa a una columna a la izquierda: Hoy, Entrada, los tres ejes con sus módulos, y debajo la cuenta. El contenido queda a la derecha, más ancho.
