@@ -7,8 +7,14 @@ const API = "https://api.impersia.cloud";
 const LOOKS = [
   { id: "claro", name: "Claro", note: "Gris claro y verde" },
   { id: "papel", name: "Papel", note: "Crema y verde bosque" },
-  { id: "noche", name: "Noche", note: "Fondo oscuro" },
+  { id: "mar", name: "Mar", note: "Azul profundo" },
+  { id: "cielo", name: "Cielo", note: "Azul claro" },
+  { id: "oliva", name: "Oliva", note: "Verde suave" },
+  { id: "arena", name: "Arena", note: "Cálido" },
+  { id: "violeta", name: "Violeta", note: "Lila suave" },
   { id: "tinta", name: "Tinta", note: "Blanco y negro" },
+  { id: "noche", name: "Noche", note: "Oscuro" },
+  { id: "grafito", name: "Grafito", note: "Carbón" },
 ];
 
 function applyLook(look) {
@@ -66,7 +72,6 @@ export default function App() {
   if (!me) return <Auth onEnter={(data) => { applyLook(data.look); setMe(data); }} />;
   return (
     <Home
-      email={me.email}
       look={me.look || "claro"}
       onLook={(look) => setMe({ ...me, look })}
       onLeave={() => setMe(null)}
@@ -124,7 +129,7 @@ function Auth({ onEnter }) {
   );
 }
 
-function Home({ email, look, onLook, onLeave }) {
+function Home({ look, onLook, onLeave }) {
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
   const [editing, setEditing] = useState(null);
@@ -187,8 +192,7 @@ function Home({ email, look, onLook, onLeave }) {
       <header className="top">
         <a className="mark" href="#hoy"><Logo /></a>
         <div className="who">
-          <span>{email}</span>
-          <a className={screen === "aspecto" ? "on" : ""} href="#aspecto">Aspecto</a>
+          <a className={screen === "apariencia" ? "on" : ""} href="#apariencia"><Icon name="apariencia" /> Apariencia</a>
           <button type="button" className="text" onClick={leave}>Salir</button>
         </div>
       </header>
@@ -262,10 +266,10 @@ function Home({ email, look, onLook, onLeave }) {
           </div>
         </>
       )}
-      {screen === "aspecto" && (
+      {screen === "apariencia" && (
         <>
-          <h1>Aspecto</h1>
-          <p className="lead">Elige cómo quieres ver Impersia. Queda guardado en tu cuenta.</p>
+          <h1>Apariencia</h1>
+          <p className="lead">Elige cómo se ve Impersia. Queda guardado en tu cuenta.</p>
           <div className="looks">
             {LOOKS.map((item) => (
               <button
@@ -285,7 +289,7 @@ function Home({ email, look, onLook, onLeave }) {
           </div>
         </>
       )}
-      {screen !== "hoy" && screen !== "entrada" && screen !== "aspecto" && !current && (
+      {screen !== "hoy" && screen !== "entrada" && screen !== "apariencia" && !current && (
         <>
           <h1>Hoy</h1>
           <p className="lead">Esa pantalla no existe. Vuelve a Hoy.</p>
@@ -381,12 +385,15 @@ function ItemList({ items, editing, setEditing, saveEdit }) {
 function useHash() {
   const read = () => {
     const hash = window.location.hash.replace("#", "") || "hoy";
-    return hash === "caja" ? "entrada" : hash;
+    if (hash === "caja") return "entrada";
+    if (hash === "aspecto") return "apariencia";
+    return hash;
   };
   const [hash, setHash] = useState(read);
   useEffect(() => {
     if (!window.location.hash) window.location.hash = "hoy";
     if (window.location.hash === "#caja") window.location.replace("#entrada");
+    if (window.location.hash === "#aspecto") window.location.replace("#apariencia");
     const onChange = () => setHash(read());
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);

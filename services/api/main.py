@@ -25,7 +25,7 @@ app.add_middleware(
 )
 
 KINDS = {"note", "task", "event"}
-LOOKS = {"claro", "papel", "noche", "tinta"}
+LOOKS = {"claro", "papel", "mar", "cielo", "oliva", "arena", "violeta", "tinta", "noche", "grafito"}
 COOKIE = "impersia_session"
 
 
@@ -191,7 +191,7 @@ def me(request: Request):
 def patch_me(body: LookIn, request: Request):
     user_id = current_user(request)
     if body.look not in LOOKS:
-        raise HTTPException(status_code=400, detail="Ese aspecto no existe")
+        raise HTTPException(status_code=400, detail="Esa apariencia no existe")
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(

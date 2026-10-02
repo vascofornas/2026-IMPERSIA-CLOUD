@@ -312,3 +312,7 @@ La web de uso deja el papel crema y la letra con remate. Fondo gris claro, texto
 Modesto pide que cada persona pueda ver la web a su gusto.
 La primera versión no es un editor de cada color. En Aspecto hay cuatro estilos completos: Claro, Papel, Noche y Tinta. El elegido se guarda en la cuenta y se aplica al entrar.
 Van la pantalla, el estilo, la columna look en la cuenta y el arreglo de la API.
+
+2 de octubre de 2026, 15:55
+Modesto quiere más estilos. El correo de la fila superior le sobra, y «Aspecto» le parece poco claro y poco profesional.
+El correo sale de esa fila. El enlace pasa a llamarse Apariencia, con icono de paleta. Hay diez estilos: Claro, Papel, Mar, Cielo, Oliva, Arena, Violeta, Tinta, Noche y Grafito. La dirección antigua #aspecto abre Apariencia.

@@ -34,4 +34,5 @@ const draw = {
   listas: <><path {...common} d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></>,
   circulos: <><circle {...common} cx="8" cy="8" r="3" /><circle {...common} cx="16" cy="9" r="2.5" /><circle {...common} cx="12" cy="16" r="2.5" /></>,
   espacios: <><rect {...common} x="3" y="3" width="7" height="18" rx="1" /><rect {...common} x="14" y="3" width="7" height="10" rx="1" /><rect {...common} x="14" y="16" width="7" height="5" rx="1" /></>,
+  apariencia: <><path {...common} d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 2-2 1.6 1.6 0 0 1 1.6-1.6H19a2 2 0 0 0 2-2A9 9 0 0 0 12 3z" /><circle cx="7.5" cy="10.5" r="1.1" fill="currentColor" stroke="none" /><circle cx="10.2" cy="7" r="1.1" fill="currentColor" stroke="none" /><circle cx="14.4" cy="7" r="1.1" fill="currentColor" stroke="none" /><circle cx="16.8" cy="10.8" r="1.1" fill="currentColor" stroke="none" /></>,
 };
