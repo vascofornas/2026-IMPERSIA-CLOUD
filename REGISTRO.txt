@@ -353,3 +353,6 @@ La API de Google Calendar queda activada en el proyecto impersia. La cuenta impe
 
 3 de octubre de 2026, 00:13
 Queda creado el cliente de la web. El retorno es https://api.impersia.cloud/auth/google/callback. El permiso pedido es solo lectura del calendario. La llave está en el servidor, en el entorno de la API, y no entra en el repositorio ni en este diario.
+
+3 de octubre de 2026, 00:16
+La aplicación de Google pasa de interna a externa, en pruebas. Mientras siga en pruebas, solo conectan los correos que se añadan como usuarios de prueba, hasta cien. Publicarla para todo el mundo exige la revisión de Google.
