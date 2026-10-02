@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Icon } from "./icons.jsx";
 import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
@@ -164,8 +165,8 @@ function Home({ email, onLeave }) {
         </div>
       </header>
       <nav className="primary">
-        <a className={screen === "hoy" ? "on" : ""} href="#hoy">Hoy</a>
-        <a className={screen === "entrada" ? "on" : ""} href="#entrada">Entrada</a>
+        <a className={screen === "hoy" ? "on" : ""} href="#hoy"><Icon name="hoy" /> Hoy</a>
+        <a className={screen === "entrada" ? "on" : ""} href="#entrada"><Icon name="entrada" /> Entrada</a>
       </nav>
       <nav className="axes">
         {AXES.map((axis) => (
@@ -175,14 +176,14 @@ function Home({ email, onLeave }) {
             className={shownAxis?.id === axis.id ? "text on" : "text"}
             onClick={() => setOpenAxis(shownAxis?.id === axis.id && !current ? null : axis.id)}
           >
-            {axis.name}
+            <Icon name={axis.id} /> {axis.name}
           </button>
         ))}
       </nav>
       {shownAxis && (
         <nav className="modules">
           {shownAxis.modules.map((mod) => (
-            <a key={mod.id} className={screen === mod.id ? "on" : ""} href={`#${mod.id}`}>{mod.label}</a>
+            <a key={mod.id} className={screen === mod.id ? "on" : ""} href={`#${mod.id}`}><Icon name={mod.id} /> {mod.label}</a>
           ))}
         </nav>
       )}
@@ -292,7 +293,7 @@ function ItemList({ items, editing, setEditing, saveEdit }) {
               {item.starts_at && <p className="when">{whenLabel(item)}</p>}
               <p className="title">{item.title}</p>
               <p className="meta">
-                <span>{labelOf(item.module)}</span>
+                <span><Icon name={item.module} /> {labelOf(item.module)}</span>
                 <button type="button" className="text" onClick={() => setEditing({ ...item })}>Cambiar</button>
               </p>
             </>
