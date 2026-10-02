@@ -100,6 +100,8 @@ def _module(low: str) -> str:
         return "proyectos"
     if any(word in low for word in ("vuelo", "hotel", "viaje", "maleta", "itinerario")):
         return "viajes"
+    if re.search(r"\bagenda\b", low):
+        return "agenda"
     if any(word in low for word in ("lista de la compra", "comprar", "suministro", "taller", "avería", "averia")):
         return "casa"
     if any(word in low for word in ("hábito", "habito", "ejercicio", "meditación", "meditacion", "rutina")):

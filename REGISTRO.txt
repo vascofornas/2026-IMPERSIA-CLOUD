@@ -374,3 +374,7 @@ La navegación pasa a una columna a la izquierda: Hoy, Entrada, los tres ejes co
 3 de octubre de 2026, 00:41
 Modesto dice que la información sigue en una sola columna central.
 El contenido deja de ir centrado y estrecho. Ocupa todo el ancho que queda a la derecha. En Hoy, lo de hoy y lo próximo van en dos columnas. En cada módulo, lo tuyo y lo de al lado (Google, o los ejemplos) también.
+
+3 de octubre de 2026, 00:55
+Modesto prueba tres frases de comprar tabaco. Las tres caen en Casa y salen en Próximos, porque tienen fecha.
+La primera es mañana, sin hora. La segunda es el lunes a las 18:00. La tercera dice «apuntarlo en la agenda» y aun así fue a Casa, porque «comprar» se leía antes. A partir de ahora, si la frase dice agenda, va a Agenda. Esa tercera queda corregida.
