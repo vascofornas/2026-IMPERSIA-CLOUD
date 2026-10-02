@@ -325,3 +325,7 @@ Arriba, el correo abre Perfil, con icono de persona. La pantalla dice la cuenta 
 2 de octubre de 2026, 16:05
 Modesto cierra la sesión. El aspecto, Apariencia, el perfil y Próximos se quedan así hasta la siguiente.
 La etiqueta es sesion-2026-10-02, sobre este punto del repositorio.
+
+2 de octubre de 2026, 22:40
+Modesto no quiere seguir por Proyectos suelto. Quiere perfeccionar los ejes uno por uno, y dentro de cada eje lo propio de cada grupo de contenido.
+La ruta queda así: Vida personal, luego Profesional, luego Social. Dentro de Vida personal el orden es Agenda, Casa, Hábitos, Viajes, Diario y Deseos. El primero es Agenda. Entrada sigue siendo el inicio.

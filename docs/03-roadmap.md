@@ -6,19 +6,19 @@ El corte es deliberado. El PDF describe el producto completo. Esta ruta construy
 
 ## Lo que se ve, en orden
 
-Entrada es siempre el inicio. El desarrollo no cambia esa regla. Cada paso añade algo que se puede abrir.
+Entrada es siempre el inicio. Abrir un eje o un módulo sirve para ver y corregir.
 
-1. **Entrada, hoy.** Escribes una frase y queda en una lista, con una etiqueta: Proyectos, Agenda, Diario. Es lo que hay en https://impersia.cloud/app/.
-2. **Hoy.** Otra pantalla. Lo que tiene fecha sale en el día. La frase sigue entrando por Entrada.
-3. **Proyectos, como sitio.** Otra pantalla. Ahí está Capenergy, y debajo las frases que son suyas. Esas frases han entrado por Entrada. Si el enlace está mal, se corrige en esa pantalla.
-4. **Entrada relaciona.** «Proyecto Capenergy 2026» abre el proyecto. «Avanzar en los foros de Capenergy» entra dentro, sin montarlo a mano. Este es el paso difícil. Llega cuando el paso 3 ya se ve.
-5. **El resto de módulos, de uno en uno.** Agenda, diario, deseos, viajes, hábitos, reuniones, ideas. Cada uno repite el paso 3: primero un sitio donde leer lo que Entrada ya guardó.
-6. **Voz e imagen.** Entran por la misma Entrada.
-7. **Compartir.** Un elemento pasa de privado a un círculo o a público.
+El esqueleto de las pantallas ya está, con ejemplos. A partir de aquí se perfecciona eje por eje. Dentro de cada eje, cada grupo recibe lo que le es propio.
 
-Hasta terminar el paso 1, los siguientes no se improvisan en la misma pantalla.
+1. **Vida personal.** Agenda, Casa, Hábitos, Viajes, Diario, Deseos.
+2. **Profesional.** Proyectos, Reuniones, Segunda memoria, Ideas.
+3. **Social.** Muro, Listas y rutas, Círculos, Espacios.
 
-El 2 de octubre se adelanta el esqueleto de la web: todas las pantallas, con registros de ejemplo, para poder ver la estructura. Se pule después. Las apps móviles siguen para más tarde.
+El primero es Agenda: una cita con día y hora, visible en Hoy, y corregible después.
+
+Cuando un grupo necesita partes dentro, como un viaje, un proyecto o un hábito, Entrada decide si la frase abre algo nuevo o entra en lo que ya existe. Eso se hace al llegar a ese grupo.
+
+Voz, imagen y compartir llegan cuando los tres ejes ya se usan. Las apps móviles siguen para más tarde.
 
 ## Fase 0 — Servidor vacío que responde
 
