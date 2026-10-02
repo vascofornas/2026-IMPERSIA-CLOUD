@@ -344,3 +344,6 @@ Impersia se registra con una cuenta de Google del producto, no con la personal. 
 
 2 de octubre de 2026, 23:53
 Modesto crea el proyecto Impersia en Google Cloud, con la cuenta del producto. La consola exigía una organización; al aceptar la prueba, el proyecto se pudo crear. Falta activar la API del calendario y el permiso de lectura.
+
+2 de octubre de 2026, 23:55
+La cuenta de Google del producto es impersia@impersia.cloud. Queda en la definición. No es una clave: es el correo con el que se registra Impersia en Google.
