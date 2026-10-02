@@ -1,10 +1,46 @@
-:root {
+:root,
+[data-look="claro"] {
   --paper: #f4f6f8;
   --ink: #111827;
   --muted: #6b7280;
   --line: #e5e7eb;
   --card: #ffffff;
   --mark: #0f766e;
+  --onmark: #ffffff;
+  color-scheme: light;
+}
+
+[data-look="papel"] {
+  --paper: #f6f1e7;
+  --ink: #1c1915;
+  --muted: #6b645b;
+  --line: #e4dccf;
+  --card: #fffdf8;
+  --mark: #3f6b4e;
+  --onmark: #fffdf8;
+  color-scheme: light;
+}
+
+[data-look="noche"] {
+  --paper: #0f1419;
+  --ink: #f3f4f6;
+  --muted: #9ca3af;
+  --line: #2a3139;
+  --card: #171d24;
+  --mark: #2dd4bf;
+  --onmark: #042f2e;
+  color-scheme: dark;
+}
+
+[data-look="tinta"] {
+  --paper: #ffffff;
+  --ink: #0a0a0a;
+  --muted: #525252;
+  --line: #d4d4d4;
+  --card: #fafafa;
+  --mark: #111827;
+  --onmark: #ffffff;
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -56,7 +92,9 @@ h2 {
   gap: 16px;
 }
 
-.mark img {
+.mark { color: var(--ink); }
+
+.logo {
   display: block;
   width: 112px;
   height: auto;
@@ -67,6 +105,13 @@ h2 {
   align-items: center;
   gap: 14px;
 }
+
+.who a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.who a.on { color: var(--mark); }
 
 .primary {
   display: flex;
@@ -142,7 +187,7 @@ button {
   border: 0;
   border-radius: 999px;
   background: var(--mark);
-  color: white;
+  color: var(--onmark);
   font: inherit;
   cursor: pointer;
 }
@@ -173,7 +218,66 @@ button.text {
 
 .secret button { white-space: nowrap; }
 
-.error { color: #8a2a2a; }
+.error { color: #b91c1c; }
+
+[data-look="noche"] .error { color: #fca5a5; }
+
+.looks {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.looks button {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--ink);
+  text-align: left;
+}
+
+.looks button.on { border-color: var(--mark); }
+
+.looks strong { display: block; color: var(--ink); font-weight: 650; }
+
+.looks span { color: var(--muted); font-size: 0.92rem; }
+
+.chosen {
+  margin-left: auto;
+  color: var(--mark);
+  font-size: 0.85rem;
+}
+
+.swatch {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  flex: none;
+}
+
+.swatch i {
+  display: block;
+  width: 12px;
+  height: 12px;
+  margin: 12px auto 0;
+  border-radius: 50%;
+}
+
+.swatch.claro { background: #f4f6f8; }
+.swatch.claro i { background: #0f766e; }
+.swatch.papel { background: #f6f1e7; }
+.swatch.papel i { background: #3f6b4e; }
+.swatch.noche { background: #0f1419; }
+.swatch.noche i { background: #2dd4bf; }
+.swatch.tinta { background: #ffffff; }
+.swatch.tinta i { background: #111827; }
 
 .cards { display: block; }
 

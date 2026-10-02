@@ -307,3 +307,8 @@ Hoy deja de ser un índice. La página es la fecha y la lista. Los catorce módu
 2 de octubre de 2026, 15:40
 Modesto dice que el aspecto es mejor, pero las fuentes, los colores y el fondo siguen pareciéndole antiguos, y faltan iconos.
 La web de uso deja el papel crema y la letra con remate. Fondo gris claro, texto casi negro, verde más actual, letra Plus Jakarta Sans. Hoy, Entrada, los ejes y cada módulo llevan un icono de línea.
+
+2 de octubre de 2026, 15:48
+Modesto pide que cada persona pueda ver la web a su gusto.
+La primera versión no es un editor de cada color. En Aspecto hay cuatro estilos completos: Claro, Papel, Noche y Tinta. El elegido se guarda en la cuenta y se aplica al entrar.
+Van la pantalla, el estilo, la columna look en la cuenta y el arreglo de la API.

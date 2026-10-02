@@ -25,6 +25,7 @@ app.add_middleware(
 )
 
 KINDS = {"note", "task", "event"}
+LOOKS = {"claro", "papel", "noche", "tinta"}
 COOKIE = "impersia_session"
 
 
@@ -119,6 +120,10 @@ class ItemPatch(BaseModel):
     time_known: bool = False
 
 
+class LookIn(BaseModel):
+    look: str
+
+
 @app.get("/health")
 def health(response: Response):
     try:
@@ -147,7 +152,7 @@ def register(body: Credentials, response: Response):
     except psycopg.errors.UniqueViolation:
         raise HTTPException(status_code=409, detail="Ese correo ya tiene cuenta")
     set_session(response, user_id)
-    return {"email": email}
+    return {"email": email, "look": "claro"}
 
 
 @app.post("/auth/login")
@@ -155,12 +160,12 @@ def login(body: Credentials, response: Response):
     email = body.email.lower()
     with db() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, password_hash FROM users WHERE email = %s", (email,))
+            cur.execute("SELECT id, password_hash, look FROM users WHERE email = %s", (email,))
             row = cur.fetchone()
     if not row or not check_password(body.password, row["password_hash"]):
         raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
     set_session(response, str(row["id"]))
-    return {"email": email}
+    return {"email": email, "look": row["look"] if row["look"] in LOOKS else "claro"}
 
 
 @app.post("/auth/logout")
@@ -174,11 +179,30 @@ def me(request: Request):
     user_id = current_user(request)
     with db() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT email FROM users WHERE id = %s", (user_id,))
+            cur.execute("SELECT email, look FROM users WHERE id = %s", (user_id,))
             row = cur.fetchone()
     if not row:
         raise HTTPException(status_code=401, detail="Necesitas entrar")
-    return {"email": row["email"]}
+    look = row["look"] if row["look"] in LOOKS else "claro"
+    return {"email": row["email"], "look": look}
+
+
+@app.patch("/me")
+def patch_me(body: LookIn, request: Request):
+    user_id = current_user(request)
+    if body.look not in LOOKS:
+        raise HTTPException(status_code=400, detail="Ese aspecto no existe")
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE users SET look = %s WHERE id = %s RETURNING email, look",
+                (body.look, user_id),
+            )
+            row = cur.fetchone()
+        conn.commit()
+    if not row:
+        raise HTTPException(status_code=401, detail="Necesitas entrar")
+    return {"email": row["email"], "look": row["look"]}
 
 
 @app.post("/captures", status_code=201)

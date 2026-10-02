@@ -4,6 +4,23 @@ import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
 
+const LOOKS = [
+  { id: "claro", name: "Claro", note: "Gris claro y verde" },
+  { id: "papel", name: "Papel", note: "Crema y verde bosque" },
+  { id: "noche", name: "Noche", note: "Fondo oscuro" },
+  { id: "tinta", name: "Tinta", note: "Blanco y negro" },
+];
+
+function applyLook(look) {
+  const name = LOOKS.some((item) => item.id === look) ? look : "claro";
+  document.documentElement.dataset.look = name;
+  try {
+    localStorage.setItem("impersia-look", name);
+  } catch {
+    /* el aspecto sigue en la cuenta */
+  }
+}
+
 async function call(path, options = {}) {
   const response = await fetch(API + path, {
     credentials: "include",
@@ -37,14 +54,24 @@ export default function App() {
 
   useEffect(() => {
     call("/me")
-      .then(setMe)
+      .then((data) => {
+        applyLook(data.look);
+        setMe(data);
+      })
       .catch(() => setMe(null))
       .finally(() => setReady(true));
   }, []);
 
   if (!ready) return <main className="wait">Cargando…</main>;
-  if (!me) return <Auth onEnter={setMe} />;
-  return <Home email={me.email} onLeave={() => setMe(null)} />;
+  if (!me) return <Auth onEnter={(data) => { applyLook(data.look); setMe(data); }} />;
+  return (
+    <Home
+      email={me.email}
+      look={me.look || "claro"}
+      onLook={(look) => setMe({ ...me, look })}
+      onLeave={() => setMe(null)}
+    />
+  );
 }
 
 function Auth({ onEnter }) {
@@ -68,7 +95,7 @@ function Auth({ onEnter }) {
 
   return (
     <main>
-      <a className="mark" href="#hoy"><img src={`${import.meta.env.BASE_URL}logo.svg`} alt="Impersia" width="168" height="116" /></a>
+      <a className="mark" href="#hoy"><Logo /></a>
       <h1>Entra en Impersia</h1>
       <p className="lead">La contraseña tiene al menos 8 caracteres. La cuenta es solo tuya.</p>
       <label>
@@ -97,7 +124,7 @@ function Auth({ onEnter }) {
   );
 }
 
-function Home({ email, onLeave }) {
+function Home({ email, look, onLook, onLeave }) {
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
   const [editing, setEditing] = useState(null);
@@ -158,9 +185,10 @@ function Home({ email, onLeave }) {
   return (
     <main>
       <header className="top">
-        <a className="mark" href="#hoy"><img src={`${import.meta.env.BASE_URL}logo.svg`} alt="Impersia" width="168" height="116" /></a>
+        <a className="mark" href="#hoy"><Logo /></a>
         <div className="who">
           <span>{email}</span>
+          <a className={screen === "aspecto" ? "on" : ""} href="#aspecto">Aspecto</a>
           <button type="button" className="text" onClick={leave}>Salir</button>
         </div>
       </header>
@@ -234,13 +262,59 @@ function Home({ email, onLeave }) {
           </div>
         </>
       )}
-      {screen !== "hoy" && screen !== "entrada" && !current && (
+      {screen === "aspecto" && (
+        <>
+          <h1>Aspecto</h1>
+          <p className="lead">Elige cómo quieres ver Impersia. Queda guardado en tu cuenta.</p>
+          <div className="looks">
+            {LOOKS.map((item) => (
+              <button
+                type="button"
+                key={item.id}
+                className={look === item.id ? "on" : ""}
+                onClick={() => chooseLook(item.id, onLook, setError)}
+              >
+                <span className={`swatch ${item.id}`}><i /></span>
+                <span>
+                  <strong>{item.name}</strong>
+                  {item.note}
+                </span>
+                {look === item.id && <em className="chosen">Elegido</em>}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      {screen !== "hoy" && screen !== "entrada" && screen !== "aspecto" && !current && (
         <>
           <h1>Hoy</h1>
           <p className="lead">Esa pantalla no existe. Vuelve a Hoy.</p>
         </>
       )}
     </main>
+  );
+}
+
+async function chooseLook(id, onLook, setError) {
+  applyLook(id);
+  onLook(id);
+  try {
+    await call("/me", { method: "PATCH", body: JSON.stringify({ look: id }) });
+  } catch (err) {
+    setError(err.message);
+  }
+}
+
+function Logo() {
+  return (
+    <svg className="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 116" fill="none" role="img" aria-label="Impersia">
+      <rect x="8" y="8" width="136" height="100" rx="6" stroke="currentColor" strokeWidth="2.4" />
+      <path d="M28 10.2v95.6" stroke="currentColor" strokeWidth="2.4" />
+      <text x="40" y="52" fill="currentColor" fontFamily="Plus Jakarta Sans, Segoe UI, sans-serif" fontSize="22" fontWeight="680" letterSpacing="-0.3">Impersia</text>
+      <path d="M40 64h72" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <circle cx="124" cy="92" r="18" fill="#0f5c4c" />
+      <circle cx="124" cy="92" r="12.4" stroke="#f3efe6" strokeWidth="1.6" />
+    </svg>
   );
 }
 
