@@ -205,3 +205,8 @@ La fase 1 no está cerrada: falta que Modesto corrija una propuesta mala y que d
 2 de octubre de 2026, 14:05
 Modesto escribió «Viernes por la tarde, no sé qué hacer». Quedó guardado como cita a las 18:00, porque él cambió el tipo y la hora. La pantalla no decía en una frase qué proponía, y «por la tarde» se leía como las 9:00.
 Ahora, al pulsar Proponer, sale una frase: «Propongo una cita para el viernes… a las 18:00». Debajo se puede cambiar. «Por la tarde» es las 18:00, «por la noche» las 21:00, «por la mañana» las 10:00. «No sé qué hacer» ya no se toma como tarea solo por la palabra hacer.
+
+2 de octubre de 2026, 14:10
+Modesto no ve para qué sirve Proponer: el título era la misma frase, y solo cambiaba la etiqueta de nota, tarea o cita.
+El objetivo del botón es partir la frase antes de guardar. Ejemplo del producto: «Tarea privada, para el viernes: llamar al taller». Guardar es el que escribe el registro.
+El título ya no repite el día ni la hora. «Llamar al taller el viernes» propone el título «Llamar al taller» y deja el viernes en la fecha.

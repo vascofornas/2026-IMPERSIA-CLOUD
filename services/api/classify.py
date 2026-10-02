@@ -55,10 +55,37 @@ def classify(text: str) -> dict:
         kind = "note"
     return {
         "kind": kind,
-        "title": raw[:140],
+        "title": _title(raw),
         "starts_at": starts,
         "source": "rules",
     }
+
+
+def _title(raw: str) -> str:
+    text = raw
+    cuts = (
+        r"\bpasado mañana\b",
+        r"\bpasado manana\b",
+        r"\besta mañana\b",
+        r"\besta manana\b",
+        r"\bpor la mañana\b",
+        r"\bpor la manana\b",
+        r"\bpor la tarde\b",
+        r"\bpor la noche\b",
+        r"\bal mediodía\b",
+        r"\bal mediodia\b",
+        r"\ba las \d{1,2}(?::\d{2})?\b",
+        r"\b(?:el |la )?(?:lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo)(?: \d{1,2})?\b",
+        r"\bmañana\b",
+        r"\bmanana\b",
+        r"\bhoy\b",
+    )
+    for pattern in cuts:
+        text = re.sub(pattern, " ", text, flags=re.IGNORECASE)
+    text = " ".join(text.replace(",", " ").split()).strip(" .;:-")
+    if not text:
+        text = raw
+    return (text[0].upper() + text[1:])[:140]
 
 
 def _when(low: str) -> datetime | None:

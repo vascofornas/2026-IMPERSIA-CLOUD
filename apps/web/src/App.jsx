@@ -153,7 +153,7 @@ function Box({ email, onLeave }) {
         <button type="button" className="secondary" onClick={leave}>Salir</button>
       </header>
       <h1>La caja</h1>
-      <p className="lead">Escribe una frase. Impersia propone qué es. Tú confirmas o lo corriges. Se guarda en privado.</p>
+      <p className="lead">Escribe como te salga. Proponer no guarda: separa el tipo, un título corto y la fecha. Tú lo corriges. Guardar lo deja en privado.</p>
       <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Llamar al taller el viernes" />
       <button type="button" onClick={propose} disabled={!text.trim()}>Proponer</button>
       {error && <p className="error">{error}</p>}
@@ -216,8 +216,8 @@ function whenLabel(value) {
 }
 
 function proposalSentence(proposal) {
-  const kind = labelOf(proposal.kind).toLowerCase();
-  if (!proposal.starts_at) return `Propongo una ${kind}, sin fecha.`;
+  const kind = labelOf(proposal.kind);
+  if (!proposal.starts_at) return `${kind} privada: ${proposal.title}.`;
   const when = new Date(proposal.starts_at).toLocaleString("es-ES", {
     weekday: "long",
     day: "numeric",
@@ -225,5 +225,5 @@ function proposalSentence(proposal) {
     hour: "2-digit",
     minute: "2-digit",
   });
-  return `Propongo una ${kind} para el ${when}.`;
+  return `${kind} privada, para el ${when}: ${proposal.title}.`;
 }
