@@ -14,7 +14,7 @@ El esqueleto de las pantallas ya está, con ejemplos. A partir de aquí se perfe
 2. **Profesional.** Proyectos, Reuniones, Segunda memoria, Ideas.
 3. **Social.** Muro, Listas y rutas, Círculos, Espacios.
 
-El primero es Agenda. Junta lo que entra por Entrada con Google Calendar, si la persona lo conecta. Impersia lee ese calendario y lo muestra en Agenda y en Hoy, marcado como Google. Lo escrito en Entrada se queda en Impersia. Escribir de vuelta en Google llega cuando esta lectura ya se use. La vista de Agenda es un mes, con las citas de Impersia y las de Google en el mismo día. Hoy sigue siendo la lista del día.
+El primero es Agenda. Junta lo que entra por Entrada con Google Calendar, si la persona lo conecta. Impersia lee ese calendario y lo muestra en Agenda y en Hoy, marcado como Google. Lo escrito en Entrada se queda en Impersia. Escribir de vuelta en Google llega cuando esta lectura ya se use. La vista de Agenda es un mes. Entra lo que ocupa un hueco: Agenda, Reuniones y Viajes, más Google. Cada entrada sigue en su cajón. Hoy sigue siendo la lista del día.
 
 Cuando un grupo necesita partes dentro, como un viaje, un proyecto o un hábito, Entrada decide si la frase abre algo nuevo o entra en lo que ya existe. Eso se hace al llegar a ese grupo.
 

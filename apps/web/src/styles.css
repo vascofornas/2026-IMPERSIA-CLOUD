@@ -283,7 +283,7 @@ main.content {
   text-overflow: ellipsis;
 }
 
-.chip.google {
+.chip.google, .chip.other {
   background: transparent;
   border: 1px solid var(--line);
 }

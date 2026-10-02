@@ -386,3 +386,7 @@ No. Escribe como le sale. Impersia adivina el cajón. Si ella dice «agenda», s
 3 de octubre de 2026, 01:05
 Modesto pregunta si Agenda puede tener una vista de calendario.
 Sí. Encima de las listas, Agenda muestra el mes. Cada día lleva las citas de Impersia de ese cajón y las de Google, si está conectado. Google se distingue con un recuadro. Hoy sigue siendo la lista. Una compra con fecha no entra en ese mes. Arrastrar y la vista de semana quedan para más adelante.
+
+3 de octubre de 2026, 01:10
+Modesto dice que el mes está bien, pero muchas entradas no salen, y pone de ejemplo las reuniones.
+El mes solo pintaba el cajón Agenda. Una reunión se archivaba en Reuniones y desaparecía del calendario. A partir de ahora el mes muestra lo que ocupa un hueco: Agenda, Reuniones y Viajes, y Google si está conectado. La reunión sigue en su cajón. En el día se lee «Reuniones» delante del título. La compra sigue fuera.

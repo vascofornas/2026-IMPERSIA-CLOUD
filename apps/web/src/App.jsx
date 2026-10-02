@@ -3,6 +3,7 @@ import { Icon } from "./icons.jsx";
 import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
+const ON_CALENDAR = new Set(["agenda", "reuniones", "viajes"]);
 
 const LOOKS = [
   { id: "claro", name: "Claro", note: "Gris claro y verde" },
@@ -263,7 +264,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
               <a className="connect" href={`${API}/auth/google/start`}>
                 {googleEmail ? "Pedir permiso del calendario" : "Conectar Google Calendar"}
               </a>
-              <MonthBoard items={[...items.filter((item) => item.module === "agenda" && item.starts_at), ...googleDated]} />
+              <MonthBoard items={[...items.filter((item) => ON_CALENDAR.has(item.module) && item.starts_at), ...googleDated]} />
             </>
           )}
           <div className="panes">
@@ -419,7 +420,7 @@ function MonthBoard({ items }) {
             <div className={classes.join(" ")} key={key}>
               <p className="num">{date.getDate()}</p>
               {shown.map((item) => (
-                <p className={item.source === "google" ? "chip google" : "chip"} key={item.id} title={item.title}>{chipText(item)}</p>
+                <p className={chipClass(item)} key={item.id} title={chipTitle(item)}>{chipText(item)}</p>
               ))}
               {list.length > 3 && <p className="more">+{list.length - 3}</p>}
             </div>
@@ -430,11 +431,27 @@ function MonthBoard({ items }) {
   );
 }
 
+function chipClass(item) {
+  if (item.source === "google") return "chip google";
+  if (item.module && item.module !== "agenda") return "chip other";
+  return "chip";
+}
+
+function chipTitle(item) {
+  if (item.source === "google" || !item.module || item.module === "agenda") return item.title;
+  return `${labelOf(item.module)}. ${item.title}`;
+}
+
 function chipText(item) {
-  if (!item.time_known) return item.title;
-  const date = new Date(item.starts_at);
+  const clock = item.time_known ? clockOf(item.starts_at) : "";
+  const where = item.source !== "google" && item.module && item.module !== "agenda" ? `${labelOf(item.module)}. ` : "";
+  return `${clock ? `${clock} ` : ""}${where}${item.title}`;
+}
+
+function clockOf(value) {
+  const date = new Date(value);
   const pad = (n) => String(n).padStart(2, "0");
-  return `${pad(date.getHours())}:${pad(date.getMinutes())} ${item.title}`;
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function ItemList({ items, editing, setEditing, saveEdit }) {
