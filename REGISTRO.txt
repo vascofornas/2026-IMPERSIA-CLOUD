@@ -363,3 +363,6 @@ Agenda tiene el enlace para conectar Google Calendar. Hoy y Agenda muestran esas
 
 3 de octubre de 2026, 00:24
 Al entrar salía «Failed to fetch». La tabla del enlace con Google se había creado sin permiso para la aplicación. El permiso ya está dado. La entrada vuelve a funcionar.
+
+3 de octubre de 2026, 00:32
+Google enlazó el correo, pero no dio permiso para leer las citas. El botón de conectar desaparecía al quedar enlazado. Vuelve a salir, para pedir otra vez el permiso del calendario.

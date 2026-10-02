@@ -278,15 +278,19 @@ def google_start(request: Request):
         user_id = current_user(request)
     except HTTPException:
         return RedirectResponse("https://impersia.cloud/app/#hoy")
-    query = urllib.parse.urlencode({
-        "client_id": os.environ["GOOGLE_CLIENT_ID"],
-        "redirect_uri": os.environ["GOOGLE_REDIRECT_URI"],
-        "response_type": "code",
-        "scope": "openid email https://www.googleapis.com/auth/calendar.readonly",
-        "access_type": "offline",
-        "prompt": "consent",
-        "state": _google_state(user_id),
-    })
+    query = urllib.parse.urlencode(
+        {
+            "client_id": os.environ["GOOGLE_CLIENT_ID"],
+            "redirect_uri": os.environ["GOOGLE_REDIRECT_URI"],
+            "response_type": "code",
+            "scope": "openid email https://www.googleapis.com/auth/calendar.readonly",
+            "access_type": "offline",
+            "prompt": "consent select_account",
+            "include_granted_scopes": "true",
+            "state": _google_state(user_id),
+        },
+        quote_via=urllib.parse.quote,
+    )
     return RedirectResponse(f"https://accounts.google.com/o/oauth2/v2/auth?{query}")
 
 
@@ -305,8 +309,9 @@ def google_callback(code: str = "", state: str = ""):
         })
         refresh = tokens.get("refresh_token")
         access = tokens.get("access_token")
-        if not access:
-            return RedirectResponse(APP_HOME)
+        granted = tokens.get("scope") or ""
+        if not access or "calendar.readonly" not in granted:
+            return RedirectResponse("https://impersia.cloud/app/?google=permiso#agenda")
         profile = _google_get("https://www.googleapis.com/oauth2/v2/userinfo", access)
         email = profile.get("email")
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, KeyError):

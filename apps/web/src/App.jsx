@@ -143,6 +143,10 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
   const shownAxis = AXES.find((axis) => axis.id === (current?.axisId || openAxis));
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("google") === "permiso") {
+      setError("Google no ha dado permiso para leer el calendario. En su pantalla hay que aceptar ver el calendario.");
+    }
     call("/items").then(setItems).catch((err) => setError(err.message));
   }, []);
 
@@ -261,11 +265,12 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
           <h1>{current.label}</h1>
           <p className="lead">{current.blurb}</p>
           {current.id === "agenda" && (
-            googleEmail ? (
-              <p className="private">Google Calendar conectado: {googleEmail}</p>
-            ) : (
-              <a className="connect" href={`${API}/auth/google/start`}>Conectar Google Calendar</a>
-            )
+            <>
+              {googleEmail && <p className="private">Google Calendar conectado: {googleEmail}</p>}
+              <a className="connect" href={`${API}/auth/google/start`}>
+                {googleEmail ? "Pedir permiso del calendario" : "Conectar Google Calendar"}
+              </a>
+            </>
           )}
           <h2>Tuyo</h2>
           {items.some((item) => item.module === current.id) ? (
