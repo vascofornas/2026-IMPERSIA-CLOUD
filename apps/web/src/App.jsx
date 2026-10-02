@@ -159,6 +159,8 @@ function Box({ email, onLeave }) {
       {error && <p className="error">{error}</p>}
       {proposal && (
         <section className="proposal">
+          <p className="says">{proposalSentence(proposal)}</p>
+          <p className="private">Si no es eso, cámbialo aquí.</p>
           <label>
             Tipo
             <select value={proposal.kind} onChange={(e) => setProposal({ ...proposal, kind: e.target.value })}>
@@ -211,4 +213,17 @@ function toLocalInput(value) {
 
 function whenLabel(value) {
   return new Date(value).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function proposalSentence(proposal) {
+  const kind = labelOf(proposal.kind).toLowerCase();
+  if (!proposal.starts_at) return `Propongo una ${kind}, sin fecha.`;
+  const when = new Date(proposal.starts_at).toLocaleString("es-ES", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `Propongo una ${kind} para el ${when}.`;
 }

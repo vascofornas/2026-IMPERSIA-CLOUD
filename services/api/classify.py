@@ -45,9 +45,11 @@ def classify(text: str) -> dict:
     low = raw.lower()
     starts = _when(low)
     timed = bool(re.search(r"\ba las \d", low))
-    if any(word in low for word in EVENT_WORDS) or timed:
+    task = _is_task(low)
+    planned = _daypart(low) is not None and _explicit_day(low) and not task
+    if any(word in low for word in EVENT_WORDS) or timed or planned:
         kind = "event"
-    elif any(word in low for word in TASK_WORDS):
+    elif task:
         kind = "task"
     else:
         kind = "note"
@@ -79,6 +81,10 @@ def _when(low: str) -> datetime | None:
                 day = (now + timedelta(days=ahead)).date()
                 break
     hour, minute = _clock(low)
+    if hour is None:
+        part = _daypart(low)
+        if part is not None:
+            hour, minute = part
     if day is None and hour is None:
         return None
     if day is None:
@@ -86,6 +92,32 @@ def _when(low: str) -> datetime | None:
     if hour is None:
         hour, minute = 9, 0
     return datetime(day.year, day.month, day.day, hour, minute, tzinfo=MADRID)
+
+
+def _is_task(low: str) -> bool:
+    words = [word for word in TASK_WORDS if word != "hacer"]
+    if any(word in low for word in words):
+        return True
+    return bool(re.search(r"\bhacer\b", low)) and not re.search(r"\bqu[eé] hacer\b", low)
+
+
+def _explicit_day(low: str) -> bool:
+    rest = low.replace("esta mañana", " ").replace("esta manana", " ")
+    if any(piece in rest for piece in ("pasado mañana", "pasado manana", "mañana", "manana", "hoy")):
+        return True
+    return any(re.search(rf"\b{name}\b", rest) for name in WEEKDAYS)
+
+
+def _daypart(low: str) -> tuple[int, int] | None:
+    if "por la tarde" in low:
+        return 18, 0
+    if "por la noche" in low:
+        return 21, 0
+    if "al mediodía" in low or "al mediodia" in low:
+        return 14, 0
+    if "por la mañana" in low or "por la manana" in low:
+        return 10, 0
+    return None
 
 
 def _clock(low: str) -> tuple[int, int] | tuple[None, None]:

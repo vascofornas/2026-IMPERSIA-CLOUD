@@ -201,3 +201,7 @@ Ahora la propuesta tiene una fecha editable. Lo guardado muestra el día y la ho
 «Esta mañana» ya no se lee como el día siguiente.
 Sigue sin modelo de lenguaje: la propuesta la hacen reglas. El modelo entra cuando haya una clave de API.
 La fase 1 no está cerrada: falta que Modesto corrija una propuesta mala y que diez frases queden en el tipo correcto después de confirmar.
+
+2 de octubre de 2026, 14:05
+Modesto escribió «Viernes por la tarde, no sé qué hacer». Quedó guardado como cita a las 18:00, porque él cambió el tipo y la hora. La pantalla no decía en una frase qué proponía, y «por la tarde» se leía como las 9:00.
+Ahora, al pulsar Proponer, sale una frase: «Propongo una cita para el viernes… a las 18:00». Debajo se puede cambiar. «Por la tarde» es las 18:00, «por la noche» las 21:00, «por la mañana» las 10:00. «No sé qué hacer» ya no se toma como tarea solo por la palabra hacer.
