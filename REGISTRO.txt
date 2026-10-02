@@ -390,3 +390,7 @@ Sí. Encima de las listas, Agenda muestra el mes. Cada día lleva las citas de I
 3 de octubre de 2026, 01:10
 Modesto dice que el mes está bien, pero muchas entradas no salen, y pone de ejemplo las reuniones.
 El mes solo pintaba el cajón Agenda. Una reunión se archivaba en Reuniones y desaparecía del calendario. A partir de ahora el mes muestra lo que ocupa un hueco: Agenda, Reuniones y Viajes, y Google si está conectado. La reunión sigue en su cajón. En el día se lee «Reuniones» delante del título. La compra sigue fuera.
+
+3 de octubre de 2026, 01:12
+Modesto pregunta si hay entradas de otros ejes que también deben verse en el calendario.
+Sí. El mes es el tiempo de la persona, no una lista de cajones. Cualquier entrada con fecha se pinta en su día, y delante se lee el cajón: Casa, Proyectos, Hábitos o el que sea. Sigue guardada en su sitio. Google, si está conectado, entra igual.

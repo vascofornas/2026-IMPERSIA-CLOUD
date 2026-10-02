@@ -3,7 +3,6 @@ import { Icon } from "./icons.jsx";
 import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
-const ON_CALENDAR = new Set(["agenda", "reuniones", "viajes"]);
 
 const LOOKS = [
   { id: "claro", name: "Claro", note: "Gris claro y verde" },
@@ -264,7 +263,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
               <a className="connect" href={`${API}/auth/google/start`}>
                 {googleEmail ? "Pedir permiso del calendario" : "Conectar Google Calendar"}
               </a>
-              <MonthBoard items={[...items.filter((item) => ON_CALENDAR.has(item.module) && item.starts_at), ...googleDated]} />
+              <MonthBoard items={[...items.filter((item) => item.starts_at), ...googleDated]} />
             </>
           )}
           <div className="panes">
@@ -438,13 +437,13 @@ function chipClass(item) {
 }
 
 function chipTitle(item) {
-  if (item.source === "google" || !item.module || item.module === "agenda") return item.title;
+  if (item.source === "google" || !item.module) return item.title;
   return `${labelOf(item.module)}. ${item.title}`;
 }
 
 function chipText(item) {
   const clock = item.time_known ? clockOf(item.starts_at) : "";
-  const where = item.source !== "google" && item.module && item.module !== "agenda" ? `${labelOf(item.module)}. ` : "";
+  const where = item.source !== "google" && item.module ? `${labelOf(item.module)}. ` : "";
   return `${clock ? `${clock} ` : ""}${where}${item.title}`;
 }
 

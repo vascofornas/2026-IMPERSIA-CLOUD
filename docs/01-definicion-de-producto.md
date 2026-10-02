@@ -15,7 +15,7 @@ No hay un paso de confirmar antes de guardar. El PDF lo llama entrada de fricci�
 
 La persona no aprende palabras para elegir el cajón. Escribe como le sale e Impersia adivina. Si ella nombra uno, por ejemplo «en la agenda», se respeta. Si no lo nombra, no se le pide que lo nombre.
 
-Una compra con día y hora sigue siendo Casa. Aparece en Hoy porque tiene fecha. Agenda es el cajón de las citas. Si el cajón queda mal, se cambia después.
+Una compra con día y hora sigue siendo Casa. Si tiene fecha, sale en Hoy y también en el mes. Agenda es el cajón de las citas. Si el cajón queda mal, se cambia después.
 
 Personal, profesional y social son destino y permiso de cada elemento. La persona ve un solo flujo. Esas tres palabras organizan el almacenamiento y quién puede verlo. No son tres aplicaciones dentro de Impersia.
 
@@ -23,7 +23,7 @@ Entrada es siempre el inicio. Decide qué hacer con cada frase: abrir algo nuevo
 
 Agenda puede mostrar, además, un calendario que la persona ya tenga. El primero es Google Calendar, y solo si ella lo conecta. Impersia lo lee y lo junta en Agenda y en Hoy con lo que entró por Entrada. Lo de Google se distingue. Lo escrito en Impersia no se copia a Google en esta versión.
 
-En Agenda la vista es un mes. Cada día muestra lo que ocupa un hueco: las citas de Agenda, las reuniones y los viajes, más Google si está conectado. Cada entrada sigue en su cajón. Una compra con fecha no se pinta ahí: sigue en Casa y en Hoy. Pasar de mes no mueve las citas. Arrastrar un día, y las vistas de semana o de un solo día, llegan más adelante.
+En Agenda la vista es un mes. Cada día muestra lo que tiene fecha, venga del eje que venga, más Google si está conectado. En el día se lee el cajón. La entrada sigue en su sitio. Pasar de mes no la mueve. Arrastrar un día, y las vistas de semana o de un solo día, llegan más adelante.
 
 Impersia se registra una vez en Google, con la cuenta del producto `impersia@impersia.cloud`, no con la personal de quien lo lleva. Cada persona solo acepta que se lea su calendario.
 
