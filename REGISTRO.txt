@@ -247,3 +247,7 @@ En la base, items gana las columnas axis y module.
 2 de octubre de 2026, 14:36
 Modesto escribe «Tengo que avanzar en la parte Foros de la web26 del proyecto Capenergy 2026». Queda en Proyectos. Dice que por ahora está bien.
 El siguiente paso será Hoy: lo que tiene fecha aparece en el día, no solo en la lista de archivado. No se cambia la caja en este paso.
+
+2 de octubre de 2026, 14:37
+Modesto dice que vamos bien, y que además de la caja hay que afinar muchas cosas.
+La caja es la entrada. Falta Hoy, y que cada eje del PDF sea un sitio donde recuperar lo archivado, no solo una etiqueta. La clasificación sigue siendo reglas, no un modelo. Voz, imagen y la capa social vienen después.
