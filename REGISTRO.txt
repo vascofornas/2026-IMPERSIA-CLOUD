@@ -278,3 +278,8 @@ El orden queda escrito en la ruta, en «Lo que se ve»: caja, Hoy, Proyectos com
 2 de octubre de 2026, 14:55
 Modesto pide crear ahora todas las pantallas de la web, con registros inventados de cada eje, y pulir después. Las apps móviles quedan para más tarde.
 Es viable como esqueleto, no como módulos terminados. Hoy, la caja y las catorce pantallas del PDF quedan en https://impersia.cloud/app/#hoy. Los ejemplos se ven en cada pantalla y no se guardan en su cuenta. Lo suyo sigue en la base.
+
+2 de octubre de 2026, 15:06
+Modesto abre Hoy. Ve la navegación de los tres ejes y, en Después, la frase del viernes 9 a las 18:00 y la cita del dentista.
+Para hoy está vacío: ninguna de las dos cae el 2 de octubre. Es lo esperado.
+La cita del dentista dice «lunes 19» en el título y el 5 de octubre en la fecha. El 19 no se leyó. Queda pendiente de corregir.
