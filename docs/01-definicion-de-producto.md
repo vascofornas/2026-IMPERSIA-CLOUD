@@ -15,6 +15,8 @@ No hay un paso de confirmar antes de guardar. El PDF lo llama entrada de fricci�
 
 Personal, profesional y social son destino y permiso de cada elemento. La persona ve un solo flujo. Esas tres palabras organizan el almacenamiento y quién puede verlo. No son tres aplicaciones dentro de Impersia.
 
+Un proyecto profesional también nace en la caja. «Proyecto Capenergy 2026» queda en Proyectos. Ese módulo es donde se abre después, con sus tareas. No hay una segunda pantalla para crearlo. Lo mismo vale para una cita, un deseo o una entrada de diario.
+
 ## Privacidad
 
 Privado por defecto. Público solo si la persona lo elige.
