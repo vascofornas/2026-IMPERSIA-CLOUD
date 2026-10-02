@@ -13,6 +13,10 @@ El problema que resuelve es la fragmentación: notas, agenda, tareas, diario, li
 
 No hay un paso de confirmar antes de guardar. El PDF lo llama entrada de fricción cero. Si el archivo queda mal, se corrige después, sin volver a escribir la frase.
 
+La persona no aprende palabras para elegir el cajón. Escribe como le sale e Impersia adivina. Si ella nombra uno, por ejemplo «en la agenda», se respeta. Si no lo nombra, no se le pide que lo nombre.
+
+Una compra con día y hora sigue siendo Casa. Aparece en Hoy porque tiene fecha. Agenda es el cajón de las citas. Si el cajón queda mal, se cambia después.
+
 Personal, profesional y social son destino y permiso de cada elemento. La persona ve un solo flujo. Esas tres palabras organizan el almacenamiento y quién puede verlo. No son tres aplicaciones dentro de Impersia.
 
 Entrada es siempre el inicio. Decide qué hacer con cada frase: abrir algo nuevo o meterlo dentro de algo que ya existe. «Proyecto Capenergy 2026» abre el proyecto. «Avanzar en los foros de Capenergy» entra dentro. Abrir Proyectos sirve para verlo y para corregirlo, no para armarlo a mano. Lo mismo para un viaje, un hábito o un deseo.
