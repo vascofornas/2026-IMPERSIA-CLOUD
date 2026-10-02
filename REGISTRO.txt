@@ -382,3 +382,7 @@ La primera es mañana, sin hora. La segunda es el lunes a las 18:00. La tercera 
 3 de octubre de 2026, 00:58
 Modesto pregunta si hay que instruir a la persona para que sepa cuándo una entrada va a Agenda.
 No. Escribe como le sale. Impersia adivina el cajón. Si ella dice «agenda», se respeta. Una compra con fecha sigue en Casa y se ve en Hoy. Si el cajón queda mal, se cambia después. Queda en la definición.
+
+3 de octubre de 2026, 01:05
+Modesto pregunta si Agenda puede tener una vista de calendario.
+Sí. Encima de las listas, Agenda muestra el mes. Cada día lleva las citas de Impersia de ese cajón y las de Google, si está conectado. Google se distingue con un recuadro. Hoy sigue siendo la lista. Una compra con fecha no entra en ese mes. Arrastrar y la vista de semana quedan para más adelante.

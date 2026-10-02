@@ -263,6 +263,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
               <a className="connect" href={`${API}/auth/google/start`}>
                 {googleEmail ? "Pedir permiso del calendario" : "Conectar Google Calendar"}
               </a>
+              <MonthBoard items={[...items.filter((item) => item.module === "agenda" && item.starts_at), ...googleDated]} />
             </>
           )}
           <div className="panes">
@@ -365,6 +366,75 @@ function Logo() {
       <circle cx="124" cy="92" r="12.4" stroke="#f3efe6" strokeWidth="1.6" />
     </svg>
   );
+}
+
+const WEEKDAYS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+
+function MonthBoard({ items }) {
+  const today = new Date();
+  const [cursor, setCursor] = useState({ year: today.getFullYear(), month: today.getMonth() });
+  const first = new Date(cursor.year, cursor.month, 1);
+  const startOffset = (first.getDay() + 6) % 7;
+  const daysInMonth = new Date(cursor.year, cursor.month + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < startOffset; i += 1) cells.push(new Date(cursor.year, cursor.month, 1 - (startOffset - i)));
+  for (let day = 1; day <= daysInMonth; day += 1) cells.push(new Date(cursor.year, cursor.month, day));
+  while (cells.length % 7 !== 0) {
+    const last = cells[cells.length - 1];
+    cells.push(new Date(last.getFullYear(), last.getMonth(), last.getDate() + 1));
+  }
+  const byDay = new Map();
+  items.forEach((item) => {
+    if (!item.starts_at) return;
+    const key = dayKey(item.starts_at);
+    if (!byDay.has(key)) byDay.set(key, []);
+    byDay.get(key).push(item);
+  });
+  byDay.forEach((list) => list.sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at)));
+  const raw = first.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+  const title = raw.charAt(0).toUpperCase() + raw.slice(1);
+
+  function shift(delta) {
+    const next = new Date(cursor.year, cursor.month + delta, 1);
+    setCursor({ year: next.getFullYear(), month: next.getMonth() });
+  }
+
+  return (
+    <section className="month" aria-label="Mes">
+      <div className="month-bar">
+        <button type="button" className="secondary" onClick={() => shift(-1)}>Anterior</button>
+        <p className="month-name">{title}</p>
+        <button type="button" className="secondary" onClick={() => shift(1)}>Siguiente</button>
+      </div>
+      <div className="month-grid">
+        {WEEKDAYS.map((name) => <p className="dow" key={name}>{name}</p>)}
+        {cells.map((date) => {
+          const key = dayKey(date);
+          const list = byDay.get(key) || [];
+          const shown = list.slice(0, 3);
+          const classes = ["day"];
+          if (date.getMonth() !== cursor.month) classes.push("out");
+          if (key === dayKey(today)) classes.push("today");
+          return (
+            <div className={classes.join(" ")} key={key}>
+              <p className="num">{date.getDate()}</p>
+              {shown.map((item) => (
+                <p className={item.source === "google" ? "chip google" : "chip"} key={item.id} title={item.title}>{chipText(item)}</p>
+              ))}
+              {list.length > 3 && <p className="more">+{list.length - 3}</p>}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function chipText(item) {
+  if (!item.time_known) return item.title;
+  const date = new Date(item.starts_at);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(date.getHours())}:${pad(date.getMinutes())} ${item.title}`;
 }
 
 function ItemList({ items, editing, setEditing, saveEdit }) {

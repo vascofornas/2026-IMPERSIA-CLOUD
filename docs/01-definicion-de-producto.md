@@ -23,6 +23,8 @@ Entrada es siempre el inicio. Decide qué hacer con cada frase: abrir algo nuevo
 
 Agenda puede mostrar, además, un calendario que la persona ya tenga. El primero es Google Calendar, y solo si ella lo conecta. Impersia lo lee y lo junta en Agenda y en Hoy con lo que entró por Entrada. Lo de Google se distingue. Lo escrito en Impersia no se copia a Google en esta versión.
 
+En Agenda la vista es un mes. Cada día muestra las citas de ese cajón y, si está conectado, las de Google. Una compra con fecha no se pinta ahí: sigue en Casa y en Hoy. Pasar de mes no mueve las citas. Arrastrar un día, y las vistas de semana o de un solo día, llegan más adelante.
+
 Impersia se registra una vez en Google, con la cuenta del producto `impersia@impersia.cloud`, no con la personal de quien lo lleva. Cada persona solo acepta que se lea su calendario.
 
 ## Privacidad
