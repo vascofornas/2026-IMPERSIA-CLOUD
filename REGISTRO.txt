@@ -410,3 +410,6 @@ Sí. La pantalla del módulo abre con el icono del eje y el del cajón, este en 
 3 de octubre de 2026, 01:34
 Modesto pregunta si es complicado añadir Día, Semana y Mes en el calendario, con Mes por defecto.
 No. Encima del calendario están las tres opciones. Al abrir se ve el mes. Anterior y Siguiente mueven un día, una semana o un mes, según la vista. Pulsar un número abre ese día. Los colores y los iconos se mantienen. Arrastrar una cita sigue para más adelante.
+
+3 de octubre de 2026, 01:43
+Modesto ve Día, Semana y Mes y dice que está perfecto. El calendario queda así. Al abrir se sigue viendo el mes.
