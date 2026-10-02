@@ -32,3 +32,10 @@ CREATE TABLE IF NOT EXISTS items (
     privacy text NOT NULL DEFAULT 'private',
     created_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS google_links (
+    user_id uuid PRIMARY KEY REFERENCES users (id),
+    google_email text,
+    refresh_token text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+);

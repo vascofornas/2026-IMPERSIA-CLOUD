@@ -73,6 +73,7 @@ export default function App() {
   return (
     <Home
       email={me.email}
+      googleEmail={me.google_email || ""}
       look={me.look || "claro"}
       onLook={(look) => setMe({ ...me, look })}
       onLeave={() => setMe(null)}
@@ -130,9 +131,10 @@ function Auth({ onEnter }) {
   );
 }
 
-function Home({ email, look, onLook, onLeave }) {
+function Home({ email, googleEmail, look, onLook, onLeave }) {
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
+  const [googleEvents, setGoogleEvents] = useState([]);
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState("");
   const [openAxis, setOpenAxis] = useState(null);
@@ -143,6 +145,14 @@ function Home({ email, look, onLook, onLeave }) {
   useEffect(() => {
     call("/items").then(setItems).catch((err) => setError(err.message));
   }, []);
+
+  useEffect(() => {
+    if (!googleEmail) {
+      setGoogleEvents([]);
+      return;
+    }
+    call("/google/events").then(setGoogleEvents).catch((err) => setError(err.message));
+  }, [googleEmail]);
 
   async function archive() {
     setError("");
@@ -183,7 +193,8 @@ function Home({ email, look, onLook, onLeave }) {
   }
 
   const todayKey = dayKey(new Date());
-  const dated = items.filter((item) => item.starts_at);
+  const googleDated = googleEvents.filter((event) => event.starts_at).map(asGoogle);
+  const dated = [...items.filter((item) => item.starts_at), ...googleDated];
   const byDate = (a, b) => new Date(a.starts_at) - new Date(b.starts_at);
   const todayItems = dated.filter((item) => dayKey(item.starts_at) === todayKey).sort(byDate);
   const laterItems = dated.filter((item) => dayKey(item.starts_at) > todayKey).sort(byDate);
@@ -249,11 +260,28 @@ function Home({ email, look, onLook, onLeave }) {
           <p className="private">{current.axis}</p>
           <h1>{current.label}</h1>
           <p className="lead">{current.blurb}</p>
+          {current.id === "agenda" && (
+            googleEmail ? (
+              <p className="private">Google Calendar conectado: {googleEmail}</p>
+            ) : (
+              <a className="connect" href={`${API}/auth/google/start`}>Conectar Google Calendar</a>
+            )
+          )}
           <h2>Tuyo</h2>
           {items.some((item) => item.module === current.id) ? (
             <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
           ) : (
             <p className="private">Todavía no hay nada tuyo aquí. Escríbelo en Entrada.</p>
+          )}
+          {current.id === "agenda" && googleEmail && (
+            <>
+              <h2>Google</h2>
+              {googleDated.length ? (
+                <ItemList items={googleDated} editing={null} setEditing={() => {}} saveEdit={() => {}} />
+              ) : (
+                <p className="private">No hay citas de Google en los próximos sesenta días.</p>
+              )}
+            </>
           )}
           <h2>Ejemplos</h2>
           <p className="private">Inventados, para ver la forma de esta pantalla. No están en tu cuenta.</p>
@@ -380,8 +408,14 @@ function ItemList({ items, editing, setEditing, saveEdit }) {
               {item.starts_at && <p className="when">{whenLabel(item)}</p>}
               <p className="title">{item.title}</p>
               <p className="meta">
-                <span><Icon name={item.module} /> {labelOf(item.module)}</span>
-                <button type="button" className="text" onClick={() => setEditing({ ...item })}>Cambiar</button>
+                {item.source === "google" ? (
+                  <span>Google</span>
+                ) : (
+                  <>
+                    <span><Icon name={item.module} /> {labelOf(item.module)}</span>
+                    <button type="button" className="text" onClick={() => setEditing({ ...item })}>Cambiar</button>
+                  </>
+                )}
               </p>
             </>
           )}
@@ -389,6 +423,17 @@ function ItemList({ items, editing, setEditing, saveEdit }) {
       ))}
     </div>
   );
+}
+
+function asGoogle(event) {
+  return {
+    id: `google-${event.id}`,
+    title: event.title,
+    starts_at: event.starts_at,
+    time_known: !event.all_day,
+    source: "google",
+    module: "agenda",
+  };
 }
 
 function useHash() {

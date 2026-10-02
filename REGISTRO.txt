@@ -356,3 +356,7 @@ Queda creado el cliente de la web. El retorno es https://api.impersia.cloud/auth
 
 3 de octubre de 2026, 00:16
 La aplicación de Google pasa de interna a externa, en pruebas. Mientras siga en pruebas, solo conectan los correos que se añadan como usuarios de prueba, hasta cien. Publicarla para todo el mundo exige la revisión de Google.
+
+3 de octubre de 2026, 00:20
+modestovasco@gmail.com queda como usuario de prueba.
+Agenda tiene el enlace para conectar Google Calendar. Hoy y Agenda muestran esas citas marcadas como Google, sin copiarlas a la cuenta. La lectura usa la llave que ya está en el servidor.

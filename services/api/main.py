@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import hashlib
 import hmac
@@ -6,8 +6,12 @@ import json
 import os
 import base64
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
 import psycopg
@@ -137,6 +141,18 @@ def health(response: Response):
     return {"status": "ok", "database": "ok"}
 
 
+def _account(user_id: str, email: str, look: str) -> dict:
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT google_email FROM google_links WHERE user_id = %s", (user_id,))
+            link = cur.fetchone()
+    return {
+        "email": email,
+        "look": look if look in LOOKS else "claro",
+        "google_email": link["google_email"] if link else None,
+    }
+
+
 @app.post("/auth/register", status_code=201)
 def register(body: Credentials, response: Response):
     email = body.email.lower()
@@ -152,7 +168,7 @@ def register(body: Credentials, response: Response):
     except psycopg.errors.UniqueViolation:
         raise HTTPException(status_code=409, detail="Ese correo ya tiene cuenta")
     set_session(response, user_id)
-    return {"email": email, "look": "claro"}
+    return {"email": email, "look": "claro", "google_email": None}
 
 
 @app.post("/auth/login")
@@ -165,7 +181,7 @@ def login(body: Credentials, response: Response):
     if not row or not check_password(body.password, row["password_hash"]):
         raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
     set_session(response, str(row["id"]))
-    return {"email": email, "look": row["look"] if row["look"] in LOOKS else "claro"}
+    return _account(str(row["id"]), email, row["look"])
 
 
 @app.post("/auth/logout")
@@ -183,8 +199,7 @@ def me(request: Request):
             row = cur.fetchone()
     if not row:
         raise HTTPException(status_code=401, detail="Necesitas entrar")
-    look = row["look"] if row["look"] in LOOKS else "claro"
-    return {"email": row["email"], "look": look}
+    return _account(user_id, row["email"], row["look"])
 
 
 @app.patch("/me")
@@ -202,7 +217,170 @@ def patch_me(body: LookIn, request: Request):
         conn.commit()
     if not row:
         raise HTTPException(status_code=401, detail="Necesitas entrar")
-    return {"email": row["email"], "look": row["look"]}
+    return _account(user_id, row["email"], row["look"])
+
+
+APP_HOME = "https://impersia.cloud/app/#agenda"
+MADRID = ZoneInfo("Europe/Madrid")
+
+
+def _google_state(user_id: str) -> str:
+    payload = _b64(json.dumps({"sub": user_id, "exp": int(time.time()) + 600}).encode())
+    secret = os.environ["JWT_SECRET"].encode()
+    signature = _b64(hmac.new(secret, payload.encode(), hashlib.sha256).digest())
+    return f"{payload}.{signature}"
+
+
+def _read_google_state(state: str) -> str | None:
+    try:
+        payload, signature = state.split(".")
+    except ValueError:
+        return None
+    secret = os.environ["JWT_SECRET"].encode()
+    expected = _b64(hmac.new(secret, payload.encode(), hashlib.sha256).digest())
+    if not hmac.compare_digest(expected, signature):
+        return None
+    data = json.loads(_unb64(payload))
+    if data.get("exp", 0) < time.time():
+        return None
+    return data.get("sub")
+
+
+def _google_post(fields: dict) -> dict:
+    body = urllib.parse.urlencode(fields).encode()
+    request = urllib.request.Request("https://oauth2.googleapis.com/token", data=body, method="POST")
+    with urllib.request.urlopen(request, timeout=20) as response:
+        return json.load(response)
+
+
+def _google_get(url: str, access_token: str) -> dict:
+    request = urllib.request.Request(url, headers={"Authorization": f"Bearer {access_token}"})
+    with urllib.request.urlopen(request, timeout=20) as response:
+        return json.load(response)
+
+
+def _access_token(refresh_token: str) -> str:
+    data = _google_post({
+        "client_id": os.environ["GOOGLE_CLIENT_ID"],
+        "client_secret": os.environ["GOOGLE_CLIENT_SECRET"],
+        "refresh_token": refresh_token,
+        "grant_type": "refresh_token",
+    })
+    token = data.get("access_token")
+    if not token:
+        raise HTTPException(status_code=502, detail="Google no ha devuelto acceso")
+    return token
+
+
+@app.get("/auth/google/start")
+def google_start(request: Request):
+    try:
+        user_id = current_user(request)
+    except HTTPException:
+        return RedirectResponse("https://impersia.cloud/app/#hoy")
+    query = urllib.parse.urlencode({
+        "client_id": os.environ["GOOGLE_CLIENT_ID"],
+        "redirect_uri": os.environ["GOOGLE_REDIRECT_URI"],
+        "response_type": "code",
+        "scope": "openid email https://www.googleapis.com/auth/calendar.readonly",
+        "access_type": "offline",
+        "prompt": "consent",
+        "state": _google_state(user_id),
+    })
+    return RedirectResponse(f"https://accounts.google.com/o/oauth2/v2/auth?{query}")
+
+
+@app.get("/auth/google/callback")
+def google_callback(code: str = "", state: str = ""):
+    user_id = _read_google_state(state)
+    if not user_id or not code:
+        return RedirectResponse(APP_HOME)
+    try:
+        tokens = _google_post({
+            "code": code,
+            "client_id": os.environ["GOOGLE_CLIENT_ID"],
+            "client_secret": os.environ["GOOGLE_CLIENT_SECRET"],
+            "redirect_uri": os.environ["GOOGLE_REDIRECT_URI"],
+            "grant_type": "authorization_code",
+        })
+        refresh = tokens.get("refresh_token")
+        access = tokens.get("access_token")
+        if not access:
+            return RedirectResponse(APP_HOME)
+        profile = _google_get("https://www.googleapis.com/oauth2/v2/userinfo", access)
+        email = profile.get("email")
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, KeyError):
+        return RedirectResponse(APP_HOME)
+    with db() as conn:
+        with conn.cursor() as cur:
+            if refresh:
+                cur.execute(
+                    """
+                    INSERT INTO google_links (user_id, google_email, refresh_token)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (user_id) DO UPDATE
+                        SET google_email = EXCLUDED.google_email,
+                            refresh_token = EXCLUDED.refresh_token
+                    """,
+                    (user_id, email, refresh),
+                )
+            else:
+                cur.execute(
+                    "UPDATE google_links SET google_email = %s WHERE user_id = %s",
+                    (email, user_id),
+                )
+        conn.commit()
+    return RedirectResponse(APP_HOME)
+
+
+@app.get("/google/events")
+def google_events(request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT refresh_token FROM google_links WHERE user_id = %s", (user_id,))
+            row = cur.fetchone()
+    if not row:
+        return []
+    try:
+        access = _access_token(row["refresh_token"])
+        start = datetime.now(MADRID).replace(hour=0, minute=0, second=0, microsecond=0)
+        end = start + timedelta(days=60)
+        query = urllib.parse.urlencode({
+            "timeMin": start.isoformat(),
+            "timeMax": end.isoformat(),
+            "singleEvents": "true",
+            "orderBy": "startTime",
+            "maxResults": "50",
+        })
+        data = _google_get(
+            f"https://www.googleapis.com/calendar/v3/calendars/primary/events?{query}",
+            access,
+        )
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, HTTPException):
+        raise HTTPException(status_code=502, detail="No se ha podido leer Google Calendar")
+    events = []
+    for event in data.get("items", []):
+        start_at = event.get("start", {})
+        end_at = event.get("end", {})
+        all_day = "date" in start_at and "dateTime" not in start_at
+        events.append({
+            "id": event.get("id"),
+            "title": event.get("summary") or "(sin título)",
+            "starts_at": _google_when(start_at, all_day),
+            "ends_at": _google_when(end_at, all_day),
+            "all_day": all_day,
+            "source": "google",
+        })
+    return events
+
+
+def _google_when(value: dict, all_day: bool) -> str | None:
+    if value.get("dateTime"):
+        return value["dateTime"]
+    if value.get("date"):
+        return f"{value['date']}T00:00:00"
+    return None
 
 
 @app.post("/captures", status_code=201)
