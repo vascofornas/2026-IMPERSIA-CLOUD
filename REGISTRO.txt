@@ -347,3 +347,6 @@ Modesto crea el proyecto Impersia en Google Cloud, con la cuenta del producto. L
 
 2 de octubre de 2026, 23:55
 La cuenta de Google del producto es impersia@impersia.cloud. Queda en la definición. No es una clave: es el correo con el que se registra Impersia en Google.
+
+2 de octubre de 2026, 23:59
+La API de Google Calendar queda activada en el proyecto impersia. La cuenta impersia@impersia.cloud es propietaria. Falta la pantalla de permiso y el cliente con el que cada persona acepta leer su calendario.
