@@ -13,14 +13,14 @@ from pydantic import BaseModel, EmailStr, Field
 import psycopg
 from psycopg.rows import dict_row
 
-from classify import classify
+from classify import MODULES, classify, legacy_kind
 
 app = FastAPI(title="Impersia API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://impersia.cloud"],
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PATCH"],
     allow_headers=["Content-Type"],
 )
 
@@ -112,6 +112,13 @@ class ConfirmIn(BaseModel):
     time_known: bool = False
 
 
+class ItemPatch(BaseModel):
+    module: str
+    title: str = Field(min_length=1, max_length=200)
+    starts_at: str | None = None
+    time_known: bool = False
+
+
 @app.get("/health")
 def health(response: Response):
     try:
@@ -183,8 +190,8 @@ def create_capture(body: CaptureIn, request: Request):
             cur.execute(
                 """
                 INSERT INTO captures
-                    (user_id, raw_text, suggested_kind, suggested_title, suggested_starts_at, source)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                    (user_id, raw_text, suggested_kind, suggested_title, suggested_starts_at, source, status)
+                VALUES (%s, %s, %s, %s, %s, %s, 'filed')
                 RETURNING id
                 """,
                 (
@@ -197,8 +204,27 @@ def create_capture(body: CaptureIn, request: Request):
                 ),
             )
             capture_id = str(cur.fetchone()["id"])
+            cur.execute(
+                """
+                INSERT INTO items
+                    (user_id, capture_id, kind, axis, module, title, starts_at, time_known, privacy)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'private')
+                RETURNING id, kind, axis, module, title, starts_at, time_known, privacy, created_at
+                """,
+                (
+                    user_id,
+                    capture_id,
+                    suggestion["kind"],
+                    suggestion["axis"],
+                    suggestion["module"],
+                    suggestion["title"],
+                    suggestion["starts_at"],
+                    suggestion["time_known"],
+                ),
+            )
+            item = cur.fetchone()
         conn.commit()
-    return {"id": capture_id, **_public_suggestion(suggestion)}
+    return _public_item(item)
 
 
 @app.post("/captures/{capture_id}/confirm", status_code=201)
@@ -219,9 +245,9 @@ def confirm_capture(capture_id: str, body: ConfirmIn, request: Request):
                 raise HTTPException(status_code=404, detail="Esa propuesta ya no está pendiente")
             cur.execute(
                 """
-                INSERT INTO items (user_id, capture_id, kind, title, starts_at, time_known, privacy)
-                VALUES (%s, %s, %s, %s, %s, %s, 'private')
-                RETURNING id, kind, title, starts_at, time_known, privacy, created_at
+                INSERT INTO items (user_id, capture_id, kind, axis, module, title, starts_at, time_known, privacy)
+                VALUES (%s, %s, %s, 'personal', 'diario', %s, %s, %s, 'private')
+                RETURNING id, kind, axis, module, title, starts_at, time_known, privacy, created_at
                 """,
                 (
                     user_id,
@@ -238,6 +264,38 @@ def confirm_capture(capture_id: str, body: ConfirmIn, request: Request):
     return _public_item(item)
 
 
+@app.patch("/items/{item_id}")
+def patch_item(item_id: str, body: ItemPatch, request: Request):
+    user_id = current_user(request)
+    if body.module not in MODULES:
+        raise HTTPException(status_code=422, detail="Ese módulo no existe")
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE items
+                SET module = %s, axis = %s, kind = %s, title = %s, starts_at = %s, time_known = %s
+                WHERE id = %s AND user_id = %s
+                RETURNING id, kind, axis, module, title, starts_at, time_known, privacy, created_at
+                """,
+                (
+                    body.module,
+                    MODULES[body.module],
+                    legacy_kind(body.module),
+                    body.title.strip(),
+                    _when_saving(body.starts_at, body.time_known),
+                    body.time_known,
+                    item_id,
+                    user_id,
+                ),
+            )
+            item = cur.fetchone()
+        conn.commit()
+    if not item:
+        raise HTTPException(status_code=404, detail="No está en tu cuenta")
+    return _public_item(item)
+
+
 @app.get("/items")
 def list_items(request: Request):
     user_id = current_user(request)
@@ -245,7 +303,7 @@ def list_items(request: Request):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT id, kind, title, starts_at, time_known, privacy, created_at
+                SELECT id, kind, axis, module, title, starts_at, time_known, privacy, created_at
                 FROM items
                 WHERE user_id = %s
                 ORDER BY created_at DESC
@@ -289,6 +347,8 @@ def _public_item(row: dict) -> dict:
     return {
         "id": str(row["id"]),
         "kind": row["kind"],
+        "axis": row.get("axis") or "personal",
+        "module": row.get("module") or "diario",
         "title": row["title"],
         "starts_at": starts.isoformat() if starts else None,
         "time_known": bool(row.get("time_known")),

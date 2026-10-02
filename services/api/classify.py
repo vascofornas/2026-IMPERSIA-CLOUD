@@ -27,6 +27,23 @@ EVENT_WORDS = (
     "cumpleanos",
     "vuelo",
 )
+MODULES = {
+    "agenda": "personal",
+    "casa": "personal",
+    "habitos": "personal",
+    "viajes": "personal",
+    "diario": "personal",
+    "deseos": "personal",
+    "proyectos": "professional",
+    "reuniones": "professional",
+    "memoria": "professional",
+    "ideas": "professional",
+    "muro": "social",
+    "listas": "social",
+    "circulos": "social",
+    "espacios": "social",
+}
+
 WEEKDAYS = {
     "lunes": 0,
     "martes": 1,
@@ -44,22 +61,60 @@ def classify(text: str) -> dict:
     raw = " ".join(text.strip().split())
     low = raw.lower()
     starts, time_known = _when(low)
-    timed = bool(re.search(r"\ba las \d", low))
-    task = _is_task(low)
-    planned = _daypart(low) is not None and _explicit_day(low) and not task
-    if any(word in low for word in EVENT_WORDS) or timed or planned:
-        kind = "event"
-    elif task:
-        kind = "task"
-    else:
-        kind = "note"
+    module = _module(low)
     return {
-        "kind": kind,
+        "axis": MODULES[module],
+        "module": module,
+        "kind": legacy_kind(module),
         "title": _title(raw),
         "starts_at": starts,
         "time_known": time_known,
         "source": "rules",
     }
+
+
+def legacy_kind(module: str) -> str:
+    if module in {"agenda", "reuniones", "viajes"}:
+        return "event"
+    if module in {"proyectos", "casa", "habitos"}:
+        return "task"
+    return "note"
+
+
+def _module(low: str) -> str:
+    if any(word in low for word in ("en abierto", "en el muro", "publicar")):
+        return "muro"
+    if any(word in low for word in ("círculo", "circulo")):
+        return "circulos"
+    if any(word in low for word in ("con mi pareja", "juntos", "compartido con")):
+        return "espacios"
+    if any(word in low for word in ("lista pública", "lista publica")):
+        return "listas"
+    if any(word in low for word in ("reunión", "reunion", "acta", "cliente", "socio")):
+        return "reuniones"
+    if any(word in low for word in ("idea de", "emprend", "modelo de negocio")):
+        return "ideas"
+    if any(word in low for word in ("resumen", "artículo", "articulo", "documentación", "documentacion", "apuntes")):
+        return "memoria"
+    if any(word in low for word in ("proyecto", "hito", "entregable")):
+        return "proyectos"
+    if any(word in low for word in ("vuelo", "hotel", "viaje", "maleta", "itinerario")):
+        return "viajes"
+    if any(word in low for word in ("lista de la compra", "comprar", "suministro", "taller", "avería", "averia")):
+        return "casa"
+    if any(word in low for word in ("hábito", "habito", "ejercicio", "meditación", "meditacion", "rutina")):
+        return "habitos"
+    if any(word in low for word in ("deseo", "quiero ir", "película", "pelicula", "restaurante")):
+        return "deseos"
+    if any(word in low for word in ("cita", "médico", "medico", "dentista", "cumpleaños", "cumpleanos")):
+        return "agenda"
+    if any(word in low for word in ("he dormido", "me siento", "diario", "ánimo", "animo")):
+        return "diario"
+    if re.search(r"\ba las \d", low) or _explicit_day(low):
+        return "agenda"
+    if _is_task(low):
+        return "proyectos"
+    return "diario"
 
 
 def _title(raw: str) -> str:

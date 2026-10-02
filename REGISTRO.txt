@@ -237,3 +237,9 @@ Eso no es lo que hace la pantalla de ahora. No se toca el código. Queda por dec
 Modesto dice que lo ideal es archivar solo, y que más tarde se pueda editar y cambiar lo necesario.
 Queda escrito en la definición, en el resumen y en la fase 1 de la ruta. Se quita el paso de confirmar antes de guardar.
 La pantalla en https://impersia.cloud/app/ sigue con Proponer y Guardar. El código no se cambia en este paso.
+
+2 de octubre de 2026, 14:32
+Modesto dice que avance yo, con la base ya clara, y que pregunte solo si falta algo.
+La caja deja de proponer. Un botón, Dejar, archiva la frase en un módulo del PDF: agenda, casa, hábitos, viajes, diario, deseos, proyectos, reuniones, segunda memoria, ideas, muro, listas, círculos o espacios. Cambiar corrige el módulo, el título, el día y la hora.
+Todavía no hay modelo: lo coloca un juego de reglas. Lo ya guardado como cita pasa a Agenda, lo guardado como tarea a Proyectos, lo guardado como nota a Diario.
+En la base, items gana las columnas axis y module.

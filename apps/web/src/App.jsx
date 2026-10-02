@@ -1,10 +1,27 @@
 import { useEffect, useState } from "react";
 
 const API = "https://api.impersia.cloud";
-const KINDS = [
-  ["note", "Nota"],
-  ["task", "Tarea"],
-  ["event", "Cita"],
+const MODULES = [
+  ["Vida personal", [
+    ["agenda", "Agenda"],
+    ["casa", "Casa"],
+    ["habitos", "Hábitos"],
+    ["viajes", "Viajes"],
+    ["diario", "Diario"],
+    ["deseos", "Deseos"],
+  ]],
+  ["Profesional", [
+    ["proyectos", "Proyectos"],
+    ["reuniones", "Reuniones"],
+    ["memoria", "Segunda memoria"],
+    ["ideas", "Ideas"],
+  ]],
+  ["Social", [
+    ["muro", "Muro"],
+    ["listas", "Listas"],
+    ["circulos", "Círculos"],
+    ["espacios", "Espacios"],
+  ]],
 ];
 
 async function call(path, options = {}) {
@@ -101,44 +118,42 @@ function Auth({ onEnter }) {
 
 function Box({ email, onLeave }) {
   const [text, setText] = useState("");
-  const [proposal, setProposal] = useState(null);
-  const [fix, setFix] = useState(false);
   const [items, setItems] = useState([]);
+  const [editing, setEditing] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     call("/items").then(setItems).catch((err) => setError(err.message));
   }, []);
 
-  async function propose() {
+  async function archive() {
     setError("");
     try {
-      const data = await call("/captures", {
+      const item = await call("/captures", {
         method: "POST",
         body: JSON.stringify({ text }),
       });
-      setFix(false);
-      setProposal(data);
+      setItems([item, ...items]);
+      setText("");
     } catch (err) {
       setError(err.message);
     }
   }
 
-  async function confirm() {
+  async function saveEdit() {
     setError("");
     try {
-      const item = await call(`/captures/${proposal.id}/confirm`, {
-        method: "POST",
+      const item = await call(`/items/${editing.id}`, {
+        method: "PATCH",
         body: JSON.stringify({
-          kind: proposal.kind,
-          title: proposal.title,
-          starts_at: proposal.starts_at,
-          time_known: Boolean(proposal.time_known),
+          module: editing.module,
+          title: editing.title,
+          starts_at: editing.starts_at,
+          time_known: Boolean(editing.time_known),
         }),
       });
-      setItems([item, ...items]);
-      setProposal(null);
-      setText("");
+      setItems(items.map((row) => (row.id === item.id ? item : row)));
+      setEditing(null);
     } catch (err) {
       setError(err.message);
     }
@@ -156,60 +171,61 @@ function Box({ email, onLeave }) {
         <button type="button" className="secondary" onClick={leave}>Salir</button>
       </header>
       <h1>La caja</h1>
-      <p className="lead">Escribe como te salga. Impersia dice si es nota, tarea o cita. Si está bien, guárdalo. Si no, corrígelo.</p>
+      <p className="lead">Escribe lo que tengas en la cabeza. Impersia lo archiva en su eje. Si no es el sitio, lo cambias.</p>
       <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Llamar al taller el viernes" />
-      <button type="button" onClick={propose} disabled={!text.trim()}>Proponer</button>
+      <button type="button" onClick={archive} disabled={!text.trim()}>Dejar</button>
       {error && <p className="error">{error}</p>}
-      {proposal && (
-        <section className="proposal">
-          <p className="says">{proposalSentence(proposal)}</p>
-          <div className="actions">
-            <button type="button" onClick={confirm}>Guardar</button>
-            <button type="button" className="secondary" onClick={() => setFix(!fix)}>
-              {fix ? "Ocultar" : "Corregir"}
-            </button>
-          </div>
-          {fix && (
-            <>
-              <label>
-                Tipo
-                <select value={proposal.kind} onChange={(e) => setProposal({ ...proposal, kind: e.target.value })}>
-                  {KINDS.map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Título
-                <input value={proposal.title} onChange={(e) => setProposal({ ...proposal, title: e.target.value })} />
-              </label>
-              <label>
-                Día
-                <input
-                  type="date"
-                  value={datePart(proposal.starts_at)}
-                  onChange={(e) => setProposal(withWhen(proposal, e.target.value, timePart(proposal)))}
-                />
-              </label>
-              <label>
-                Hora
-                <input
-                  type="time"
-                  value={proposal.time_known ? timePart(proposal) : ""}
-                  onChange={(e) => setProposal(withWhen(proposal, datePart(proposal.starts_at), e.target.value))}
-                />
-              </label>
-            </>
-          )}
-        </section>
-      )}
-      <h2>Guardado</h2>
+      <h2>Archivado</h2>
       <ul>
         {items.map((item) => (
           <li key={item.id}>
-            <strong>{labelOf(item.kind)}</strong>
-            <span>{item.title}</span>
-            {item.starts_at && <span>{whenLabel(item)}</span>}
+            {editing && editing.id === item.id ? (
+              <>
+                <label>
+                  Módulo
+                  <select value={editing.module} onChange={(e) => setEditing({ ...editing, module: e.target.value })}>
+                    {MODULES.map(([axis, options]) => (
+                      <optgroup key={axis} label={axis}>
+                        {options.map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Título
+                  <input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+                </label>
+                <label>
+                  Día
+                  <input
+                    type="date"
+                    value={datePart(editing.starts_at)}
+                    onChange={(e) => setEditing(withWhen(editing, e.target.value, timePart(editing)))}
+                  />
+                </label>
+                <label>
+                  Hora
+                  <input
+                    type="time"
+                    value={editing.time_known ? timePart(editing) : ""}
+                    onChange={(e) => setEditing(withWhen(editing, datePart(editing.starts_at), e.target.value))}
+                  />
+                </label>
+                <div className="actions">
+                  <button type="button" onClick={saveEdit}>Guardar cambio</button>
+                  <button type="button" className="secondary" onClick={() => setEditing(null)}>Cancelar</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <strong>{labelOf(item.module)}</strong>
+                <span>{item.title}</span>
+                {item.starts_at && <span>{whenLabel(item)}</span>}
+                <button type="button" className="secondary" onClick={() => setEditing({ ...item })}>Cambiar</button>
+              </>
+            )}
           </li>
         ))}
       </ul>
@@ -217,8 +233,12 @@ function Box({ email, onLeave }) {
   );
 }
 
-function labelOf(kind) {
-  return KINDS.find(([value]) => value === kind)?.[1] || kind;
+function labelOf(module) {
+  for (const [, options] of MODULES) {
+    const found = options.find(([value]) => value === module);
+    if (found) return found[1];
+  }
+  return module;
 }
 
 function datePart(value) {
@@ -251,12 +271,3 @@ function whenLabel(item) {
   return date.toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" });
 }
 
-function proposalSentence(proposal) {
-  const kind = labelOf(proposal.kind);
-  if (!proposal.starts_at) return `${kind} privada: ${proposal.title}.`;
-  const date = new Date(proposal.starts_at);
-  const day = date.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
-  if (!proposal.time_known) return `${kind} privada, para el ${day}: ${proposal.title}.`;
-  const clock = date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-  return `${kind} privada, para el ${day} a las ${clock}: ${proposal.title}.`;
-}

@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS items (
     user_id uuid NOT NULL REFERENCES users (id),
     capture_id uuid REFERENCES captures (id),
     kind text NOT NULL,
+    axis text NOT NULL DEFAULT 'personal',
+    module text NOT NULL DEFAULT 'diario',
     title text NOT NULL,
     starts_at timestamptz,
     time_known boolean NOT NULL DEFAULT false,
