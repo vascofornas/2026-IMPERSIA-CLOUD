@@ -72,6 +72,7 @@ export default function App() {
   if (!me) return <Auth onEnter={(data) => { applyLook(data.look); setMe(data); }} />;
   return (
     <Home
+      email={me.email}
       look={me.look || "claro"}
       onLook={(look) => setMe({ ...me, look })}
       onLeave={() => setMe(null)}
@@ -129,7 +130,7 @@ function Auth({ onEnter }) {
   );
 }
 
-function Home({ look, onLook, onLeave }) {
+function Home({ email, look, onLook, onLeave }) {
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
   const [editing, setEditing] = useState(null);
@@ -192,6 +193,7 @@ function Home({ look, onLook, onLeave }) {
       <header className="top">
         <a className="mark" href="#hoy"><Logo /></a>
         <div className="who">
+          <a className={screen === "perfil" ? "session on" : "session"} href="#perfil"><Icon name="perfil" /> <span>{email}</span></a>
           <a className={screen === "apariencia" ? "on" : ""} href="#apariencia"><Icon name="apariencia" /> Apariencia</a>
           <button type="button" className="text" onClick={leave}>Salir</button>
         </div>
@@ -236,7 +238,7 @@ function Home({ look, onLook, onLeave }) {
           {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} /> : <p className="private">Hoy no hay nada con fecha.</p>}
           {laterItems.length > 0 && (
             <>
-              <h2>Después</h2>
+              <h2>Próximos</h2>
               <ItemList items={laterItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
             </>
           )}
@@ -266,6 +268,13 @@ function Home({ look, onLook, onLeave }) {
           </div>
         </>
       )}
+      {screen === "perfil" && (
+        <>
+          <h1>Perfil</h1>
+          <p className="lead">{email}</p>
+          <p className="private">El resto de esta pantalla lo vemos más adelante.</p>
+        </>
+      )}
       {screen === "apariencia" && (
         <>
           <h1>Apariencia</h1>
@@ -289,7 +298,7 @@ function Home({ look, onLook, onLeave }) {
           </div>
         </>
       )}
-      {screen !== "hoy" && screen !== "entrada" && screen !== "apariencia" && !current && (
+      {screen !== "hoy" && screen !== "entrada" && screen !== "apariencia" && screen !== "perfil" && !current && (
         <>
           <h1>Hoy</h1>
           <p className="lead">Esa pantalla no existe. Vuelve a Hoy.</p>

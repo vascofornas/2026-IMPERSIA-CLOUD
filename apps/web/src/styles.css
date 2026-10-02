@@ -183,6 +183,17 @@ h2 {
 
 .who a.on { color: var(--mark); }
 
+.who a.session {
+  max-width: 240px;
+  font-weight: 500;
+}
+
+.who a.session span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .primary {
   display: flex;
   gap: 22px;

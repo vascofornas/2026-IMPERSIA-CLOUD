@@ -316,3 +316,8 @@ Van la pantalla, el estilo, la columna look en la cuenta y el arreglo de la API.
 2 de octubre de 2026, 15:55
 Modesto quiere más estilos. El correo de la fila superior le sobra, y «Aspecto» le parece poco claro y poco profesional.
 El correo sale de esa fila. El enlace pasa a llamarse Apariencia, con icono de paleta. Hay diez estilos: Claro, Papel, Mar, Cielo, Oliva, Arena, Violeta, Tinta, Noche y Grafito. La dirección antigua #aspecto abre Apariencia.
+
+2 de octubre de 2026, 16:00
+Modesto quiere ver quién ha entrado, y una pantalla Perfil, sin llenarla todavía. «Después» le parece mal dicho, y cree que sale en todas las pantallas.
+«Después» solo estaba en Hoy, para lo fechado a partir de mañana. Pasa a llamarse Próximos.
+Arriba, el correo abre Perfil, con icono de persona. La pantalla dice la cuenta y deja el resto para más adelante.
