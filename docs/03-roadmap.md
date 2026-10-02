@@ -4,6 +4,20 @@ Orden para una persona construyendo Impersia OS. Las semanas son ritmo, no un co
 
 El corte es deliberado. El PDF describe el producto completo. Esta ruta construye primero la caja, Hoy, y las tres superficies que has pedido. Los demás módulos entran de uno en uno, cuando el núcleo ya se usa.
 
+## Lo que se ve, en orden
+
+La caja es siempre el inicio. El desarrollo no cambia esa regla. Cada paso añade algo que se puede abrir.
+
+1. **La caja, hoy.** Escribes una frase y queda en una lista, con una etiqueta: Proyectos, Agenda, Diario. Es lo que hay en https://impersia.cloud/app/.
+2. **Hoy.** Otra pantalla. Lo que tiene fecha sale en el día. La frase sigue entrando por la caja.
+3. **Proyectos, como sitio.** Otra pantalla. Ahí está Capenergy, y debajo las frases que son suyas. Esas frases han entrado por la caja. Si el enlace está mal, se corrige en esa pantalla.
+4. **La caja relaciona.** «Proyecto Capenergy 2026» abre el proyecto. «Avanzar en los foros de Capenergy» entra dentro, sin montarlo a mano. Este es el paso difícil. Llega cuando el paso 3 ya se ve.
+5. **El resto de módulos, de uno en uno.** Agenda, diario, deseos, viajes, hábitos, reuniones, ideas. Cada uno repite el paso 3: primero un sitio donde leer lo que la caja ya guardó.
+6. **Voz e imagen.** Entran por la misma caja.
+7. **Compartir.** Un elemento pasa de privado a un círculo o a público.
+
+Hasta terminar el paso 1, los siguientes no se improvisan en la misma pantalla.
+
 ## Fase 0 — Servidor vacío que responde
 
 Duración orientativa: 1 semana.

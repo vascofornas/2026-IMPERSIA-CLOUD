@@ -270,3 +270,7 @@ Eso no se construye ahora. La caja sigue archivando la frase en un módulo. La r
 Modesto señala la contradicción: si todo empieza en la caja, un proyecto con partes no puede armarse al abrir Proyectos.
 Tiene razón. La frase anterior era un atajo de construcción, escrito como si fuera el producto.
 La regla queda así: la caja es siempre el inicio. Decide si la frase abre algo nuevo o entra en algo que ya existe. Abrir el módulo es para verlo y corregirlo. Implementarlo bien es difícil, y todavía no está en la pantalla. La definición vuelve a decir esto.
+
+2 de octubre de 2026, 14:50
+Modesto sigue sin ver cómo avanza el desarrollo, porque lo único que tiene delante es la caja.
+El orden queda escrito en la ruta, en «Lo que se ve»: caja, Hoy, Proyectos como sitio, la caja que relaciona, el resto de módulos de uno en uno, voz e imagen, y compartir. La caja no deja de ser el inicio en ningún paso.
