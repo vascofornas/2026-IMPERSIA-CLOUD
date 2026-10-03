@@ -534,3 +534,7 @@ Primera variante de Casa: casa_kind (compra, mantenimiento, suministro, limpieza
 3 de octubre de 2026, 15:50
 Modesto pide alinear Casa con el PDF (logística doméstica) e incluir tareas del hogar.
 Limpieza pasa a domestica (Tareas del hogar): basuras, lavadora, limpieza… Nombres alineados con compra, mantenimiento y suministros. Inventario queda pendiente. Suben migración 007, classify, API, web y docs.
+
+3 de octubre de 2026, 15:28
+Modesto reporta error con «a las 9 de la tarde»: guardaba 9:00, título roto y «Tarde» como lugar.
+classify.py entiende tarde/noche como hora pm, limpia el título y no confunde dayparts con lugar. Suben classify.py y REGISTRO.txt.

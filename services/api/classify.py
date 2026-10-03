@@ -441,8 +441,13 @@ def _title(raw: str) -> str:
         r"\bcada\b",
         r"\bpor la tarde\b",
         r"\bpor la noche\b",
+        r"\bde la tarde\b",
+        r"\bde la noche\b",
         r"\bal mediodía\b",
         r"\bal mediodia\b",
+        r"\btodos los d[ií]as\b",
+        r"\ba las \d{1,2}(?::\d{2})?\s*(?:de la )?(?:tarde|noche|mañana|manana)?\b",
+        r"\b\d{1,2}\s+de la (?:tarde|noche|mañana|manana)\b",
         r"\ba las \d{1,2}(?::\d{2})?\b",
         r"\b\d{1,2}:\d{2}\b",
         r"\b(?:el |la )?(?:lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo)(?: \d{1,2})?\b",
@@ -490,6 +495,8 @@ def _when(low: str) -> datetime | None:
                 day = _literal_day(low, now)
     hour, minute = _clock(low)
     time_known = hour is not None
+    if time_known:
+        hour = _evening_hour(low, hour)
     if not time_known:
         part = _daypart(low)
         if part is not None:
@@ -998,14 +1005,28 @@ def _alert_minutes_before(low: str, time_known: bool) -> int | None:
     return None
 
 
+def _evening_hour(low: str, hour: int) -> int:
+    if hour < 12 and re.search(r"\b(?:de la |por la )?(?:tarde|noche)\b", low):
+        return hour + 12
+    return hour
+
+
 def _clock(low: str) -> tuple[int, int] | tuple[None, None]:
     match = re.search(r"\ba las (\d{1,2})(?::(\d{2}))?", low)
-    if not match:
-        match = re.search(r"\b(\d{1,2}):(\d{2})\b", low)
-    if not match:
-        return None, None
-    hour = int(match.group(1))
-    minute = int(match.group(2) or 0)
+    if match:
+        hour = int(match.group(1))
+        minute = int(match.group(2) or 0)
+    else:
+        match = re.search(r"\b(\d{1,2})\s+de la (?:tarde|noche|mañana|manana)\b", low)
+        if match:
+            hour = int(match.group(1))
+            minute = 0
+        else:
+            match = re.search(r"\b(\d{1,2}):(\d{2})\b", low)
+            if not match:
+                return None, None
+            hour = int(match.group(1))
+            minute = int(match.group(2))
     if hour > 23 or minute > 59:
         return None, None
     return hour, minute
@@ -1013,7 +1034,7 @@ def _clock(low: str) -> tuple[int, int] | tuple[None, None]:
 
 def _casa_place(low: str) -> str | None:
     match = re.search(
-        r"\b(?:en|del|de la)\s+(?:el\s+|la\s+)?([a-z0-9áéíóúñ .-]{3,40})",
+        r"\b(?:en|del)\s+(?:el\s+|la\s+)?([a-z0-9áéíóúñ .-]{3,40})",
         low,
     )
     if not match:
