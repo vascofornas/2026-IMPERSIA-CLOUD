@@ -773,6 +773,9 @@ a.connect {
 }
 
 .item-actions .link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin: 0;
   padding: 6px 12px;
   border: 0;
@@ -781,6 +784,17 @@ a.connect {
   color: var(--muted);
   font-size: 0.88rem;
   font-weight: 500;
+}
+
+.item-actions .link .icon, .dialog .actions button .icon {
+  width: 15px;
+  height: 15px;
+}
+
+.dialog .actions button.danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .item-actions .link:hover {

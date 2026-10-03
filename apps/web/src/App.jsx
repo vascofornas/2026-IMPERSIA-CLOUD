@@ -383,7 +383,7 @@ function ConfirmDialog({ item, busy, onCancel, onConfirm }) {
         <p className="lead">¿Borrar «{item.title}»? No se puede deshacer.</p>
         <div className="actions">
           <button type="button" className="secondary" onClick={onCancel} disabled={busy}>Cancelar</button>
-          <button type="button" className="danger" onClick={onConfirm} disabled={busy}>{busy ? "Borrando…" : "Borrar"}</button>
+          <button type="button" className="danger" onClick={onConfirm} disabled={busy}><Icon name="borrar" /> {busy ? "Borrando…" : "Borrar"}</button>
         </div>
       </div>
     </div>
@@ -652,8 +652,8 @@ function ItemList({ items, editing, setEditing, saveEdit, askRemove }) {
                   <>
                     <span className={`tag m-${item.module}`}><Icon name={item.module} /> {labelOf(item.module)}</span>
                     <span className="item-actions">
-                      <button type="button" className="link" onClick={() => setEditing({ ...item })}>Cambiar</button>
-                      <button type="button" className="link danger" onClick={() => askRemove(item)}>Borrar</button>
+                      <button type="button" className="link" onClick={() => setEditing({ ...item })}><Icon name="editar" /> Cambiar</button>
+                      <button type="button" className="link danger" onClick={() => askRemove(item)}><Icon name="borrar" /> Borrar</button>
                     </span>
                   </>
                 )}

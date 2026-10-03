@@ -425,3 +425,7 @@ Al pulsar Borrar sale un cuadro propio: título, la frase con el nombre de la en
 3 de octubre de 2026, 09:23
 Modesto dice que el aspecto de Cambiar y Borrar en la ficha es horrible. Borrar salía como pastilla roja vacía: el estilo del cuadro de confirmación se aplicaba también en la lista.
 Cambiar y Borrar pasan a enlaces discretos a la derecha. El cajón va en una pastilla con su color. El rojo fuerte solo queda en el cuadro de confirmación.
+
+3 de octubre de 2026, 09:25
+Modesto pide iconos también en Cambiar y Borrar. Con solo texto no se ve que son acciones.
+Cambiar lleva lápiz y Borrar papelera, en la ficha y en el cuadro de confirmación. Queda en la definición: toda acción va con icono y texto.
