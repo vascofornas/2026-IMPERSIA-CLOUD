@@ -530,3 +530,7 @@ Queda validado el pulido de fechas en Agenda. Los cuatro tipos de cita y la cita
 3 de octubre de 2026, 15:45
 Modesto pide seguir con Casa en Vida personal.
 Primera variante de Casa: casa_kind (compra, mantenimiento, suministro, limpieza, otro), casa_place y casa_notes. Reglas en classify.py. Editor y ficha en la web. Marcar hecho en tareas. Pendiente y hecho separados en el módulo. Suben migración 006, API, classify, web y docs.
+
+3 de octubre de 2026, 15:50
+Modesto pide alinear Casa con el PDF (logística doméstica) e incluir tareas del hogar.
+Limpieza pasa a domestica (Tareas del hogar): basuras, lavadora, limpieza… Nombres alineados con compra, mantenimiento y suministros. Inventario queda pendiente. Suben migración 007, classify, API, web y docs.

@@ -36,7 +36,7 @@ FAMILY_KIND = {"cumpleanos", "aniversario", "boda", "bautizo", "comunion", "comi
 LEISURE_KIND = {"cine", "restaurante", "concierto", "teatro", "deporte", "excursion", "quedar", "otro"}
 LEISURE_WITH = {"solo", "partner", "friends", "family", "other"}
 REMINDER_KIND = {"itv", "seguro", "impuesto", "documento", "hogar", "otro"}
-CASA_KIND = {"compra", "mantenimiento", "suministro", "limpieza", "otro"}
+CASA_KIND = {"compra", "mantenimiento", "suministro", "domestica", "otro"}
 LOOKS = {"claro", "papel", "mar", "cielo", "oliva", "arena", "violeta", "tinta", "noche", "grafito"}
 COOKIE = "impersia_session"
 
@@ -639,8 +639,9 @@ def _casa_fields(body: ItemPatch) -> dict:
     empty = {"casa_kind": None, "casa_place": None, "casa_notes": None}
     if body.module != "casa":
         return empty
+    kind = body.casa_kind if body.casa_kind != "limpieza" else "domestica"
     return {
-        "casa_kind": body.casa_kind if body.casa_kind in CASA_KIND else "otro",
+        "casa_kind": kind if kind in CASA_KIND else "otro",
         "casa_place": (body.casa_place or "").strip() or None,
         "casa_notes": (body.casa_notes or "").strip() or None,
     }

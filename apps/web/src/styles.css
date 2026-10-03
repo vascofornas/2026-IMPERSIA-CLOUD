@@ -810,6 +810,7 @@ a.connect {
 .tag.compra,
 .tag.mantenimiento,
 .tag.suministro,
+.tag.domestica,
 .tag.limpieza {
   background: color-mix(in srgb, var(--chip, #c2410c) 14%, var(--bg));
   color: var(--chip, #c2410c);

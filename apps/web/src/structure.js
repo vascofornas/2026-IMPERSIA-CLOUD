@@ -15,11 +15,11 @@ export const AXES = [
       {
         id: "casa",
         label: "Casa",
-        blurb: "Compras, arreglos, suministros y limpieza del hogar. Con fecha sale en Hoy; se marca hecho cuando toca.",
+        blurb: "Compra, mantenimiento, suministros y tareas del hogar (limpieza, basuras…). Con fecha sale en Hoy; se marca hecho cuando toca.",
         examples: [
           ["Comprar leche", "compra"],
           ["Cambiar el filtro del aire", "mantenimiento"],
-          ["Limpiar ventanas el sábado", "limpieza"],
+          ["Sacar la basura el martes", "tareas del hogar"],
         ],
       },
       {

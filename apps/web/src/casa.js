@@ -1,14 +1,15 @@
 export const CASA_KIND = [
-  ["compra", "Compra"],
-  ["mantenimiento", "Mantenimiento"],
-  ["suministro", "Suministro"],
-  ["limpieza", "Limpieza"],
+  ["compra", "Lista de la compra"],
+  ["mantenimiento", "Mantenimiento del hogar"],
+  ["suministro", "Control de suministros"],
+  ["domestica", "Tareas del hogar"],
   ["otro", "Otro"],
 ];
 
 const CASA_KIND_LABEL = Object.fromEntries(CASA_KIND);
 
 export function casaKindLabel(kind) {
+  if (kind === "limpieza") return "Tareas del hogar";
   return CASA_KIND_LABEL[kind] || "Casa";
 }
 
