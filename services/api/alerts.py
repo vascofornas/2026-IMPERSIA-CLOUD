@@ -338,44 +338,55 @@ def _email_html(occ: dict, when: str, module: str) -> str:
     link = _module_link(occ["module"])
     note = _alert_note(occ)
     note_row = (
-        f'<p style="margin:12px 0 0;color:#6b7280;font-size:14px;line-height:1.5;">{note}</p>'
+        f'<tr><td style="padding:10px 0 0;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#6b7280;">{note}</td></tr>'
         if note
         else ""
     )
-    time_row = (
-        f'<p style="margin:0 0 4px;color:#374151;font-size:15px;line-height:1.5;">{when}</p>'
-        if occ.get("time_known")
-        else f'<p style="margin:0 0 4px;color:#374151;font-size:15px;line-height:1.5;">{when}</p>'
-    )
     title = _html_escape(occ["title"])
+    module_label = _html_escape(module.upper())
+    when_text = _html_escape(when)
     return f"""<!doctype html>
 <html lang="es">
-<body style="margin:0;padding:0;background:#f3efe6;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3efe6;padding:32px 16px;">
+<body style="margin:0;padding:0;background:#ffffff;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#ffffff">
     <tr>
-      <td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;">
+      <td align="center" style="padding:12px 16px 24px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:440px;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
           <tr>
-            <td style="padding:0 4px 18px;">
-              <span style="font-size:22px;font-weight:700;letter-spacing:-0.3px;color:{MARK};">Impersia</span>
+            <td bgcolor="{MARK}" style="padding:14px 18px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:18px;line-height:1.2;font-weight:700;color:#ffffff;">Impersia</td>
+          </tr>
+          <tr>
+            <td bgcolor="#ffffff" style="border-left:4px solid {color};padding:18px 18px 16px;">
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td bgcolor="#f3f4f6" style="padding:5px 11px;border-radius:999px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:11px;line-height:1;font-weight:700;letter-spacing:0.05em;color:{color};">{module_label}</td>
+                </tr>
+              </table>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:14px;">
+                <tr>
+                  <td style="font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:21px;line-height:1.35;font-weight:700;color:#111827;">{title}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0 0;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.5;color:#374151;">{when_text}</td>
+                </tr>
+                {note_row}
+              </table>
             </td>
           </tr>
           <tr>
-            <td style="background:#ffffff;border:1px solid #e5e7eb;border-left:4px solid {color};border-radius:12px;padding:22px 24px;">
-              <p style="margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:{color};">{module}</p>
-              <h1 style="margin:0 0 14px;font-size:22px;line-height:1.35;font-weight:650;color:#111827;">{title}</h1>
-              {time_row}
-              {note_row}
+            <td bgcolor="#ffffff" style="padding:0 18px 18px;">
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td bgcolor="{MARK}" style="border-radius:999px;">
+                    <a href="{link}" style="display:inline-block;padding:11px 18px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:15px;line-height:1;font-weight:700;color:#ffffff;text-decoration:none;">Ver en Impersia</a>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           <tr>
-            <td style="padding:22px 4px 0;" align="left">
-              <a href="{link}" style="display:inline-block;background:{MARK};color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:12px 18px;border-radius:999px;">Ver en Impersia</a>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:18px 4px 0;color:#9ca3af;font-size:12px;line-height:1.5;">
-              Este aviso llega porque activaste los correos en tu perfil de Impersia.
+            <td bgcolor="#f9fafb" style="padding:12px 18px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.45;color:#9ca3af;border-top:1px solid #e5e7eb;">
+              Aviso por correo activado en tu perfil de Impersia.
             </td>
           </tr>
         </table>

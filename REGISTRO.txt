@@ -463,3 +463,6 @@ El buzón impersia@impersia.cloud pasa a Google Workspace. IONOS no servía. Se 
 3 de octubre de 2026, 11:38
 Modesto dice que el correo de prueba llega con un formato horrible.
 El aviso pasa a HTML con estilo Impersia: cabecera verde, ficha con color del módulo, botón Ver en Impersia y texto plano de respaldo.
+
+3 de octubre de 2026, 11:39
+Modesto enseña captura: mucho hueco beige, Impersia y Hábitos sin color. Se compacta en una sola tarjeta blanca, cabecera verde con bgcolor, pastilla del módulo y menos margen.
