@@ -92,7 +92,9 @@ def classify(text: str) -> dict:
     low = raw.lower()
     starts, time_known = _when(low)
     module = _module(low)
-    if _is_reminder(low):
+    if _is_casa_supply(low):
+        module = "casa"
+    elif _is_reminder(low):
         module = "agenda"
     medical = module == "agenda" and _is_medical(low)
     family = module == "agenda" and not medical and _is_family(low)
@@ -184,6 +186,8 @@ def classify(text: str) -> dict:
         )
     if casa:
         home = _casa_meta(raw, low)
+        if home.get("casa_kind") == "suministro" and alert is None:
+            alert = 10080
         return _classify_result(
             module,
             _casa_title(raw, low, home.get("casa_kind")),
@@ -258,6 +262,7 @@ def _classify_result(
         "casa_kind": casa_fields.get("casa_kind"),
         "casa_place": casa_fields.get("casa_place"),
         "casa_notes": casa_fields.get("casa_notes"),
+        "supply_kind": casa_fields.get("supply_kind"),
         "source": "rules",
     }
 
@@ -306,13 +311,34 @@ CASA_KINDS = {
         "suministro",
         "recibo de la luz",
         "recibo del agua",
+        "recibo del gas",
         "factura de la luz",
         "factura del gas",
+        "factura del agua",
+        "pagar la luz",
+        "pagar el gas",
+        "pagar el agua",
         "iberdrola",
         "endesa",
         "naturgy",
         "fibra",
         "wifi en casa",
+    ),
+    "inventario": (
+        "inventario",
+        "despensa",
+        "congelador",
+        "almacén",
+        "almacen",
+        "quedan ",
+        "en stock",
+        "guardado en",
+        "tengo en el",
+        "tengo en la",
+        "cartuchos",
+        "repuesto",
+        "botes de",
+        "latas de",
     ),
     "domestica": (
         "limpiar",
@@ -340,6 +366,23 @@ CASA_KINDS = {
     ),
     "otro": ("en casa", "del hogar", "del piso"),
 }
+
+
+def _is_casa_supply(low: str) -> bool:
+    supply_phrases = (
+        "factura de la luz",
+        "factura del gas",
+        "factura del agua",
+        "recibo de la luz",
+        "recibo del gas",
+        "recibo del agua",
+        "pagar la luz",
+        "pagar el gas",
+        "pagar el agua",
+    )
+    if any(phrase in low for phrase in supply_phrases):
+        return True
+    return _is_casa(low) and _casa_kind(low) == "suministro"
 
 
 def _is_casa(low: str) -> bool:
@@ -1062,12 +1105,32 @@ def _casa_place(low: str) -> str | None:
     return place[0].upper() + place[1:]
 
 
+SUPPLY_KINDS = {
+    "luz": ("luz", "iberdrola", "endesa", "electricidad", "recibo de la luz", "factura de la luz", "pagar la luz"),
+    "agua": ("agua", "factura del agua", "recibo del agua", "pagar el agua", "canal de isabel", "agbar"),
+    "gas": ("gas", "naturgy", "factura del gas", "recibo del gas", "pagar el gas"),
+    "internet": ("fibra", "internet", "wifi", "movistar", "vodafone", "orange"),
+}
+
+
+def _supply_kind(low: str) -> str:
+    for kind, words in SUPPLY_KINDS.items():
+        if any(word in low for word in words):
+            return kind
+    return "otro"
+
+
 def _casa_meta(raw: str, low: str) -> dict:
-    return {
-        "casa_kind": _casa_kind(low),
+    kind = _casa_kind(low)
+    meta = {
+        "casa_kind": kind,
         "casa_place": _casa_place(low),
         "casa_notes": None,
+        "supply_kind": None,
     }
+    if kind == "suministro":
+        meta["supply_kind"] = _supply_kind(low)
+    return meta
 
 
 def _casa_title(raw: str, low: str, kind: str | None) -> str:
@@ -1076,6 +1139,7 @@ def _casa_title(raw: str, low: str, kind: str | None) -> str:
         "mantenimiento": "Mantenimiento",
         "suministro": "Suministro",
         "domestica": "Tareas del hogar",
+        "inventario": "Inventario",
         "otro": "Casa",
     }
     label = labels.get(kind or "otro", "Casa")

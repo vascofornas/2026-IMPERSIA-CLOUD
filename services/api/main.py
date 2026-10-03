@@ -36,7 +36,8 @@ FAMILY_KIND = {"cumpleanos", "aniversario", "boda", "bautizo", "comunion", "comi
 LEISURE_KIND = {"cine", "restaurante", "concierto", "teatro", "deporte", "excursion", "quedar", "otro"}
 LEISURE_WITH = {"solo", "partner", "friends", "family", "other"}
 REMINDER_KIND = {"itv", "seguro", "impuesto", "documento", "hogar", "otro"}
-CASA_KIND = {"compra", "mantenimiento", "suministro", "domestica", "otro"}
+CASA_KIND = {"compra", "mantenimiento", "suministro", "domestica", "inventario", "otro"}
+SUPPLY_KIND = {"luz", "agua", "gas", "internet", "otro"}
 LOOKS = {"claro", "papel", "mar", "cielo", "oliva", "arena", "violeta", "tinta", "noche", "grafito"}
 COOKIE = "impersia_session"
 
@@ -152,6 +153,7 @@ class ItemPatch(BaseModel):
     casa_kind: str | None = None
     casa_place: str | None = None
     casa_notes: str | None = None
+    supply_kind: str | None = None
 
 
 class StatusIn(BaseModel):
@@ -474,14 +476,14 @@ def create_capture(body: CaptureIn, request: Request):
                      family_kind, family_for, family_name, family_place, family_notes,
                      leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
                      reminder_kind, reminder_place, reminder_notes,
-                     casa_kind, casa_place, casa_notes, privacy)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
+                     casa_kind, casa_place, casa_notes, supply_kind, privacy)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
                 RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
                     agenda_type, medical_for, medical_name, medical_place, medical_notes,
                     family_kind, family_for, family_name, family_place, family_notes,
                     leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
                     reminder_kind, reminder_place, reminder_notes,
-                    casa_kind, casa_place, casa_notes, status, privacy, created_at
+                    casa_kind, casa_place, casa_notes, supply_kind, status, privacy, created_at
                 """,
                 (
                     user_id,
@@ -515,6 +517,7 @@ def create_capture(body: CaptureIn, request: Request):
                     suggestion.get("casa_kind"),
                     suggestion.get("casa_place"),
                     suggestion.get("casa_notes"),
+                    suggestion.get("supply_kind"),
                 ),
             )
             item = cur.fetchone()
@@ -636,14 +639,18 @@ def _agenda_fields(body: ItemPatch) -> dict:
 
 
 def _casa_fields(body: ItemPatch) -> dict:
-    empty = {"casa_kind": None, "casa_place": None, "casa_notes": None}
+    empty = {"casa_kind": None, "casa_place": None, "casa_notes": None, "supply_kind": None}
     if body.module != "casa":
         return empty
     kind = body.casa_kind if body.casa_kind != "limpieza" else "domestica"
+    supply = None
+    if kind == "suministro":
+        supply = body.supply_kind if body.supply_kind in SUPPLY_KIND else "otro"
     return {
         "casa_kind": kind if kind in CASA_KIND else "otro",
         "casa_place": (body.casa_place or "").strip() or None,
         "casa_notes": (body.casa_notes or "").strip() or None,
+        "supply_kind": supply,
     }
 
 
@@ -665,14 +672,14 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     family_name = %s, family_place = %s, family_notes = %s, leisure_kind = %s,
                     leisure_with = %s, leisure_name = %s, leisure_place = %s, leisure_notes = %s,
                     reminder_kind = %s, reminder_place = %s, reminder_notes = %s,
-                    casa_kind = %s, casa_place = %s, casa_notes = %s
+                    casa_kind = %s, casa_place = %s, casa_notes = %s, supply_kind = %s
                 WHERE id = %s AND user_id = %s
                 RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
                     agenda_type, medical_for, medical_name, medical_place, medical_notes,
                     family_kind, family_for, family_name, family_place, family_notes,
                     leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
                     reminder_kind, reminder_place, reminder_notes,
-                    casa_kind, casa_place, casa_notes, status, privacy, created_at
+                    casa_kind, casa_place, casa_notes, supply_kind, status, privacy, created_at
                 """,
                 (
                     body.module,
@@ -703,6 +710,7 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     casa["casa_kind"],
                     casa["casa_place"],
                     casa["casa_notes"],
+                    casa["supply_kind"],
                     item_id,
                     user_id,
                 ),
@@ -833,7 +841,7 @@ def list_items(request: Request):
                     family_kind, family_for, family_name, family_place, family_notes,
                     leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
                     reminder_kind, reminder_place, reminder_notes,
-                    casa_kind, casa_place, casa_notes, status, privacy, created_at
+                    casa_kind, casa_place, casa_notes, supply_kind, status, privacy, created_at
                 FROM items
                 WHERE user_id = %s
                 ORDER BY created_at DESC
@@ -899,7 +907,7 @@ def _fetch_item(cur, item_id: str, user_id: str) -> dict | None:
             family_kind, family_for, family_name, family_place, family_notes,
             leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
             reminder_kind, reminder_place, reminder_notes,
-            casa_kind, casa_place, casa_notes, status, privacy, created_at
+            casa_kind, casa_place, casa_notes, supply_kind, status, privacy, created_at
         FROM items
         WHERE id = %s AND user_id = %s
         """,
@@ -960,6 +968,7 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         "casa_kind": row.get("casa_kind"),
         "casa_place": row.get("casa_place"),
         "casa_notes": row.get("casa_notes"),
+        "supply_kind": row.get("supply_kind"),
         "status": row.get("status") or "open",
         "privacy": row["privacy"],
         "created_at": row["created_at"].isoformat(),

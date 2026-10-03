@@ -542,3 +542,7 @@ classify.py entiende tarde/noche como hora pm, limpia el título y no confunde d
 3 de octubre de 2026, 15:30
 Modesto confirma que «Sacar la basura todos los dias a las 9 de la tarde» queda bien (21:00, título limpio).
 Queda validado el arreglo de horas tarde/noche en Casa.
+
+3 de octubre de 2026, 15:35
+Modesto pide seguir puliendo Casa según el PDF (logística doméstica).
+Inventario personal, suministros con tipo (luz, agua, gas…), pantalla por secciones, facturas de luz/gas a Casa. Suben migración 008, API, classify, web y docs.

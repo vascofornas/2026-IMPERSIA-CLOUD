@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS items (
     casa_kind text,
     casa_place text,
     casa_notes text,
+    supply_kind text,
     status text NOT NULL DEFAULT 'open',
     privacy text NOT NULL DEFAULT 'private',
     created_at timestamptz NOT NULL DEFAULT now()

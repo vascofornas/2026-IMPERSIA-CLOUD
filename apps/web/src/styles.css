@@ -821,6 +821,34 @@ a.connect {
   opacity: 0.65;
 }
 
+.casa-board {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.casa-section h2 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+}
+
+.casa-done {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.casa-done-group h3 {
+  margin: 12px 0 8px;
+  font-size: 0.92rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.tag.inventario {
+  background: color-mix(in srgb, #7c3aed 14%, var(--bg));
+  color: #6d28d9;
+}
+
 .medical-line {
   display: flex;
   flex-wrap: wrap;

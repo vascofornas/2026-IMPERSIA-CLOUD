@@ -18,7 +18,7 @@ import {
   MEDICAL_FOR,
   medicalForLabel,
 } from "./agenda.js";
-import { CASA_KIND, casaEventLine, isCasaItem } from "./casa.js";
+import { CASA_KIND, casaEventLine, groupCasaItems, isCasaItem, SUPPLY_KIND } from "./casa.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
 import { AXES, findModule, labelOf } from "./structure.js";
 
@@ -249,7 +249,9 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
             title: editing.title,
             starts_at: editing.starts_at,
             time_known: Boolean(editing.time_known),
-            alert_minutes_before: editing.time_known ? editing.alert_minutes_before ?? null : null,
+            alert_minutes_before: (editing.time_known || (editing.module === "casa" && editing.starts_at))
+              ? editing.alert_minutes_before ?? null
+              : null,
             agenda_type: editing.module === "agenda" ? editing.agenda_type || null : null,
             medical_for: editing.agenda_type === "medica" ? editing.medical_for || "self" : null,
             medical_name: editing.agenda_type === "medica" ? editing.medical_name || null : null,
@@ -271,6 +273,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
             casa_kind: editing.module === "casa" ? editing.casa_kind || "otro" : null,
             casa_place: editing.module === "casa" ? editing.casa_place || null : null,
             casa_notes: editing.module === "casa" ? editing.casa_notes || null : null,
+            supply_kind: editing.module === "casa" && editing.casa_kind === "suministro" ? editing.supply_kind || "otro" : null,
           }),
         });
       }
@@ -450,69 +453,54 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
               />
             </>
           )}
-          <div className="panes">
-            <section>
-              <h2>{current.id === "casa" ? "Pendiente" : "Tuyo"}</h2>
-              {current.id === "casa" ? (
-                items.some((item) => item.module === "casa" && item.status !== "done") ? (
-                  <ItemList
-                    items={items.filter((item) => item.module === "casa" && item.status !== "done")}
-                    editing={editing}
-                    setEditing={setEditing}
-                    startEdit={startEdit}
-                    saveEdit={saveEdit}
-                    askRemove={askRemove}
-                    onToggleStatus={toggleStatus}
-                  />
+          {current.id === "casa" ? (
+            <CasaBoard
+              items={items}
+              editing={editing}
+              setEditing={setEditing}
+              startEdit={startEdit}
+              saveEdit={saveEdit}
+              askRemove={askRemove}
+              onToggleStatus={toggleStatus}
+            />
+          ) : (
+            <div className="panes">
+              <section>
+                <h2>Tuyo</h2>
+                {items.some((item) => item.module === current.id) ? (
+                  <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
                 ) : (
-                  <p className="private">Nada pendiente. Escríbelo en Entrada.</p>
-                )
-              ) : items.some((item) => item.module === current.id) ? (
-                <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
-              ) : (
-                <p className="private">Todavía no hay nada tuyo aquí. Escríbelo en Entrada.</p>
-              )}
-            </section>
-            <section>
-              {current.id === "agenda" && googleEmail ? (
-                <>
-                  <h2>Google</h2>
-                  {googleDated.length ? (
-                    <ItemList items={googleDated} editing={null} setEditing={() => {}} saveEdit={() => {}} />
-                  ) : (
-                    <p className="private">No hay citas de Google en los próximos sesenta días.</p>
-                  )}
-                </>
-              ) : current.id === "casa" && items.some((item) => item.module === "casa" && item.status === "done") ? (
-                <>
-                  <h2>Hecho</h2>
-                  <ItemList
-                    items={items.filter((item) => item.module === "casa" && item.status === "done")}
-                    editing={editing}
-                    setEditing={setEditing}
-                    startEdit={startEdit}
-                    saveEdit={saveEdit}
-                    askRemove={askRemove}
-                    onToggleStatus={toggleStatus}
-                  />
-                </>
-              ) : (
-                <>
-                  <h2>Ejemplos</h2>
-                  <p className="private">Inventados, para ver la forma de esta pantalla. No están en tu cuenta.</p>
-                  <div className="cards">
-                    {current.examples.map(([title, note]) => (
-                      <article className="card" key={title}>
-                        <p className={`mod m-${current.id}`}><Icon name={current.id} /> Ejemplo</p>
-                        <p className="when">{note}</p>
-                        <p className="title">{title}</p>
-                      </article>
-                    ))}
-                  </div>
-                </>
-              )}
-            </section>
-          </div>
+                  <p className="private">Todavía no hay nada tuyo aquí. Escríbelo en Entrada.</p>
+                )}
+              </section>
+              <section>
+                {current.id === "agenda" && googleEmail ? (
+                  <>
+                    <h2>Google</h2>
+                    {googleDated.length ? (
+                      <ItemList items={googleDated} editing={null} setEditing={() => {}} saveEdit={() => {}} />
+                    ) : (
+                      <p className="private">No hay citas de Google en los próximos sesenta días.</p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <h2>Ejemplos</h2>
+                    <p className="private">Inventados, para ver la forma de esta pantalla. No están en tu cuenta.</p>
+                    <div className="cards">
+                      {current.examples.map(([title, note]) => (
+                        <article className="card" key={title}>
+                          <p className={`mod m-${current.id}`}><Icon name={current.id} /> Ejemplo</p>
+                          <p className="when">{note}</p>
+                          <p className="title">{title}</p>
+                        </article>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </section>
+            </div>
+          )}
         </>
       )}
       {screen === "perfil" && (
@@ -864,6 +852,40 @@ function clockOf(value) {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function CasaBoard({ items, editing, setEditing, startEdit, saveEdit, askRemove, onToggleStatus }) {
+  const pending = groupCasaItems(items, "open");
+  const done = groupCasaItems(items, "done");
+  const hasPending = pending.some((group) => group.items.length);
+  const hasDone = done.some((group) => group.items.length);
+  const listProps = { editing, setEditing, startEdit, saveEdit, askRemove, onToggleStatus };
+
+  if (!hasPending && !hasDone) {
+    return <p className="private">Todavía no hay nada en Casa. Escríbelo en Entrada.</p>;
+  }
+
+  return (
+    <div className="casa-board">
+      {pending.map((group) => group.items.length > 0 && (
+        <section className="casa-section" key={group.id}>
+          <h2>{group.label}</h2>
+          <ItemList items={group.items} {...listProps} />
+        </section>
+      ))}
+      {hasDone && (
+        <section className="casa-section casa-done">
+          <h2>Hecho</h2>
+          {done.filter((group) => group.items.length).map((group) => (
+            <div className="casa-done-group" key={group.id}>
+              <h3>{group.label}</h3>
+              <ItemList items={group.items} {...listProps} />
+            </div>
+          ))}
+        </section>
+      )}
+    </div>
+  );
+}
+
 function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, onToggleStatus }) {
   return (
     <div className="cards">
@@ -905,7 +927,7 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, 
                   onChange={(e) => setEditing(withWhen(editing, datePart(editing.starts_at), e.target.value))}
                 />
               </label>
-              {editing.time_known && editing.editScope !== "one" && (
+              {(editing.time_known || (editing.module === "casa" && editing.starts_at)) && editing.editScope !== "one" && (
                 <label>
                   Aviso
                   <select
@@ -1140,18 +1162,38 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, 
                     Tipo en Casa
                     <select
                       value={editing.casa_kind || "otro"}
-                      onChange={(e) => setEditing({ ...editing, casa_kind: e.target.value })}
+                      onChange={(e) => {
+                        const casa_kind = e.target.value;
+                        setEditing({
+                          ...editing,
+                          casa_kind,
+                          supply_kind: casa_kind === "suministro" ? editing.supply_kind || "luz" : null,
+                        });
+                      }}
                     >
                       {CASA_KIND.map(([value, label]) => (
                         <option key={value} value={value}>{label}</option>
                       ))}
                     </select>
                   </label>
+                  {editing.casa_kind === "suministro" && (
+                    <label>
+                      Suministro
+                      <select
+                        value={editing.supply_kind || "otro"}
+                        onChange={(e) => setEditing({ ...editing, supply_kind: e.target.value })}
+                      >
+                        {SUPPLY_KIND.map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                   <label>
                     Dónde
                     <input
                       value={editing.casa_place || ""}
-                      placeholder="Mercadona, cocina, Iberdrola…"
+                      placeholder={editing.casa_kind === "inventario" ? "Despensa, garaje…" : editing.casa_kind === "suministro" ? "Iberdrola, compañía…" : "Mercadona, cocina…"}
                       onChange={(e) => setEditing({ ...editing, casa_place: e.target.value })}
                     />
                   </label>
@@ -1159,7 +1201,7 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, 
                     Notas
                     <textarea
                       value={editing.casa_notes || ""}
-                      placeholder="Marca, referencia, detalle…"
+                      placeholder={editing.casa_kind === "inventario" ? "Cantidad, referencia…" : "Marca, detalle…"}
                       onChange={(e) => setEditing({ ...editing, casa_notes: e.target.value })}
                     />
                   </label>
@@ -1222,7 +1264,7 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, 
                 ) : (
                   <>
                     <span className={`tag m-${item.module}`}><Icon name={item.module} /> {labelOf(item.module)}</span>
-                    {item.time_known && item.alert_minutes_before != null && (
+                    {item.alert_minutes_before != null && (
                       <span className="tag alert"><Icon name="aviso" /> {alertLabel(item.alert_minutes_before)}</span>
                     )}
                     <span className="item-actions">
