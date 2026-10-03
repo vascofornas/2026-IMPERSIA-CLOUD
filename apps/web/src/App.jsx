@@ -647,12 +647,14 @@ function ItemList({ items, editing, setEditing, saveEdit, askRemove }) {
               <p className="title">{item.title}</p>
               <p className="meta">
                 {item.source === "google" ? (
-                  <span className="m-google"><GoogleMark /> Google</span>
+                  <span className="tag m-google"><GoogleMark /> Google</span>
                 ) : (
                   <>
-                    <span className={`m-${item.module}`}><Icon name={item.module} /> {labelOf(item.module)}</span>
-                    <button type="button" className="text" onClick={() => setEditing({ ...item })}>Cambiar</button>
-                    <button type="button" className="text danger" onClick={() => askRemove(item)}>Borrar</button>
+                    <span className={`tag m-${item.module}`}><Icon name={item.module} /> {labelOf(item.module)}</span>
+                    <span className="item-actions">
+                      <button type="button" className="link" onClick={() => setEditing({ ...item })}>Cambiar</button>
+                      <button type="button" className="link danger" onClick={() => askRemove(item)}>Borrar</button>
+                    </span>
                   </>
                 )}
               </p>

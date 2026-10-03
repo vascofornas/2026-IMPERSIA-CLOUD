@@ -563,10 +563,6 @@ button.text {
   color: var(--muted);
 }
 
-button.text.danger { color: #b91c1c; }
-
-[data-look="noche"] button.text.danger,
-[data-look="grafito"] button.text.danger { color: #fca5a5; }
 
 a.connect {
   display: inline-block;
@@ -617,13 +613,13 @@ a.connect {
 
 .dialog .actions button { margin-top: 0; }
 
-button.danger {
+.dialog .actions button.danger {
   background: #b91c1c;
   color: #ffffff;
 }
 
-[data-look="noche"] button.danger,
-[data-look="grafito"] button.danger {
+[data-look="noche"] .dialog .actions button.danger,
+[data-look="grafito"] .dialog .actions button.danger {
   background: #dc2626;
   color: #ffffff;
 }
@@ -741,7 +737,7 @@ button.danger {
   font-size: 0.85rem;
 }
 
-.mod .icon, .meta .icon {
+.mod .icon, .meta .icon, .tag .icon {
   width: 16px;
   height: 16px;
   color: var(--chip, currentColor);
@@ -749,12 +745,61 @@ button.danger {
 
 .meta {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   margin: 0;
   color: var(--muted);
   font-size: 0.92rem;
 }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--chip, var(--mark)) 12%, var(--card));
+  color: var(--chip, var(--mark));
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.item-actions {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.item-actions .link {
+  margin: 0;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.item-actions .link:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  color: var(--ink);
+}
+
+.item-actions .link.danger { color: #b91c1c; }
+
+.item-actions .link.danger:hover {
+  background: color-mix(in srgb, #b91c1c 10%, transparent);
+  color: #991b1b;
+}
+
+[data-look="noche"] .item-actions .link.danger,
+[data-look="grafito"] .item-actions .link.danger { color: #fca5a5; }
+
+[data-look="noche"] .item-actions .link.danger:hover,
+[data-look="grafito"] .item-actions .link.danger:hover { color: #fecaca; }
 
 .editor {
   padding: 8px 0 16px;
