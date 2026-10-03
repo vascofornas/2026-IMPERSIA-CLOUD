@@ -56,6 +56,25 @@ WEEKDAYS = {
     "domingo": 6,
 }
 
+MONTHS = {
+    "enero": 1,
+    "febrero": 2,
+    "marzo": 3,
+    "abril": 4,
+    "mayo": 5,
+    "junio": 6,
+    "julio": 7,
+    "agosto": 8,
+    "septiembre": 9,
+    "setiembre": 9,
+    "octubre": 10,
+    "noviembre": 11,
+    "diciembre": 12,
+}
+
+MONTH_NAMES = "|".join(MONTHS.keys())
+LITERAL_DATE = rf"(?:\bel\s+|\bantes del\s+|\bhasta el\s+|\bpara el\s+|\bvence el\s+)?(\d{{1,2}})\s+de\s+({MONTH_NAMES})\b"
+
 MORNING_PHRASES = (
     "esta mañana",
     "esta manana",
@@ -225,7 +244,7 @@ def _module(low: str) -> str:
         return "espacios"
     if any(word in low for word in ("lista pública", "lista publica")):
         return "listas"
-    if any(word in low for word in ("reunión", "reunion", "acta", "cliente", "socio")):
+    if any(word in low for word in ("reunión", "reunion", "acta", "cliente", "socio", "proveedor")):
         return "reuniones"
     if any(word in low for word in ("idea de", "emprend", "modelo de negocio")):
         return "ideas"
@@ -245,6 +264,8 @@ def _module(low: str) -> str:
         return "habitos"
     if _is_leisure(low) and _has_agenda_when(low):
         return "agenda"
+    if _is_leisure(low) and not _has_agenda_when(low):
+        return "deseos"
     if _is_reminder(low) and _has_agenda_when(low):
         return "agenda"
     if any(word in low for word in ("deseo", "quiero ir")) and not _has_agenda_when(low):
@@ -298,6 +319,7 @@ def _title(raw: str) -> str:
         r"\bal mediodía\b",
         r"\bal mediodia\b",
         r"\ba las \d{1,2}(?::\d{2})?\b",
+        r"\b\d{1,2}:\d{2}\b",
         r"\b(?:el |la )?(?:lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo)(?: \d{1,2})?\b",
         r"\bmañana\b",
         r"\bmanana\b",
@@ -306,6 +328,7 @@ def _title(raw: str) -> str:
         r"\b(?:av[ií]same|recu[eé]rdame|con recordatorio|con aviso)\b",
         r"\b(?:a la hora|en el momento)\b",
         r"\b\d+\s*(?:minutos?|horas?|d[ií]as?)\s*antes\b",
+        LITERAL_DATE,
     )
     for pattern in cuts:
         text = re.sub(pattern, " ", text, flags=re.IGNORECASE)
@@ -338,6 +361,8 @@ def _when(low: str) -> datetime | None:
                         ahead = 7
                     day = (now + timedelta(days=ahead)).date()
                     break
+            if day is None:
+                day = _literal_day(low, now)
     hour, minute = _clock(low)
     time_known = hour is not None
     if not time_known:
@@ -354,9 +379,33 @@ def _when(low: str) -> datetime | None:
     return datetime(day.year, day.month, day.day, hour, minute, tzinfo=MADRID), time_known
 
 
+def _literal_day(low: str, now: datetime):
+    match = re.search(LITERAL_DATE, low)
+    if not match:
+        return None
+    day_num = int(match.group(1))
+    month = MONTHS[match.group(2)]
+    if day_num < 1 or day_num > 31:
+        return None
+    year = now.year
+    for _ in range(2):
+        try:
+            candidate = datetime(year, month, day_num, tzinfo=MADRID).date()
+        except ValueError:
+            return None
+        if candidate >= now.date():
+            return candidate
+        year += 1
+    return None
+
+
+def _has_literal_date(low: str) -> bool:
+    return bool(re.search(LITERAL_DATE, low))
+
+
 def _weekday_number(low: str, now: datetime):
     match = re.search(
-        r"\b(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo)\s+(\d{1,2})\b",
+        r"\b(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo)\s+(\d{1,2})(?!:\d)\b",
         low,
     )
     if not match:
@@ -614,7 +663,9 @@ def _family_meta(raw: str, low: str) -> dict:
 def _has_agenda_when(low: str) -> bool:
     return bool(
         _explicit_day(low)
+        or _has_literal_date(low)
         or re.search(r"\ba las \d", low)
+        or re.search(r"\b\d{1,2}:\d{2}\b", low)
         or "hoy" in low
         or _means_tomorrow(low)
         or re.search(r"\bpasado mañana\b|\bpasado manana\b", low)
@@ -824,6 +875,8 @@ def _alert_minutes_before(low: str, time_known: bool) -> int | None:
 
 def _clock(low: str) -> tuple[int, int] | tuple[None, None]:
     match = re.search(r"\ba las (\d{1,2})(?::(\d{2}))?", low)
+    if not match:
+        match = re.search(r"\b(\d{1,2}):(\d{2})\b", low)
     if not match:
         return None, None
     hour = int(match.group(1))

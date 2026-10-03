@@ -518,3 +518,7 @@ Cuarta variante: agenda_type recordatorio, reminder_kind, reminder_place y remin
 3 de octubre de 2026, 11:44
 Modesto pide logo en los correos y avisos legales habituales.
 Los avisos llevan logo-email.png, pie con aviso de servicio, RGPD, enlace a desactivar en Perfil, contacto y privacidad. Se publica apps/comercial/privacidad.html y logo-email.png en impersia.cloud.
+
+3 de octubre de 2026, 15:30
+Repaso de Agenda: fechas literales en español (12 de abril, 15 de noviembre…).
+classify.py entiende día y mes; ocio sin fecha va a Deseos; horas tipo 11:00 sin «a las». Suben classify.py y REGISTRO.txt.
