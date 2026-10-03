@@ -580,6 +580,54 @@ a.connect {
 
 .actions { display: flex; gap: 10px; align-items: center; }
 
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--ink) 35%, transparent);
+}
+
+.dialog {
+  width: min(100%, 24rem);
+  padding: 24px 28px 28px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: 0 24px 48px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.dialog h2 {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+}
+
+.dialog .lead {
+  margin: 0 0 20px;
+  max-width: none;
+}
+
+.dialog .actions {
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
+.dialog .actions button { margin-top: 0; }
+
+button.danger {
+  background: #b91c1c;
+  color: #ffffff;
+}
+
+[data-look="noche"] button.danger,
+[data-look="grafito"] button.danger {
+  background: #dc2626;
+  color: #ffffff;
+}
+
 .secret {
   display: flex;
   gap: 8px;

@@ -417,3 +417,7 @@ Modesto ve Día, Semana y Mes y dice que está perfecto. El calendario queda as�
 3 de octubre de 2026, 09:15
 Modesto pregunta si se pueden editar o borrar entradas. Cambiar ya existía. Borrar no.
 Se añade Borrar en cada ficha propia, junto a Cambiar. Pide confirmación con el título. Lo de Google no se borra desde Impersia. La API tiene DELETE /items/{id}.
+
+3 de octubre de 2026, 09:20
+Modesto no quiere la confirmación del navegador. Prefiere una con estilo Impersia.
+Al pulsar Borrar sale un cuadro propio: título, la frase con el nombre de la entrada, Cancelar y Borrar. Sigue la apariencia elegida. Fuera del cuadro, Cancelar.

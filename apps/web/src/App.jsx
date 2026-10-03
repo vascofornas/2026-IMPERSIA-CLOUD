@@ -136,6 +136,8 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
   const [items, setItems] = useState([]);
   const [googleEvents, setGoogleEvents] = useState([]);
   const [editing, setEditing] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const screen = useHash();
   const current = findModule(screen);
@@ -189,15 +191,23 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
     }
   }
 
-  async function removeItem(item) {
-    if (!window.confirm(`¿Borrar «${item.title}»? No se puede deshacer.`)) return;
+  function askRemove(item) {
+    setPendingDelete(item);
+  }
+
+  async function confirmRemove() {
+    if (!pendingDelete) return;
     setError("");
+    setDeleting(true);
     try {
-      await call(`/items/${item.id}`, { method: "DELETE" });
-      setItems(items.filter((row) => row.id !== item.id));
-      if (editing?.id === item.id) setEditing(null);
+      await call(`/items/${pendingDelete.id}`, { method: "DELETE" });
+      setItems(items.filter((row) => row.id !== pendingDelete.id));
+      if (editing?.id === pendingDelete.id) setEditing(null);
+      setPendingDelete(null);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -246,7 +256,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
           <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Llamar al taller el viernes" />
           <button type="button" onClick={archive} disabled={!text.trim()}>Dejar</button>
           <h2>Archivado</h2>
-          <ItemList items={items} editing={editing} setEditing={setEditing} saveEdit={saveEdit} removeItem={removeItem} />
+          <ItemList items={items} editing={editing} setEditing={setEditing} saveEdit={saveEdit} askRemove={askRemove} />
         </>
       )}
       {screen === "hoy" && (
@@ -255,11 +265,11 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
           <div className="panes">
             <section>
               <h2>Para hoy</h2>
-              {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} removeItem={removeItem} /> : <p className="private">Hoy no hay nada con fecha.</p>}
+              {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} askRemove={askRemove} /> : <p className="private">Hoy no hay nada con fecha.</p>}
             </section>
             <section>
               <h2>Próximos</h2>
-              {laterItems.length ? <ItemList items={laterItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} removeItem={removeItem} /> : <p className="private">No hay nada con fecha después de hoy.</p>}
+              {laterItems.length ? <ItemList items={laterItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} askRemove={askRemove} /> : <p className="private">No hay nada con fecha después de hoy.</p>}
             </section>
           </div>
         </>
@@ -282,7 +292,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
             <section>
               <h2>Tuyo</h2>
               {items.some((item) => item.module === current.id) ? (
-                <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} saveEdit={saveEdit} removeItem={removeItem} />
+                <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} saveEdit={saveEdit} askRemove={askRemove} />
               ) : (
                 <p className="private">Todavía no hay nada tuyo aquí. Escríbelo en Entrada.</p>
               )}
@@ -353,6 +363,29 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
         </>
       )}
       </main>
+      {pendingDelete && (
+        <ConfirmDialog
+          item={pendingDelete}
+          busy={deleting}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={confirmRemove}
+        />
+      )}
+    </div>
+  );
+}
+
+function ConfirmDialog({ item, busy, onCancel, onConfirm }) {
+  return (
+    <div className="overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title" onClick={onCancel}>
+      <div className="dialog" onClick={(event) => event.stopPropagation()}>
+        <h2 id="confirm-title">Borrar entrada</h2>
+        <p className="lead">¿Borrar «{item.title}»? No se puede deshacer.</p>
+        <div className="actions">
+          <button type="button" className="secondary" onClick={onCancel} disabled={busy}>Cancelar</button>
+          <button type="button" className="danger" onClick={onConfirm} disabled={busy}>{busy ? "Borrando…" : "Borrar"}</button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -564,7 +597,7 @@ function clockOf(value) {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function ItemList({ items, editing, setEditing, saveEdit, removeItem }) {
+function ItemList({ items, editing, setEditing, saveEdit, askRemove }) {
   return (
     <div className="cards">
       {items.map((item) => (
@@ -619,7 +652,7 @@ function ItemList({ items, editing, setEditing, saveEdit, removeItem }) {
                   <>
                     <span className={`m-${item.module}`}><Icon name={item.module} /> {labelOf(item.module)}</span>
                     <button type="button" className="text" onClick={() => setEditing({ ...item })}>Cambiar</button>
-                    <button type="button" className="text danger" onClick={() => removeItem(item)}>Borrar</button>
+                    <button type="button" className="text danger" onClick={() => askRemove(item)}>Borrar</button>
                   </>
                 )}
               </p>
