@@ -431,7 +431,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
           <h1>Entrada</h1>
           <p className="lead">Escribe lo que tengas en la cabeza. Impersia lo archiva en su eje. Si no es el sitio, lo cambias.</p>
           <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Llamar al taller el viernes" />
-          <button type="button" onClick={archive} disabled={!text.trim()}>Archivar</button>
+          <button type="button" onClick={archive} disabled={!text.trim()}>Apuntar</button>
           <h2>Archivado</h2>
           <ItemList items={items} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
         </>

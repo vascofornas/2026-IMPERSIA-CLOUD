@@ -569,4 +569,4 @@ Tienda oculta por defecto con explicación al abrirla; enlaces de texto sin pill
 
 3 de octubre de 2026, 16:25
 Modesto pide que el botón de Entrada no diga Dejar.
-Pasa a Archivar, alineado con el lenguaje del producto. Suben web y dist.
+Pasa a Apuntar (prefiere Apuntar o Anotar frente a Archivar). Suben web y dist.
