@@ -615,3 +615,6 @@ Modesto pregunta por qué no está desplegado. Suben al VPS: migración 010, API
 
 3 de octubre de 2026, 19:50
 Desplegado en VPS (commit 7d3e20b). Migración 010 aplicada, impersia-api reiniciada, /health ok. ADMIN_EMAIL=modestovasco@gmail.com en /etc/impersia/api.env. Pantalla Motor LLM en https://impersia.cloud/app/#motor. OPENROUTER_API_KEY queda vacía hasta que Modesto la ponga en el servidor.
+
+3 de octubre de 2026, 19:55
+Modesto: el panel no debe exigir OpenRouter para verse ni configurarse; prefiere el nombre «Panel de administración». Renombrado (#admin, menú Administración). OpenRouter solo para «Probar OpenRouter (opcional)» y Fase A. Suben web y REGISTRO.

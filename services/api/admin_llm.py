@@ -1,4 +1,4 @@
-"""Rutas de administración del motor LLM. Solo ADMIN_EMAIL."""
+"""Panel de administración LLM: coste, límites y configuración. Solo ADMIN_EMAIL."""
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field

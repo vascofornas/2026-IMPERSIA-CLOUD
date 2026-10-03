@@ -20,7 +20,7 @@ import {
 } from "./agenda.js";
 import { CASA_KIND, casaEventLine, groupCasaItems, isCasaItem, SUPPLY_KIND } from "./casa.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
-import AdminMotor from "./AdminMotor.jsx";
+import AdminPanel from "./AdminPanel.jsx";
 import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
@@ -424,7 +424,7 @@ function Home({ email, googleEmail, look, alertEmail, isAdmin, onLook, onAlertEm
           <a className={screen === "perfil" ? "session on" : "session"} href="#perfil"><Icon name="perfil" /> <span>{email}</span></a>
           <a className={screen === "apariencia" ? "on" : ""} href="#apariencia"><Icon name="apariencia" /> Apariencia</a>
           {isAdmin && (
-            <a className={screen === "motor" ? "on" : ""} href="#motor"><Icon name="motor" /> Motor LLM</a>
+            <a className={screen === "admin" ? "on" : ""} href="#admin"><Icon name="admin" /> Administración</a>
           )}
           <button type="button" className="text" onClick={leave}>Salir</button>
         </div>
@@ -561,8 +561,8 @@ function Home({ email, googleEmail, look, alertEmail, isAdmin, onLook, onAlertEm
           </div>
         </>
       )}
-      {screen === "motor" && isAdmin && <AdminMotor setError={setError} />}
-      {screen !== "hoy" && screen !== "entrada" && screen !== "apariencia" && screen !== "perfil" && screen !== "motor" && !current && (
+      {screen === "admin" && isAdmin && <AdminPanel setError={setError} />}
+      {screen !== "hoy" && screen !== "entrada" && screen !== "apariencia" && screen !== "perfil" && screen !== "admin" && !current && (
         <>
           <h1>Hoy</h1>
           <p className="lead">Esa pantalla no existe. Vuelve a Hoy.</p>

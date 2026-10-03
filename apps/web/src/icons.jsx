@@ -48,7 +48,7 @@ const draw = {
   espacios: <><rect {...common} x="3" y="3" width="7" height="18" rx="1" /><rect {...common} x="14" y="3" width="7" height="10" rx="1" /><rect {...common} x="14" y="16" width="7" height="5" rx="1" /></>,
   perfil: <><circle {...common} cx="12" cy="12" r="9" /><circle {...common} cx="12" cy="10" r="3" /><path {...common} d="M6.8 18.2a5.6 5.6 0 0 1 10.4 0" /></>,
   apariencia: <><path {...common} d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 2-2 1.6 1.6 0 0 1 1.6-1.6H19a2 2 0 0 0 2-2A9 9 0 0 0 12 3z" /><circle cx="7.5" cy="10.5" r="1.1" fill="currentColor" stroke="none" /><circle cx="10.2" cy="7" r="1.1" fill="currentColor" stroke="none" /><circle cx="14.4" cy="7" r="1.1" fill="currentColor" stroke="none" /><circle cx="16.8" cy="10.8" r="1.1" fill="currentColor" stroke="none" /></>,
-  motor: <><rect {...common} x="4" y="4" width="16" height="16" rx="3" /><path {...common} d="M9 9v6M15 9v6M9 12h6" /><circle {...common} cx="12" cy="12" r="2.2" /></>,
+  admin: <><path {...common} d="M12 3 4 7v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V7l-8-4z" /><path {...common} d="M9 12l2 2 4-4" /></>,
   editar: <><path {...common} d="M12 20h9" /><path {...common} d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" /></>,
   borrar: <><path {...common} d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path {...common} d="M10 11v6M14 11v6" /></>,
   aviso: <><path {...common} d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path {...common} d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></>,

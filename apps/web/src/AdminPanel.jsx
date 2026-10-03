@@ -3,10 +3,10 @@ import { Icon } from "./icons.jsx";
 
 const API = "https://api.impersia.cloud";
 
-const REASON_LABEL = {
-  ok: "Listo para archivar con IA",
-  disabled: "Motor apagado",
-  no_key: "Falta la clave OpenRouter en el servidor",
+const IA_STATUS = {
+  ok: "Archivado con IA listo",
+  disabled: "Archivado con IA apagado · Entrada sigue con reglas",
+  no_key: "Sin clave OpenRouter · el panel funciona igual",
   daily_budget: "Presupuesto diario agotado",
   monthly_budget: "Presupuesto mensual agotado",
 };
@@ -33,7 +33,7 @@ function pct(spent, budget) {
   return Math.min(100, Math.round((spent / budget) * 100));
 }
 
-export default function AdminMotor({ setError }) {
+export default function AdminPanel({ setError }) {
   const [data, setData] = useState(null);
   const [usage, setUsage] = useState([]);
   const [draft, setDraft] = useState(null);
@@ -60,7 +60,7 @@ export default function AdminMotor({ setError }) {
   }, [load, setError]);
 
   if (!data || !draft) {
-    return <p className="private">Cargando motor…</p>;
+    return <p className="private">Cargando panel…</p>;
   }
 
   const { spend, operational, access, presets } = data;
@@ -95,11 +95,15 @@ export default function AdminMotor({ setError }) {
   }
 
   async function testConnection() {
+    if (!access.api_key_configured) {
+      setError("Para probar OpenRouter hace falta la clave en el servidor. Ver el panel no la necesita.");
+      return;
+    }
     setTesting(true);
     setError("");
     try {
       await adminCall("/admin/llm/test", { method: "POST" });
-      setSaved("Prueba correcta");
+      setSaved("Prueba OpenRouter correcta");
       await load();
     } catch (err) {
       setError(err.message);
@@ -119,63 +123,65 @@ export default function AdminMotor({ setError }) {
   }
 
   return (
-    <div className="motor-admin">
-      <header className="motor-hero">
+    <div className="admin-panel">
+      <header className="admin-hero">
         <div>
-          <p className="private kicker"><Icon name="motor" /> Administración</p>
-          <h1>Motor LLM</h1>
-          <p className="lead">Coste, límites y encendido del archivado con IA. Solo tú ves esta pantalla.</p>
+          <p className="private kicker"><Icon name="admin" /> Solo tú</p>
+          <h1>Panel de administración</h1>
+          <p className="lead">Coste, límites y configuración del archivado con IA. No hace falta OpenRouter para ver ni guardar ajustes.</p>
         </div>
-        <div className={`motor-status ${operational.llm_available ? "on" : "off"}`}>
-          <strong>{operational.llm_available ? "Activo" : "Inactivo"}</strong>
-          <span>{REASON_LABEL[operational.reason] || operational.reason}</span>
+        <div className="admin-status on">
+          <strong>Panel disponible</strong>
+          <span>{IA_STATUS[operational.reason] || operational.reason}</span>
         </div>
       </header>
 
-      <div className="motor-grid">
-        <section className="motor-card">
+      <div className="admin-grid">
+        <section className="admin-card">
           <h2>Hoy</h2>
-          <p className="motor-big">{money(spend.today_usd)}</p>
-          <div className="motor-bar"><i style={{ width: `${dailyPct}%` }} /></div>
+          <p className="admin-big">{money(spend.today_usd)}</p>
+          <div className="admin-bar"><i style={{ width: `${dailyPct}%` }} /></div>
           <p className="private">De {money(draft.daily_budget_usd)} · {spend.calls_today} llamadas</p>
         </section>
-        <section className="motor-card">
+        <section className="admin-card">
           <h2>Este mes</h2>
-          <p className="motor-big">{money(spend.month_usd)}</p>
-          <div className="motor-bar"><i style={{ width: `${monthPct}%` }} /></div>
+          <p className="admin-big">{money(spend.month_usd)}</p>
+          <div className="admin-bar"><i style={{ width: `${monthPct}%` }} /></div>
           <p className="private">De {money(draft.monthly_budget_usd)} · {spend.calls_month} llamadas</p>
         </section>
-        <section className="motor-card">
+        <section className="admin-card">
           <h2>Calidad hoy</h2>
-          <p className="motor-big">{spend.success_rate_today}%</p>
+          <p className="admin-big">{spend.success_rate_today}%</p>
           <p className="private">
             {spend.avg_latency_ms_today != null ? `${spend.avg_latency_ms_today} ms de media` : "Sin llamadas aún"}
           </p>
-          <p className="private">{access.api_key_configured ? "Clave OpenRouter configurada" : "Sin clave en el servidor"}</p>
+          <p className="private">
+            {access.api_key_configured ? "OpenRouter configurado en el servidor" : "OpenRouter pendiente (opcional por ahora)"}
+          </p>
         </section>
       </div>
 
-      <section className="motor-panel">
-        <div className="motor-row">
-          <label className="motor-toggle">
+      <section className="admin-panel-block">
+        <div className="admin-row">
+          <label className="admin-toggle">
             <input
               type="checkbox"
               checked={draft.enabled}
               onChange={(e) => setDraft({ ...draft, enabled: e.target.checked })}
             />
-            <span>Motor encendido</span>
+            <span>Archivado con IA encendido</span>
           </label>
-          <div className="motor-actions">
-            <button type="button" className="secondary" onClick={testConnection} disabled={testing || !access.api_key_configured}>
-              {testing ? "Probando…" : "Probar conexión"}
+          <div className="admin-actions">
+            <button type="button" className="secondary" onClick={testConnection} disabled={testing}>
+              {testing ? "Probando…" : "Probar OpenRouter (opcional)"}
             </button>
             <button type="button" onClick={save} disabled={busy}>{busy ? "Guardando…" : "Guardar"}</button>
-            {saved && <em className="motor-saved">{saved}</em>}
+            {saved && <em className="admin-saved">{saved}</em>}
           </div>
         </div>
 
         <label>
-          Modelo (OpenRouter)
+          Modelo previsto (OpenRouter)
           <select value={draft.model} onChange={(e) => pickPreset(e.target.value)}>
             {presets.map((item) => (
               <option key={item.model} value={item.model}>{item.model}</option>
@@ -183,7 +189,7 @@ export default function AdminMotor({ setError }) {
           </select>
         </label>
 
-        <div className="motor-fields">
+        <div className="admin-fields">
           <label>
             Presupuesto diario (USD)
             <input
@@ -227,13 +233,13 @@ export default function AdminMotor({ setError }) {
         </div>
       </section>
 
-      <section className="motor-panel">
+      <section className="admin-panel-block">
         <h2>Últimas llamadas</h2>
         {!usage.length ? (
           <p className="private">Todavía no hay llamadas registradas.</p>
         ) : (
-          <div className="motor-table-wrap">
-            <table className="motor-table">
+          <div className="admin-table-wrap">
+            <table className="admin-table">
               <thead>
                 <tr>
                   <th>Cuándo</th>
