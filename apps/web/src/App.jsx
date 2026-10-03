@@ -949,11 +949,13 @@ function ShoppingListPanel({
 }) {
   const [storeDraft, setStoreDraft] = useState("");
   const [savingStore, setSavingStore] = useState(false);
+  const [storeOpen, setStoreOpen] = useState(Boolean(list?.store_name));
   const [showDone, setShowDone] = useState(false);
   const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     setStoreDraft(list?.store_name || "");
+    if (list?.store_name) setStoreOpen(true);
   }, [list?.id, list?.store_name]);
 
   useEffect(() => {
@@ -990,24 +992,42 @@ function ShoppingListPanel({
 
   const doneLabel = done.length === 1 ? "1 comprado" : `${done.length} comprados`;
 
+  const hasStore = Boolean((list?.store_name || storeDraft).trim());
+
   return (
     <div className="shopping-list">
-      <label className="shopping-store">
-        Tienda
-        <input
-          value={storeDraft}
-          placeholder="Mercadona, Carrefour… (opcional)"
-          onChange={(e) => setStoreDraft(e.target.value)}
-          onBlur={saveStore}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              e.currentTarget.blur();
-            }
-          }}
-        />
-        {savingStore && <span className="private">Guardando…</span>}
-      </label>
+      {storeOpen ? (
+        <div className="shopping-store">
+          <p className="private shopping-store-hint">
+            Opcional. El sitio donde harás esta compra; más adelante servirá para avisarte al pasar cerca.
+          </p>
+          <label>
+            Tienda
+            <input
+              value={storeDraft}
+              placeholder="Mercadona, Amazon…"
+              onChange={(e) => setStoreDraft(e.target.value)}
+              onBlur={saveStore}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  e.currentTarget.blur();
+                }
+              }}
+            />
+          </label>
+          {savingStore && <span className="private">Guardando…</span>}
+          {!hasStore && (
+            <button type="button" className="text shopping-store-hide" onClick={() => setStoreOpen(false)}>
+              Ocultar
+            </button>
+          )}
+        </div>
+      ) : (
+        <button type="button" className="text shopping-store-open" onClick={() => setStoreOpen(true)}>
+          Indicar tienda (opcional)
+        </button>
+      )}
       {pending.length ? (
         <ShoppingChecklist
           items={pending}
@@ -1023,8 +1043,8 @@ function ShoppingListPanel({
       )}
       {done.length > 0 && (
         <div className="shopping-done">
-          <button type="button" className="link shopping-done-toggle" onClick={() => setShowDone(!showDone)}>
-            {showDone ? "Ocultar comprados" : `Mostrar ${doneLabel}`}
+          <button type="button" className="text shopping-done-toggle" onClick={() => setShowDone(!showDone)}>
+            {showDone ? "Ocultar comprados" : `${doneLabel} · mostrar`}
           </button>
           {showDone && (
             <>
@@ -1037,7 +1057,7 @@ function ShoppingListPanel({
                 askRemove={askRemove}
                 onToggleStatus={onToggleStatus}
               />
-              <button type="button" className="link danger shopping-clear-done" onClick={clearDone} disabled={clearing}>
+              <button type="button" className="text shopping-clear-done" onClick={clearDone} disabled={clearing}>
                 {clearing ? "Quitando…" : "Quitar comprados de la lista"}
               </button>
             </>
