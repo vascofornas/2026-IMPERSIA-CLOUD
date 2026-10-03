@@ -98,6 +98,16 @@ def classify(text: str) -> dict:
     family = module == "agenda" and not medical and _is_family(low)
     leisure = module == "agenda" and not medical and not family and _is_leisure(low)
     reminder = module == "agenda" and not medical and not family and not leisure and _is_reminder(low)
+    casa = (
+        not medical
+        and not family
+        and not leisure
+        and not reminder
+        and (module == "casa" or _is_casa(low))
+        and module not in {"reuniones", "proyectos", "viajes", "ideas", "memoria"}
+    )
+    if casa:
+        module = "casa"
     alert = _alert_minutes_before(low, time_known)
     if medical and alert == 15:
         alert = 30
@@ -120,6 +130,7 @@ def classify(text: str) -> dict:
             family_fields=fam,
             leisure_fields={},
             reminder_fields={},
+            casa_fields={},
         )
     if medical:
         meta = _medical_meta(raw, low)
@@ -135,6 +146,7 @@ def classify(text: str) -> dict:
             family_fields={},
             leisure_fields={},
             reminder_fields={},
+            casa_fields={},
         )
     if leisure:
         plan = _leisure_meta(raw, low)
@@ -150,6 +162,7 @@ def classify(text: str) -> dict:
             family_fields={},
             leisure_fields=plan,
             reminder_fields={},
+            casa_fields={},
         )
     if reminder:
         rem = _reminder_meta(raw, low)
@@ -167,6 +180,23 @@ def classify(text: str) -> dict:
             family_fields={},
             leisure_fields={},
             reminder_fields=rem,
+            casa_fields={},
+        )
+    if casa:
+        home = _casa_meta(raw, low)
+        return _classify_result(
+            module,
+            _casa_title(raw, low, home.get("casa_kind")),
+            starts,
+            time_known,
+            repeats,
+            alert,
+            None,
+            medical_fields={},
+            family_fields={},
+            leisure_fields={},
+            reminder_fields={},
+            casa_fields=home,
         )
     return _classify_result(
         module,
@@ -180,6 +210,7 @@ def classify(text: str) -> dict:
         family_fields={},
         leisure_fields={},
         reminder_fields={},
+        casa_fields={},
     )
 
 
@@ -195,6 +226,7 @@ def _classify_result(
     family_fields: dict,
     leisure_fields: dict,
     reminder_fields: dict,
+    casa_fields: dict,
 ) -> dict:
     return {
         "axis": MODULES[module],
@@ -223,6 +255,9 @@ def _classify_result(
         "reminder_kind": reminder_fields.get("reminder_kind"),
         "reminder_place": reminder_fields.get("reminder_place"),
         "reminder_notes": reminder_fields.get("reminder_notes"),
+        "casa_kind": casa_fields.get("casa_kind"),
+        "casa_place": casa_fields.get("casa_place"),
+        "casa_notes": casa_fields.get("casa_notes"),
         "source": "rules",
     }
 
@@ -233,6 +268,73 @@ def legacy_kind(module: str) -> str:
     if module in {"proyectos", "casa", "habitos"}:
         return "task"
     return "note"
+
+
+CASA_KINDS = {
+    "compra": (
+        "comprar",
+        "lista de la compra",
+        "hace falta",
+        "necesito",
+        "supermercado",
+        "mercadona",
+        "carrefour",
+        "lidl",
+        "aldi",
+        "colmena",
+    ),
+    "mantenimiento": (
+        "avería",
+        "averia",
+        "reparar",
+        "arreglar",
+        "cambiar el",
+        "cambiar la",
+        "fontanero",
+        "electricista",
+        "taller",
+        "filtro",
+        "grifo",
+        "fuga",
+        "caldera",
+        "calentador",
+        "persiana",
+        "pintar",
+        "gotera",
+    ),
+    "suministro": (
+        "suministro",
+        "recibo de la luz",
+        "recibo del agua",
+        "factura de la luz",
+        "factura del gas",
+        "iberdrola",
+        "endesa",
+        "naturgy",
+        "fibra",
+        "wifi en casa",
+    ),
+    "limpieza": ("limpiar", "limpieza", "ordenar", "lavar", "planchar", "fregar", "aspirar", "quitar el polvo"),
+    "otro": ("en casa", "del hogar", "del piso"),
+}
+
+
+def _is_casa(low: str) -> bool:
+    if re.search(r"\b(?:mi|el|en el|en la)\s+casa\b|\ben casa\b", low):
+        return True
+    for words in CASA_KINDS.values():
+        if any(word in low for word in words):
+            return True
+    return False
+
+
+def _casa_kind(low: str) -> str:
+    for kind, words in CASA_KINDS.items():
+        if kind == "otro":
+            continue
+        if any(word in low for word in words):
+            return kind
+    return "otro"
 
 
 def _module(low: str) -> str:
@@ -256,7 +358,7 @@ def _module(low: str) -> str:
         return "viajes"
     if re.search(r"\bagenda\b", low):
         return "agenda"
-    if any(word in low for word in ("lista de la compra", "comprar", "suministro", "taller", "avería", "averia")):
+    if _is_casa(low):
         return "casa"
     if re.search(r"\bcada\b", low):
         return "habitos"
@@ -884,3 +986,71 @@ def _clock(low: str) -> tuple[int, int] | tuple[None, None]:
     if hour > 23 or minute > 59:
         return None, None
     return hour, minute
+
+
+def _casa_place(low: str) -> str | None:
+    match = re.search(
+        r"\b(?:en|del|de la)\s+(?:el\s+|la\s+)?([a-z0-9áéíóúñ .-]{3,40})",
+        low,
+    )
+    if not match:
+        match = re.search(r"\b(?:baño|salón|salon|cocina|garaje|dormitorio|terraza)\b", low)
+        if match:
+            return match.group(0)[0].upper() + match.group(0)[1:]
+        return None
+    place = " ".join(match.group(1).split()).strip(" .")
+    skip = (
+        "martes",
+        "miércoles",
+        "miercoles",
+        "jueves",
+        "viernes",
+        "lunes",
+        "sábado",
+        "sabado",
+        "domingo",
+        "mañana",
+        "manana",
+        "hoy",
+    )
+    if any(word in place for word in skip):
+        return None
+    return place[0].upper() + place[1:]
+
+
+def _casa_meta(raw: str, low: str) -> dict:
+    return {
+        "casa_kind": _casa_kind(low),
+        "casa_place": _casa_place(low),
+        "casa_notes": None,
+    }
+
+
+def _casa_title(raw: str, low: str, kind: str | None) -> str:
+    labels = {
+        "compra": "Compra",
+        "mantenimiento": "Mantenimiento",
+        "suministro": "Suministro",
+        "limpieza": "Limpieza",
+        "otro": "Casa",
+    }
+    label = labels.get(kind or "otro", "Casa")
+    cleaned = _title(raw)
+    if kind == "compra":
+        cleaned = re.sub(
+            r"^(?:comprar|compra de|hay que comprar|hace falta|necesito(?: comprar)?)\s+",
+            "",
+            cleaned,
+            flags=re.IGNORECASE,
+        ).strip()
+        if cleaned:
+            return cleaned[0].upper() + cleaned[1:]
+    if kind == "mantenimiento":
+        cleaned = re.sub(r"^(?:hay que |tengo que )?(?:arreglar|reparar|cambiar)\s+(?:el |la )?", "", cleaned, flags=re.IGNORECASE)
+        if cleaned:
+            return cleaned[0].upper() + cleaned[1:]
+    if cleaned.lower().startswith(label.lower()):
+        return cleaned
+    if kind and kind != "otro" and label.lower() not in cleaned.lower():
+        return f"{label} · {cleaned}" if cleaned else label
+    return cleaned or label

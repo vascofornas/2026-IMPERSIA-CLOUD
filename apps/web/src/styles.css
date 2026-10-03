@@ -807,6 +807,19 @@ a.connect {
   color: #1849a9;
 }
 
+.tag.compra,
+.tag.mantenimiento,
+.tag.suministro,
+.tag.limpieza {
+  background: color-mix(in srgb, var(--chip, #c2410c) 14%, var(--bg));
+  color: var(--chip, #c2410c);
+}
+
+.card.done .title {
+  text-decoration: line-through;
+  opacity: 0.65;
+}
+
 .medical-line {
   display: flex;
   flex-wrap: wrap;

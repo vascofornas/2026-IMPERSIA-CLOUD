@@ -36,6 +36,7 @@ FAMILY_KIND = {"cumpleanos", "aniversario", "boda", "bautizo", "comunion", "comi
 LEISURE_KIND = {"cine", "restaurante", "concierto", "teatro", "deporte", "excursion", "quedar", "otro"}
 LEISURE_WITH = {"solo", "partner", "friends", "family", "other"}
 REMINDER_KIND = {"itv", "seguro", "impuesto", "documento", "hogar", "otro"}
+CASA_KIND = {"compra", "mantenimiento", "suministro", "limpieza", "otro"}
 LOOKS = {"claro", "papel", "mar", "cielo", "oliva", "arena", "violeta", "tinta", "noche", "grafito"}
 COOKIE = "impersia_session"
 
@@ -148,6 +149,13 @@ class ItemPatch(BaseModel):
     reminder_kind: str | None = None
     reminder_place: str | None = None
     reminder_notes: str | None = None
+    casa_kind: str | None = None
+    casa_place: str | None = None
+    casa_notes: str | None = None
+
+
+class StatusIn(BaseModel):
+    status: str
 
 
 class ExceptionIn(BaseModel):
@@ -465,13 +473,15 @@ def create_capture(body: CaptureIn, request: Request):
                      agenda_type, medical_for, medical_name, medical_place, medical_notes,
                      family_kind, family_for, family_name, family_place, family_notes,
                      leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
-                     reminder_kind, reminder_place, reminder_notes, privacy)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
+                     reminder_kind, reminder_place, reminder_notes,
+                     casa_kind, casa_place, casa_notes, privacy)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
                 RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
                     agenda_type, medical_for, medical_name, medical_place, medical_notes,
                     family_kind, family_for, family_name, family_place, family_notes,
                     leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
-                    reminder_kind, reminder_place, reminder_notes, privacy, created_at
+                    reminder_kind, reminder_place, reminder_notes,
+                    casa_kind, casa_place, casa_notes, status, privacy, created_at
                 """,
                 (
                     user_id,
@@ -502,6 +512,9 @@ def create_capture(body: CaptureIn, request: Request):
                     suggestion.get("reminder_kind"),
                     suggestion.get("reminder_place"),
                     suggestion.get("reminder_notes"),
+                    suggestion.get("casa_kind"),
+                    suggestion.get("casa_place"),
+                    suggestion.get("casa_notes"),
                 ),
             )
             item = cur.fetchone()
@@ -622,12 +635,24 @@ def _agenda_fields(body: ItemPatch) -> dict:
     return empty
 
 
+def _casa_fields(body: ItemPatch) -> dict:
+    empty = {"casa_kind": None, "casa_place": None, "casa_notes": None}
+    if body.module != "casa":
+        return empty
+    return {
+        "casa_kind": body.casa_kind if body.casa_kind in CASA_KIND else "otro",
+        "casa_place": (body.casa_place or "").strip() or None,
+        "casa_notes": (body.casa_notes or "").strip() or None,
+    }
+
+
 @app.patch("/items/{item_id}")
 def patch_item(item_id: str, body: ItemPatch, request: Request):
     user_id = current_user(request)
     if body.module not in MODULES:
         raise HTTPException(status_code=422, detail="Ese módulo no existe")
     extra = _agenda_fields(body)
+    casa = _casa_fields(body)
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -638,13 +663,15 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     medical_place = %s, medical_notes = %s, family_kind = %s, family_for = %s,
                     family_name = %s, family_place = %s, family_notes = %s, leisure_kind = %s,
                     leisure_with = %s, leisure_name = %s, leisure_place = %s, leisure_notes = %s,
-                    reminder_kind = %s, reminder_place = %s, reminder_notes = %s
+                    reminder_kind = %s, reminder_place = %s, reminder_notes = %s,
+                    casa_kind = %s, casa_place = %s, casa_notes = %s
                 WHERE id = %s AND user_id = %s
                 RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
                     agenda_type, medical_for, medical_name, medical_place, medical_notes,
                     family_kind, family_for, family_name, family_place, family_notes,
                     leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
-                    reminder_kind, reminder_place, reminder_notes, privacy, created_at
+                    reminder_kind, reminder_place, reminder_notes,
+                    casa_kind, casa_place, casa_notes, status, privacy, created_at
                 """,
                 (
                     body.module,
@@ -672,6 +699,9 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     extra["reminder_kind"],
                     extra["reminder_place"],
                     extra["reminder_notes"],
+                    casa["casa_kind"],
+                    casa["casa_place"],
+                    casa["casa_notes"],
                     item_id,
                     user_id,
                 ),
@@ -683,6 +713,29 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
         conn.commit()
     if not item:
         raise HTTPException(status_code=404, detail="No está en tu cuenta")
+    return item
+
+
+@app.patch("/items/{item_id}/status")
+def patch_item_status(item_id: str, body: StatusIn, request: Request):
+    user_id = current_user(request)
+    if body.status not in {"open", "done"}:
+        raise HTTPException(status_code=422, detail="El estado tiene que ser pendiente o hecho")
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE items
+                SET status = %s
+                WHERE id = %s AND user_id = %s AND kind = 'task'
+                RETURNING id
+                """,
+                (body.status, item_id, user_id),
+            )
+            if not cur.fetchone():
+                raise HTTPException(status_code=404, detail="No está en tu cuenta o no es una tarea")
+            item = _fetch_item(cur, item_id, user_id)
+        conn.commit()
     return item
 
 
@@ -778,7 +831,8 @@ def list_items(request: Request):
                     agenda_type, medical_for, medical_name, medical_place, medical_notes,
                     family_kind, family_for, family_name, family_place, family_notes,
                     leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
-                    reminder_kind, reminder_place, reminder_notes, privacy, created_at
+                    reminder_kind, reminder_place, reminder_notes,
+                    casa_kind, casa_place, casa_notes, status, privacy, created_at
                 FROM items
                 WHERE user_id = %s
                 ORDER BY created_at DESC
@@ -843,7 +897,8 @@ def _fetch_item(cur, item_id: str, user_id: str) -> dict | None:
             agenda_type, medical_for, medical_name, medical_place, medical_notes,
             family_kind, family_for, family_name, family_place, family_notes,
             leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
-            reminder_kind, reminder_place, reminder_notes, privacy, created_at
+            reminder_kind, reminder_place, reminder_notes,
+            casa_kind, casa_place, casa_notes, status, privacy, created_at
         FROM items
         WHERE id = %s AND user_id = %s
         """,
@@ -901,6 +956,10 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         "reminder_kind": row.get("reminder_kind"),
         "reminder_place": row.get("reminder_place"),
         "reminder_notes": row.get("reminder_notes"),
+        "casa_kind": row.get("casa_kind"),
+        "casa_place": row.get("casa_place"),
+        "casa_notes": row.get("casa_notes"),
+        "status": row.get("status") or "open",
         "privacy": row["privacy"],
         "created_at": row["created_at"].isoformat(),
         "exceptions": [_public_exception(row) for row in (exceptions or [])],

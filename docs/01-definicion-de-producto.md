@@ -27,6 +27,8 @@ Dentro de Agenda (Vida personal), las variantes perfeccionadas son la **cita mé
 
 La **cita médica** incluye: título (especialidad o consulta), fecha, hora, aviso, para quién es (yo, hijo/a, padre o madre, abuelo/a, sobrino/a u otra persona con nombre), lugar y notas. Son citas de interés para la persona, no solo las suyas propias. Se archivan desde Entrada y se ven y editan en Agenda con ese detalle.
 
+Dentro de **Casa** (Vida personal), las variantes son **compra**, **mantenimiento**, **suministro**, **limpieza** y **otro**. Cada tarea lleva título, tipo, dónde (tienda, habitación, compañía…) y notas. Si la frase trae fecha, sale en Hoy y en el calendario, pero sigue siendo Casa. Se puede marcar como hecha; lo pendiente y lo hecho se ven por separado en el módulo.
+
 Agenda puede mostrar, además, un calendario que la persona ya tenga. El primero es Google Calendar, y solo si ella lo conecta. Impersia lo lee y lo junta en Agenda y en Hoy con lo que entró por Entrada. Lo de Google se distingue. Lo escrito en Impersia no se copia a Google en esta versión.
 
 Las entradas con hora pueden llevar aviso. Se cambia al editar la entrada, en el campo Aviso. Las repetidas comparten el mismo aviso para toda la serie.

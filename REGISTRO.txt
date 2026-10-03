@@ -526,3 +526,7 @@ classify.py entiende día y mes; ocio sin fecha va a Deseos; horas tipo 11:00 si
 3 de octubre de 2026, 15:35
 Modesto confirma que cumpleaños con fecha literal funciona (Cumpleaños de Ana el 12 de abril).
 Queda validado el pulido de fechas en Agenda. Los cuatro tipos de cita y la cita general están operativos en v1.
+
+3 de octubre de 2026, 15:45
+Modesto pide seguir con Casa en Vida personal.
+Primera variante de Casa: casa_kind (compra, mantenimiento, suministro, limpieza, otro), casa_place y casa_notes. Reglas en classify.py. Editor y ficha en la web. Marcar hecho en tareas. Pendiente y hecho separados en el módulo. Suben migración 006, API, classify, web y docs.

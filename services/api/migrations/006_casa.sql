@@ -1,0 +1,3 @@
+ALTER TABLE items ADD COLUMN IF NOT EXISTS casa_kind text;
+ALTER TABLE items ADD COLUMN IF NOT EXISTS casa_place text;
+ALTER TABLE items ADD COLUMN IF NOT EXISTS casa_notes text;

@@ -57,6 +57,9 @@ CREATE TABLE IF NOT EXISTS items (
     reminder_kind text,
     reminder_place text,
     reminder_notes text,
+    casa_kind text,
+    casa_place text,
+    casa_notes text,
     status text NOT NULL DEFAULT 'open',
     privacy text NOT NULL DEFAULT 'private',
     created_at timestamptz NOT NULL DEFAULT now()
