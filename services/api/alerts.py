@@ -7,7 +7,6 @@ import smtplib
 from zoneinfo import ZoneInfo
 
 MADRID = ZoneInfo("Europe/Madrid")
-APP_HOME = "https://impersia.cloud/app/#hoy"
 
 MODULE_LABELS = {
     "agenda": "Agenda",
