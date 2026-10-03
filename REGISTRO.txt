@@ -522,3 +522,7 @@ Los avisos llevan logo-email.png, pie con aviso de servicio, RGPD, enlace a desa
 3 de octubre de 2026, 15:30
 Repaso de Agenda: fechas literales en español (12 de abril, 15 de noviembre…).
 classify.py entiende día y mes; ocio sin fecha va a Deseos; horas tipo 11:00 sin «a las». Suben classify.py y REGISTRO.txt.
+
+3 de octubre de 2026, 15:35
+Modesto confirma que cumpleaños con fecha literal funciona (Cumpleaños de Ana el 12 de abril).
+Queda validado el pulido de fechas en Agenda. Los cuatro tipos de cita y la cita general están operativos en v1.
