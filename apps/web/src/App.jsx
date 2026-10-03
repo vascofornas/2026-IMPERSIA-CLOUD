@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GoogleMark, Icon } from "./icons.jsx";
+import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
 import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
@@ -152,13 +153,27 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   const [pendingAction, setPendingAction] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
-  const [browserAlerts, setBrowserAlerts] = useState(
-    () => typeof Notification !== "undefined" && Notification.permission === "granted",
-  );
   const screen = useHash();
   const current = findModule(screen);
 
-  useAlerts(items, browserAlerts);
+  const checkAlerts = useAlerts(items);
+
+  useEffect(() => {
+    if (!("Notification" in window)) return undefined;
+    if (Notification.permission === "granted") ensureAlertWorker();
+    const sync = () => {
+      if (Notification.permission === "granted") {
+        ensureAlertWorker();
+        checkAlerts();
+      }
+    };
+    window.addEventListener("focus", sync);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      window.removeEventListener("focus", sync);
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, [checkAlerts]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -183,8 +198,10 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
         method: "POST",
         body: JSON.stringify({ text }),
       });
-      setItems([item, ...items]);
+      const next = [item, ...items];
+      setItems(next);
       setText("");
+      checkAlerts(next);
     } catch (err) {
       setError(err.message);
     }
@@ -420,7 +437,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
         <>
           <h1>Perfil</h1>
           <p className="lead">{email}</p>
-          <AlertPermission alertEmail={alertEmail} onAlertEmail={onAlertEmail} onBrowserAlerts={setBrowserAlerts} setError={setError} />
+          <AlertPermission alertEmail={alertEmail} onAlertEmail={onAlertEmail} setError={setError} />
         </>
       )}
       {screen === "apariencia" && (
@@ -1053,44 +1070,93 @@ function alertLabel(minutes) {
   return `${minutes} min antes`;
 }
 
-function useAlerts(items, browserAlerts) {
-  useEffect(() => {
-    if (!("Notification" in window)) return undefined;
-    const tick = () => {
-      if (!browserAlerts || Notification.permission !== "granted") return;
-      const now = Date.now();
-      const from = dayStart(new Date());
-      const to = endOfDay(new Date());
-      to.setDate(to.getDate() + 1);
-      const dated = items.filter((item) => item.starts_at && item.alert_minutes_before != null && item.source !== "google");
-      expandItems(dated, from, to).forEach((item) => {
-        const start = new Date(item.starts_at).getTime();
-        const alertAt = start - item.alert_minutes_before * 60000;
-        const key = `impersia-alert-${item.occurrenceKey || item.id}-${item.alert_minutes_before}`;
-        if (now < alertAt || now > start + 300000) return;
-        if (sessionStorage.getItem(key)) return;
-        new Notification(item.title, {
-          body: `${whenLabel(item)} · ${labelOf(item.module)}`,
-          icon: "https://impersia.cloud/logo-email.png",
-          tag: key,
-        });
-        sessionStorage.setItem(key, "1");
-      });
-    };
-    tick();
-    const id = window.setInterval(tick, 10000);
-    const onShow = () => tick();
-    document.addEventListener("visibilitychange", onShow);
-    return () => {
-      window.clearInterval(id);
-      document.removeEventListener("visibilitychange", onShow);
-    };
-  }, [items, browserAlerts]);
+const ALERT_LEAD_MS = 60000;
+const ALERT_GRACE_MS = 600000;
+
+function alertKey(item) {
+  return `impersia-alert-${item.occurrenceKey || item.id}-${item.alert_minutes_before}`;
 }
 
-function AlertPermission({ alertEmail, onAlertEmail, onBrowserAlerts, setError }) {
+function showBrowserNotification(item, key, fired) {
+  if (fired.has(key)) return;
+  postBrowserNotification(item.title, `${whenLabel(item)} · ${labelOf(item.module)}`, key)
+    .then(() => fired.add(key))
+    .catch(() => {});
+}
+
+function checkBrowserAlerts(items, fired) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const now = Date.now();
+  const from = dayStart(new Date());
+  const to = endOfDay(new Date());
+  to.setDate(to.getDate() + 1);
+  const dated = items.filter((item) => item.starts_at && item.alert_minutes_before != null && item.source !== "google");
+  expandItems(dated, from, to).forEach((item) => {
+    const start = new Date(item.starts_at).getTime();
+    const alertAt = start - item.alert_minutes_before * 60000;
+    if (now < alertAt - ALERT_LEAD_MS || now > start + ALERT_GRACE_MS) return;
+    showBrowserNotification(item, alertKey(item), fired);
+  });
+}
+
+function useAlerts(items) {
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  const firedRef = useRef(new Set());
+
+  const checkNow = useCallback((list) => {
+    checkBrowserAlerts(list ?? itemsRef.current, firedRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (!("Notification" in window)) return undefined;
+    checkNow();
+    const id = window.setInterval(checkNow, 5000);
+    const wake = () => checkNow();
+    document.addEventListener("visibilitychange", wake);
+    window.addEventListener("focus", wake);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", wake);
+      window.removeEventListener("focus", wake);
+    };
+  }, [checkNow]);
+
+  return checkNow;
+}
+
+const TEST_NOTICE =
+  "Aviso enviado. Mira arriba a la derecha del Mac. En Ajustes → Notificaciones → Google Chrome, el estilo debe ser «Alertas» o «Banners», no «Ninguno».";
+
+function AlertPermission({ alertEmail, onAlertEmail, setError }) {
   const [browser, setBrowser] = useState(() => ("Notification" in window ? Notification.permission : "unsupported"));
   const [busy, setBusy] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (!("Notification" in window)) return;
+    setBrowser(Notification.permission);
+    if (Notification.permission === "granted") ensureAlertWorker();
+  }, []);
+
+  async function runTest() {
+    setError("");
+    setNotice("");
+    setTesting(true);
+    try {
+      await postBrowserNotification(
+        "Impersia — prueba",
+        "Si ves esto, los avisos del navegador funcionan en tu Mac.",
+        `impersia-test-${Date.now()}`,
+      );
+      setNotice(TEST_NOTICE);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setTesting(false);
+    }
+  }
 
   async function toggleEmail() {
     setBusy(true);
@@ -1113,17 +1179,35 @@ function AlertPermission({ alertEmail, onAlertEmail, onBrowserAlerts, setError }
       <section>
         <h2>Navegador</h2>
         {browser === "unsupported" && <p className="private">Este navegador no puede avisarte con la pestaña abierta.</p>}
-        {browser === "granted" && <p className="private"><Icon name="aviso" /> Los avisos del navegador están activos.</p>}
-        {browser === "denied" && <p className="private">El navegador tiene los avisos bloqueados. Actívalos en los ajustes del sitio.</p>}
+        {browser === "granted" && (
+          <>
+            <p className="private"><Icon name="aviso" /> Permiso del sitio: concedido.</p>
+            <p className="private">La pestaña debe estar abierta. En Chrome: candado → Notificaciones → Permitir.</p>
+            <button type="button" className="secondary" onClick={runTest} disabled={testing}>
+              <Icon name="aviso" /> {testing ? "Enviando…" : "Probar notificación"}
+            </button>
+            {notice && <p className="notice">{notice}</p>}
+          </>
+        )}
+        {browser === "denied" && (
+          <p className="private">
+            Chrome bloquea impersia.cloud. Pulsa el candado junto a la URL → Notificaciones → Permitir, y recarga.
+          </p>
+        )}
         {browser === "default" && (
           <>
             <p className="lead">Con la web abierta, Impersia puede avisarte a la hora de tus entradas.</p>
             <button
               type="button"
               onClick={async () => {
+                setError("");
+                setNotice("");
                 const result = await Notification.requestPermission();
                 setBrowser(result);
-                if (result === "granted") onBrowserAlerts(true);
+                if (result === "granted") {
+                  await ensureAlertWorker();
+                  runTest();
+                }
               }}
             >
               <Icon name="aviso" /> Activar avisos del navegador

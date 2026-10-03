@@ -479,6 +479,18 @@ El timer de correo fallaba cada minuto: send_alerts.py no usaba dict_row y las f
 Modesto confirma que el correo sí llega pero la notificación en la web no.
 Si activabas avisos del navegador en Perfil, el comprobador no arrancaba hasta recargar. Ahora arranca al conceder permiso, revisa cada 10 segundos y al volver a la pestaña.
 
+3 de octubre de 2026, 12:15
+Sigue sin saltar la notificación en el Mac; el correo sí.
+Se rehace el aviso del navegador: comprueba cada 5 s, al crear una entrada y al volver a la pestaña; ya no usa sessionStorage (podía bloquear sin mostrar nada); sin icono externo; ventana de gracia ampliada. En Perfil hay botón Probar notificación y aviso de revisar Ajustes del Mac. Archivos: apps/web/src/App.jsx. Build publicado en el VPS.
+
+3 de octubre de 2026, 12:20
+Modesto activa notificaciones de Chrome en el Mac pero Probar notificación no hace nada visible.
+Chrome en Mac a veces ignora new Notification(). Se añade service worker (apps/web/public/sw.js) y módulo notifications.js con reg.showNotification. El botón muestra feedback en pantalla y pide estilo Alertas o Banners en Ajustes del Mac. Build publicado en el VPS.
+
+3 de octubre de 2026, 12:25
+Modesto confirma que la prueba de notificación en Chrome Mac ya funciona.
+Avisos del navegador operativos con service worker. Correo y navegador quedan activos para recordatorios.
+
 3 de octubre de 2026, 11:44
 Modesto pide logo en los correos y avisos legales habituales.
 Los avisos llevan logo-email.png, pie con aviso de servicio, RGPD, enlace a desactivar en Perfil, contacto y privacidad. Se publica apps/comercial/privacidad.html y logo-email.png en impersia.cloud.
