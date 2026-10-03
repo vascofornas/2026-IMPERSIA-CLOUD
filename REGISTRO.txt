@@ -456,3 +456,6 @@ En Perfil hay Activar avisos por correo. El servidor mira cada minuto qué toca 
 
 3 de octubre de 2026, 11:18
 Modesto pasa la contraseña del buzón IONOS por un archivo temporal en el Mac. Se pone SMTP en el VPS, se corrige SMTP_FROM entre comillas, se prueba un correo a modestovasco@gmail.com y se borra el archivo. El timer impersia-alerts sigue activo.
+
+3 de octubre de 2026, 11:35
+El buzón impersia@impersia.cloud pasa a Google Workspace. IONOS no servía. Se activa verificación en dos pasos, se usa contraseña de aplicación y SMTP smtp.gmail.com. Prueba de correo a modestovasco@gmail.com enviada con éxito. Se borra otra vez el archivo temporal.
