@@ -622,3 +622,6 @@ Modesto: el panel no debe exigir OpenRouter para verse ni configurarse; prefiere
 3 de octubre de 2026, 20:00
 Modesto pide panel independiente de la web app, acceso super restringido.
 Nueva app estática apps/admin en admin.impersia.cloud. Quitado de la web app (sin enlace ni ruta). Registro cerrado si hay ADMIN_EMAIL. Login solo admin. Rutas /admin/llm protegidas. Opcional ADMIN_IP_ALLOWLIST. noindex. Suben API, admin, web, nginx y despliegue VPS.
+
+3 de octubre de 2026, 22:05
+Modesto crea DNS A admin → 217.76.158.141 en IONOS. En VPS: nginx activado, certificado Let's Encrypt, https://admin.impersia.cloud sirve apps/admin/dist.
