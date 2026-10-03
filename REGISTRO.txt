@@ -566,3 +566,7 @@ Comprados ocultos bajo «Mostrar N comprados», botón para quitarlos, fecha ent
 3 de octubre de 2026, 16:20
 Modesto no entiende la caja Tienda y el botón de comprados se ve mal.
 Tienda oculta por defecto con explicación al abrirla; enlaces de texto sin pill naranja. Suben web y dist.
+
+3 de octubre de 2026, 16:25
+Modesto pide que el botón de Entrada no diga Dejar.
+Pasa a Archivar, alineado con el lenguaje del producto. Suben web y dist.
