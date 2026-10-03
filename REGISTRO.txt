@@ -453,3 +453,6 @@ Las entradas con hora guardan cuándo avisar (minutos antes). Si la frase lo dic
 3 de octubre de 2026, 11:10
 Modesto pide también avisos por correo, además de la web y el push móvil futuro.
 En Perfil hay Activar avisos por correo. El servidor mira cada minuto qué toca avisar y manda un correo a la cuenta. No repite el mismo día de una serie. Suben alerts.py, send_alerts.py, timer systemd, schema, API y web. En el VPS hay que poner SMTP en api.env y encender impersia-alerts.timer.
+
+3 de octubre de 2026, 11:18
+Modesto pasa la contraseña del buzón IONOS por un archivo temporal en el Mac. Se pone SMTP en el VPS, se corrige SMTP_FROM entre comillas, se prueba un correo a modestovasco@gmail.com y se borra el archivo. El timer impersia-alerts sigue activo.
