@@ -586,3 +586,29 @@ Checklist con hecho, horario/repetición visible, hechas colapsadas; título lim
 3 de octubre de 2026, 19:00
 Modesto reporta que «Pasar aspiradora a toda la casa» fue a Diario.
 Faltaba aspiradora en las reglas de tareas del hogar; «a toda la casa» también cuenta como Casa. Corregido en classify.py; sube API.
+
+3 de octubre de 2026, 19:10
+Modesto dice que parchear reglas no es lo correcto para Impersia; pide soluciones escalables para todos los ejes.
+Queda escrito docs/04-archivo-inteligente.md: motor híbrido (reglas temporales + modelo + correcciones), catálogo de 14 módulos, meta JSONB, contenedores, plan A-D. Fase 1 del roadmap no se cierra hasta archivado v2. Se congela ampliar classify.py por palabras.
+
+3 de octubre de 2026, 19:15
+Modesto pide Impersia en producción (14 módulos, cerebro IA), no más parches. Orden acordado: Fase A motor IA → pantallas → contenedores → compartir → voz/móvil/búsqueda.
+
+3 de octubre de 2026, 19:20
+Modesto pide comparativa de API para Fase A con alcance, calidad y coste real. Primera propuesta: OpenAI gpt-4o-mini (~0,0005 € por Apuntar, ~0,75 €/mes uso normal).
+
+3 de octubre de 2026, 19:25
+Modesto pide incluir proveedores chinos en la comparativa. Quedan en tabla: DeepSeek V4-Flash, Alibaba Qwen (3.8-flash / 3.7-flash), Zhipu GLM, Moonshot Kimi, BytePlus seed-mini. Qwen 3.8-flash y DeepSeek como alternativas chinas serias; Kimi demasiado caro como motor principal.
+
+3 de octubre de 2026, 19:30
+Modesto pregunta por OpenRouter. Decisión: válido para Fase A; una key, varios modelos, mismo precio por token (+5,5 % al recargar créditos). Recomendado para probar modelos antes de fijar uno; OpenRouter como puerta de entrada.
+
+3 de octubre de 2026, 19:35
+Modesto pide backend admin antes de Fase A: coste en tiempo real, encendido/apagado, presupuestos, acceso solo suyo. Orden: (1) backend admin LLM, (2) pantalla mínima, (3) Fase A archive.py con OpenRouter.
+
+3 de octubre de 2026, 19:40
+Backend admin LLM implementado en el repo.
+Tablas llm_settings (singleton) y llm_usage. Módulos services/api/llm.py y admin_llm.py. Rutas GET/PATCH /admin/llm/settings, GET /admin/llm/overview, GET /admin/llm/usage, POST /admin/llm/test. Variables ADMIN_EMAIL y OPENROUTER_API_KEY en infra/impersia-api.env.example. Login y registro restringidos a ADMIN_EMAIL. GET /me devuelve is_admin. Pantalla Motor LLM en la web (#motor), visible solo para admin. La clave OpenRouter nunca sale del servidor ni entra en el repositorio.
+
+3 de octubre de 2026, 19:45
+Modesto pregunta por qué no está desplegado. Suben al VPS: migración 010, API, web dist, ADMIN_EMAIL en api.env y reinicio de impersia-api.

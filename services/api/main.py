@@ -18,9 +18,12 @@ from pydantic import BaseModel, EmailStr, Field
 import psycopg
 from psycopg.rows import dict_row
 
+from admin_llm import router as admin_llm_router
 from classify import MODULES, classify, compra_store_name, legacy_kind, split_compra_titles
+import llm
 
 app = FastAPI(title="Impersia API")
+app.include_router(admin_llm_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://impersia.cloud"],
@@ -104,6 +107,22 @@ def current_user(request: Request) -> str:
     if not user_id:
         raise HTTPException(status_code=401, detail="Necesitas entrar")
     return user_id
+
+
+def read_user_email(user_id: str) -> str:
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT email FROM users WHERE id = %s", (user_id,))
+            row = cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=401, detail="Necesitas entrar")
+    return row["email"]
+
+
+def assert_account_allowed(email: str) -> None:
+    admin = llm.admin_email()
+    if admin and email.lower() != admin:
+        raise HTTPException(status_code=403, detail="Acceso restringido")
 
 
 def set_session(response: Response, user_id: str) -> None:
@@ -209,12 +228,14 @@ def _account(user_id: str, email: str, look: str, alert_email: bool = False) -> 
         "look": look if look in LOOKS else "claro",
         "alert_email": bool(alert_email),
         "google_email": link["google_email"] if link else None,
+        "is_admin": llm.is_admin_email(email),
     }
 
 
 @app.post("/auth/register", status_code=201)
 def register(body: Credentials, response: Response):
     email = body.email.lower()
+    assert_account_allowed(email)
     try:
         with db() as conn:
             with conn.cursor() as cur:
@@ -227,12 +248,13 @@ def register(body: Credentials, response: Response):
     except psycopg.errors.UniqueViolation:
         raise HTTPException(status_code=409, detail="Ese correo ya tiene cuenta")
     set_session(response, user_id)
-    return {"email": email, "look": "claro", "alert_email": False, "google_email": None}
+    return _account(user_id, email, "claro", False)
 
 
 @app.post("/auth/login")
 def login(body: Credentials, response: Response):
     email = body.email.lower()
+    assert_account_allowed(email)
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT id, password_hash, look, alert_email FROM users WHERE email = %s", (email,))
