@@ -3,6 +3,7 @@ import os
 import sys
 
 import psycopg
+from psycopg.rows import dict_row
 
 from alerts import run_email_alerts
 
@@ -13,7 +14,7 @@ def main() -> int:
         return 1
     if not os.environ.get("SMTP_HOST"):
         return 0
-    with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+    with psycopg.connect(os.environ["DATABASE_URL"], row_factory=dict_row) as conn:
         sent = run_email_alerts(conn)
     if sent:
         print(f"Enviados {sent} avisos por correo")

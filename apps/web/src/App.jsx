@@ -1073,7 +1073,7 @@ function useAlerts(items) {
       });
     };
     tick();
-    const id = window.setInterval(tick, 30000);
+    const id = window.setInterval(tick, 15000);
     return () => window.clearInterval(id);
   }, [items]);
 }
