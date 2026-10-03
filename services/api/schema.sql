@@ -49,6 +49,11 @@ CREATE TABLE IF NOT EXISTS items (
     family_name text,
     family_place text,
     family_notes text,
+    leisure_kind text,
+    leisure_with text,
+    leisure_name text,
+    leisure_place text,
+    leisure_notes text,
     status text NOT NULL DEFAULT 'open',
     privacy text NOT NULL DEFAULT 'private',
     created_at timestamptz NOT NULL DEFAULT now()

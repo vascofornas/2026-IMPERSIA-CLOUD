@@ -797,6 +797,11 @@ a.connect {
   color: #93370d;
 }
 
+.tag.ocio {
+  background: color-mix(in srgb, #027a48 14%, var(--bg));
+  color: #05603a;
+}
+
 .medical-line {
   display: flex;
   flex-wrap: wrap;

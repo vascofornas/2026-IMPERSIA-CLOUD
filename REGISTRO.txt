@@ -503,6 +503,10 @@ Queda validada la primera variante de Agenda. Siguiente paso natural: cumpleaño
 Modesto pide seguir con eventos familiares en Agenda.
 Segunda variante: agenda_type familiar, family_kind, family_for, family_name, family_place y family_notes. Cumpleaños y aniversarios se repiten cada año (repeats yearly). Editor y ficha en la web. Suben migración 003, API, classify, alerts, web y docs.
 
+3 de octubre de 2026, 15:05
+Modesto pide seguir con ocio/planes en Agenda.
+Tercera variante: agenda_type ocio, leisure_kind, leisure_with, leisure_name, leisure_place y leisure_notes. Con fecha va a Agenda; sin fecha sigue en Deseos. Suben migración 004, API, classify, web y docs.
+
 3 de octubre de 2026, 11:44
 Modesto pide logo en los correos y avisos legales habituales.
 Los avisos llevan logo-email.png, pie con aviso de servicio, RGPD, enlace a desactivar en Perfil, contacto y privacidad. Se publica apps/comercial/privacidad.html y logo-email.png en impersia.cloud.

@@ -5,7 +5,12 @@ import {
   familyEventLine,
   familyForLabel,
   isFamilyItem,
+  isLeisureItem,
   isMedicalItem,
+  LEISURE_KIND,
+  LEISURE_WITH,
+  leisureEventLine,
+  leisureWithLabel,
   MEDICAL_FOR,
   medicalForLabel,
 } from "./agenda.js";
@@ -250,6 +255,11 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
             family_name: editing.agenda_type === "familiar" ? editing.family_name || null : null,
             family_place: editing.agenda_type === "familiar" ? editing.family_place || null : null,
             family_notes: editing.agenda_type === "familiar" ? editing.family_notes || null : null,
+            leisure_kind: editing.agenda_type === "ocio" ? editing.leisure_kind || "otro" : null,
+            leisure_with: editing.agenda_type === "ocio" ? editing.leisure_with || "solo" : null,
+            leisure_name: editing.agenda_type === "ocio" ? editing.leisure_name || null : null,
+            leisure_place: editing.agenda_type === "ocio" ? editing.leisure_place || null : null,
+            leisure_notes: editing.agenda_type === "ocio" ? editing.leisure_notes || null : null,
           }),
         });
       }
@@ -772,6 +782,7 @@ function chipTitle(item) {
   if (item.source === "google") return `${clock}Google. ${item.title}`;
   if (isMedicalItem(item)) return `${clock}Cita médica. ${item.title}. ${medicalForLabel(item.medical_for, item.medical_name)}`;
   if (isFamilyItem(item)) return `${clock}${familyEventLine(item)}. ${item.title}`;
+  if (isLeisureItem(item)) return `${clock}${leisureEventLine(item)}. ${item.title}`;
   return `${clock}${labelOf(item.module)}. ${item.title}`;
 }
 
@@ -783,6 +794,10 @@ function chipText(item) {
   }
   if (isFamilyItem(item) && item.family_for !== "self") {
     const who = item.family_name || familyForLabel(item.family_for, null).replace("Para ", "");
+    return `${clock}${item.title} · ${who}`;
+  }
+  if (isLeisureItem(item) && item.leisure_with !== "solo") {
+    const who = item.leisure_name || leisureWithLabel(item.leisure_with, null);
     return `${clock}${item.title} · ${who}`;
   }
   return `${clock}${item.title}`;
@@ -868,12 +883,18 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
                           family_name: agenda_type === "familiar" ? editing.family_name || "" : "",
                           family_place: agenda_type === "familiar" ? editing.family_place || "" : "",
                           family_notes: agenda_type === "familiar" ? editing.family_notes || "" : "",
+                          leisure_kind: agenda_type === "ocio" ? editing.leisure_kind || "cine" : null,
+                          leisure_with: agenda_type === "ocio" ? editing.leisure_with || "solo" : null,
+                          leisure_name: agenda_type === "ocio" ? editing.leisure_name || "" : "",
+                          leisure_place: agenda_type === "ocio" ? editing.leisure_place || "" : "",
+                          leisure_notes: agenda_type === "ocio" ? editing.leisure_notes || "" : "",
                         });
                       }}
                     >
                       <option value="">Cita general</option>
                       <option value="medica">Cita médica</option>
                       <option value="familiar">Evento familiar</option>
+                      <option value="ocio">Ocio / plan</option>
                     </select>
                   </label>
                   {editing.agenda_type === "medica" && (
@@ -969,6 +990,58 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
                       </label>
                     </>
                   )}
+                  {editing.agenda_type === "ocio" && (
+                    <>
+                      <label>
+                        Tipo de plan
+                        <select
+                          value={editing.leisure_kind || "otro"}
+                          onChange={(e) => setEditing({ ...editing, leisure_kind: e.target.value })}
+                        >
+                          {LEISURE_KIND.map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        Con quién
+                        <select
+                          value={editing.leisure_with || "solo"}
+                          onChange={(e) => setEditing({ ...editing, leisure_with: e.target.value })}
+                        >
+                          {LEISURE_WITH.map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </select>
+                      </label>
+                      {(editing.leisure_with === "friends" || editing.leisure_with === "other") && (
+                        <label>
+                          Nombre
+                          <input
+                            value={editing.leisure_name || ""}
+                            placeholder="Ana, Luis…"
+                            onChange={(e) => setEditing({ ...editing, leisure_name: e.target.value })}
+                          />
+                        </label>
+                      )}
+                      <label>
+                        Lugar
+                        <input
+                          value={editing.leisure_place || ""}
+                          placeholder="Cine, bar, estadio…"
+                          onChange={(e) => setEditing({ ...editing, leisure_place: e.target.value })}
+                        />
+                      </label>
+                      <label>
+                        Notas
+                        <textarea
+                          value={editing.leisure_notes || ""}
+                          placeholder="Entradas, reserva, qué llevar…"
+                          onChange={(e) => setEditing({ ...editing, leisure_notes: e.target.value })}
+                        />
+                      </label>
+                    </>
+                  )}
                 </>
               )}
               <div className="actions">
@@ -999,6 +1072,14 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
               )}
               {isFamilyItem(item) && item.family_place && <p className="private">{item.family_place}</p>}
               {isFamilyItem(item) && item.family_notes && <p className="private">{item.family_notes}</p>}
+              {isLeisureItem(item) && (
+                <p className="medical-line">
+                  <span className="tag ocio">Ocio / plan</span>
+                  <span>{leisureEventLine(item)}</span>
+                </p>
+              )}
+              {isLeisureItem(item) && item.leisure_place && <p className="private">{item.leisure_place}</p>}
+              {isLeisureItem(item) && item.leisure_notes && <p className="private">{item.leisure_notes}</p>}
               <p className="meta">
                 {item.source === "google" ? (
                   <span className="tag m-google"><GoogleMark /> Google</span>

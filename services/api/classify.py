@@ -75,6 +75,7 @@ def classify(text: str) -> dict:
     module = _module(low)
     medical = module == "agenda" and _is_medical(low)
     family = module == "agenda" and not medical and _is_family(low)
+    leisure = module == "agenda" and not medical and not family and _is_leisure(low)
     alert = _alert_minutes_before(low, time_known)
     if medical and alert == 15:
         alert = 30
@@ -95,6 +96,7 @@ def classify(text: str) -> dict:
             "familiar",
             medical_fields={},
             family_fields=fam,
+            leisure_fields={},
         )
     if medical:
         meta = _medical_meta(raw, low)
@@ -108,6 +110,21 @@ def classify(text: str) -> dict:
             "medica",
             medical_fields=meta,
             family_fields={},
+            leisure_fields={},
+        )
+    if leisure:
+        plan = _leisure_meta(raw, low)
+        return _classify_result(
+            module,
+            _leisure_title(raw, low, plan.get("leisure_kind")),
+            starts,
+            time_known,
+            repeats,
+            alert,
+            "ocio",
+            medical_fields={},
+            family_fields={},
+            leisure_fields=plan,
         )
     return _classify_result(
         module,
@@ -119,6 +136,7 @@ def classify(text: str) -> dict:
         None,
         medical_fields={},
         family_fields={},
+        leisure_fields={},
     )
 
 
@@ -132,6 +150,7 @@ def _classify_result(
     agenda_type: str | None,
     medical_fields: dict,
     family_fields: dict,
+    leisure_fields: dict,
 ) -> dict:
     return {
         "axis": MODULES[module],
@@ -152,6 +171,11 @@ def _classify_result(
         "family_name": family_fields.get("family_name"),
         "family_place": family_fields.get("family_place"),
         "family_notes": family_fields.get("family_notes"),
+        "leisure_kind": leisure_fields.get("leisure_kind"),
+        "leisure_with": leisure_fields.get("leisure_with"),
+        "leisure_name": leisure_fields.get("leisure_name"),
+        "leisure_place": leisure_fields.get("leisure_place"),
+        "leisure_notes": leisure_fields.get("leisure_notes"),
         "source": "rules",
     }
 
@@ -191,7 +215,11 @@ def _module(low: str) -> str:
         return "habitos"
     if any(word in low for word in ("hábito", "habito", "ejercicio", "meditación", "meditacion", "rutina")):
         return "habitos"
-    if any(word in low for word in ("deseo", "quiero ir", "película", "pelicula", "restaurante")):
+    if _is_leisure(low) and _has_agenda_when(low):
+        return "agenda"
+    if any(word in low for word in ("deseo", "quiero ir")) and not _has_agenda_when(low):
+        return "deseos"
+    if any(word in low for word in ("película", "pelicula", "restaurante")) and not _has_agenda_when(low):
         return "deseos"
     if any(
         word in low
@@ -549,6 +577,112 @@ def _family_meta(raw: str, low: str) -> dict:
         "family_place": _medical_place(low),
         "family_notes": None,
     }
+
+
+def _has_agenda_when(low: str) -> bool:
+    return bool(
+        _explicit_day(low)
+        or re.search(r"\ba las \d", low)
+        or "hoy" in low
+        or _means_tomorrow(low)
+        or re.search(r"\bpasado mañana\b|\bpasado manana\b", low)
+    )
+
+
+LEISURE_KINDS = {
+    "cine": ("cine", "película", "pelicula"),
+    "restaurante": ("restaurante", "cenar", "cena en", "comer fuera", "tapas"),
+    "concierto": ("concierto", "recital"),
+    "teatro": ("teatro", "obra de teatro", "musical"),
+    "deporte": ("partido", "fútbol", "futbol", "baloncesto", "tenis", "pádel", "padel", "gym", "gimnasio"),
+    "excursion": ("excursión", "excursion", "ruta", "senderismo", "museo", "exposición", "exposicion"),
+    "quedar": ("quedar con", "tomar algo", "copas", "café", "cafe", "vernos"),
+    "otro": ("plan", "ocio", "salir"),
+}
+
+
+def _is_leisure(low: str) -> bool:
+    for words in LEISURE_KINDS.values():
+        if any(word in low for word in words):
+            return True
+    return False
+
+
+def _leisure_kind(low: str) -> str:
+    for kind, words in LEISURE_KINDS.items():
+        if kind == "otro":
+            continue
+        if any(word in low for word in words):
+            return kind
+    return "otro"
+
+
+def _leisure_with(low: str) -> str:
+    if re.search(r"\bsolo\b|\bir solo\b", low):
+        return "solo"
+    if re.search(r"\bcon mi pareja\b|\bcon pareja\b|\bcon mi novi[oa]\b", low):
+        return "partner"
+    if re.search(r"\bcon amigos\b|\bcon amigas\b|\bquedar con\b", low):
+        return "friends"
+    if re.search(r"\ben familia\b|\bcon la familia\b|\bcon familia\b", low):
+        return "family"
+    if re.search(r"\bquedar con\b|\bcon [A-ZÁÉÍÓÚÑa-z]", low):
+        return "friends"
+    return "solo"
+
+
+def _leisure_name(raw: str, low: str) -> str | None:
+    match = re.search(r"\bquedar con\s+(?:mis amigos?|mis amigas?)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)", raw)
+    if match:
+        return match.group(1)
+    match = re.search(r"\bquedar con\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)", raw)
+    if match:
+        name = match.group(1)
+        if name.lower() not in {"mis", "los", "las", "mi"}:
+            return name
+    match = re.search(r"\bquedar con\s+([a-záéíóúñ]+)\b", low)
+    if match:
+        name = match.group(1)
+        if name not in {"mis", "los", "las", "mi", "amigos", "amigas", "pareja"}:
+            return name[0].upper() + name[1:]
+    return None
+
+
+def _leisure_meta(raw: str, low: str) -> dict:
+    leisure_with = _leisure_with(low)
+    name = _leisure_name(raw, low)
+    if leisure_with in {"solo", "partner", "family"}:
+        name = None
+    return {
+        "leisure_kind": _leisure_kind(low),
+        "leisure_with": leisure_with,
+        "leisure_name": name,
+        "leisure_place": _medical_place(low),
+        "leisure_notes": None,
+    }
+
+
+def _leisure_title(raw: str, low: str, kind: str | None) -> str:
+    labels = {
+        "cine": "Cine",
+        "restaurante": "Restaurante",
+        "concierto": "Concierto",
+        "teatro": "Teatro",
+        "deporte": "Deporte",
+        "excursion": "Excursión",
+        "quedar": "Quedar",
+        "otro": "Plan",
+    }
+    label = labels.get(kind or "otro", "Plan")
+    cleaned = _title(raw)
+    for word in LEISURE_KINDS.get(kind or "otro", ()):
+        if word in low and word in cleaned.lower():
+            return cleaned
+    if cleaned.lower().startswith(label.lower()):
+        return cleaned
+    if kind == "cine" and "cine" not in cleaned.lower():
+        return f"Cine · {cleaned}" if cleaned else "Cine"
+    return cleaned or label
 
 
 def _family_title(raw: str, low: str, kind: str | None) -> str:
