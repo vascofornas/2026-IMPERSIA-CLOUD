@@ -612,3 +612,6 @@ Tablas llm_settings (singleton) y llm_usage. Módulos services/api/llm.py y admi
 
 3 de octubre de 2026, 19:45
 Modesto pregunta por qué no está desplegado. Suben al VPS: migración 010, API, web dist, ADMIN_EMAIL en api.env y reinicio de impersia-api.
+
+3 de octubre de 2026, 19:50
+Desplegado en VPS (commit 7d3e20b). Migración 010 aplicada, impersia-api reiniciada, /health ok. ADMIN_EMAIL=modestovasco@gmail.com en /etc/impersia/api.env. Pantalla Motor LLM en https://impersia.cloud/app/#motor. OPENROUTER_API_KEY queda vacía hasta que Modesto la ponga en el servidor.
