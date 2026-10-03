@@ -459,3 +459,7 @@ Modesto pasa la contraseña del buzón IONOS por un archivo temporal en el Mac. 
 
 3 de octubre de 2026, 11:35
 El buzón impersia@impersia.cloud pasa a Google Workspace. IONOS no servía. Se activa verificación en dos pasos, se usa contraseña de aplicación y SMTP smtp.gmail.com. Prueba de correo a modestovasco@gmail.com enviada con éxito. Se borra otra vez el archivo temporal.
+
+3 de octubre de 2026, 11:38
+Modesto dice que el correo de prueba llega con un formato horrible.
+El aviso pasa a HTML con estilo Impersia: cabecera verde, ficha con color del módulo, botón Ver en Impersia y texto plano de respaldo.

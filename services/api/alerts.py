@@ -26,6 +26,26 @@ MODULE_LABELS = {
     "espacios": "Espacios",
 }
 
+MODULE_COLORS = {
+    "agenda": "#0f766e",
+    "casa": "#c2410c",
+    "habitos": "#4d7c0f",
+    "viajes": "#0369a1",
+    "diario": "#78716c",
+    "deseos": "#e11d48",
+    "proyectos": "#4338ca",
+    "reuniones": "#1d4ed8",
+    "memoria": "#7c3aed",
+    "ideas": "#d97706",
+    "muro": "#a21caf",
+    "listas": "#0891b2",
+    "circulos": "#db2777",
+    "espacios": "#15803d",
+}
+
+MARK = "#0f5c4c"
+APP_URL = "https://impersia.cloud/app"
+
 
 def run_email_alerts(conn) -> int:
     if not os.environ.get("SMTP_HOST"):
@@ -251,13 +271,15 @@ def _mark_sent(conn, item_id, day: str) -> None:
 
 
 def _send_email(to: str, occ: dict) -> bool:
-    subject = f"Impersia: {occ['title']}"
-    body = _email_body(occ)
+    when = _when_label(occ)
+    module = MODULE_LABELS.get(occ["module"], occ["module"])
+    subject = occ["title"]
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = os.environ.get("SMTP_FROM", "impersia@impersia.cloud")
     msg["To"] = to
-    msg.set_content(body)
+    msg.set_content(_email_plain(occ, when, module))
+    msg.add_alternative(_email_html(occ, when, module), subtype="html")
     host = os.environ["SMTP_HOST"]
     port = int(os.environ.get("SMTP_PORT", "587"))
     user = os.environ.get("SMTP_USER", "")
@@ -272,17 +294,105 @@ def _send_email(to: str, occ: dict) -> bool:
     return True
 
 
-def _email_body(occ: dict) -> str:
-    when = _when_label(occ)
-    module = MODULE_LABELS.get(occ["module"], occ["module"])
+def _module_link(module: str) -> str:
+    return f"{APP_URL}/#{module}"
+
+
+def _alert_note(occ: dict) -> str:
+    minutes = occ.get("alert_minutes_before")
+    if minutes is None:
+        return ""
+    if minutes == 0:
+        return "Aviso a la hora"
+    if minutes == 15:
+        return "Aviso 15 minutos antes"
+    if minutes == 60:
+        return "Aviso 1 hora antes"
+    if minutes == 1440:
+        return "Aviso 1 día antes"
+    if minutes < 60:
+        return f"Aviso {minutes} minutos antes"
+    if minutes % 1440 == 0:
+        return f"Aviso {minutes // 1440} días antes"
+    if minutes % 60 == 0:
+        return f"Aviso {minutes // 60} horas antes"
+    return f"Aviso {minutes} minutos antes"
+
+
+def _email_plain(occ: dict, when: str, module: str) -> str:
+    note = _alert_note(occ)
+    lines = [
+        "Impersia",
+        "",
+        occ["title"],
+        when,
+        module,
+    ]
+    if note:
+        lines.append(note)
+    lines.extend(["", f"Ver en Impersia: {_module_link(occ['module'])}"])
+    return "\n".join(lines) + "\n"
+
+
+def _email_html(occ: dict, when: str, module: str) -> str:
+    color = MODULE_COLORS.get(occ["module"], MARK)
+    link = _module_link(occ["module"])
+    note = _alert_note(occ)
+    note_row = (
+        f'<p style="margin:12px 0 0;color:#6b7280;font-size:14px;line-height:1.5;">{note}</p>'
+        if note
+        else ""
+    )
+    time_row = (
+        f'<p style="margin:0 0 4px;color:#374151;font-size:15px;line-height:1.5;">{when}</p>'
+        if occ.get("time_known")
+        else f'<p style="margin:0 0 4px;color:#374151;font-size:15px;line-height:1.5;">{when}</p>'
+    )
+    title = _html_escape(occ["title"])
+    return f"""<!doctype html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#f3efe6;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3efe6;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;">
+          <tr>
+            <td style="padding:0 4px 18px;">
+              <span style="font-size:22px;font-weight:700;letter-spacing:-0.3px;color:{MARK};">Impersia</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#ffffff;border:1px solid #e5e7eb;border-left:4px solid {color};border-radius:12px;padding:22px 24px;">
+              <p style="margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:{color};">{module}</p>
+              <h1 style="margin:0 0 14px;font-size:22px;line-height:1.35;font-weight:650;color:#111827;">{title}</h1>
+              {time_row}
+              {note_row}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 4px 0;" align="left">
+              <a href="{link}" style="display:inline-block;background:{MARK};color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:12px 18px;border-radius:999px;">Ver en Impersia</a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 4px 0;color:#9ca3af;font-size:12px;line-height:1.5;">
+              Este aviso llega porque activaste los correos en tu perfil de Impersia.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+
+def _html_escape(value: str) -> str:
     return (
-        "Impersia\n"
-        "\n"
-        f"{occ['title']}\n"
-        f"{when}\n"
-        f"{module}\n"
-        "\n"
-        f"Ver en Impersia: {APP_HOME}\n"
+        value.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
     )
 
 
