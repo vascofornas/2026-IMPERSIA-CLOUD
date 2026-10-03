@@ -469,3 +469,7 @@ Modesto enseña captura: mucho hueco beige, Impersia y Hábitos sin color. Se co
 
 3 de octubre de 2026, 11:41
 Gmail no se ve el texto blanco sobre verde en la cabecera. Cabecera crema con Impersia en verde oscuro, botón con borde verde y meta color-scheme light para que Gmail no invierta colores.
+
+3 de octubre de 2026, 11:44
+Modesto pide logo en los correos y avisos legales habituales.
+Los avisos llevan logo-email.png, pie con aviso de servicio, RGPD, enlace a desactivar en Perfil, contacto y privacidad. Se publica apps/comercial/privacidad.html y logo-email.png en impersia.cloud.

@@ -43,7 +43,12 @@ MODULE_COLORS = {
 }
 
 MARK = "#0f5c4c"
-APP_URL = "https://impersia.cloud/app"
+SITE_URL = "https://impersia.cloud"
+APP_URL = f"{SITE_URL}/app"
+LOGO_URL = f"{SITE_URL}/logo-email.png"
+PRIVACY_URL = f"{SITE_URL}/privacidad.html"
+PROFILE_URL = f"{APP_URL}/#perfil"
+CONTACT_EMAIL = "impersia@impersia.cloud"
 
 
 def run_email_alerts(conn) -> int:
@@ -329,8 +334,25 @@ def _email_plain(occ: dict, when: str, module: str) -> str:
     ]
     if note:
         lines.append(note)
-    lines.extend(["", f"Ver en Impersia: {_module_link(occ['module'])}"])
+    lines.extend(["", f"Ver en Impersia: {_module_link(occ['module'])}", ""])
+    lines.extend(_email_legal_plain())
     return "\n".join(lines) + "\n"
+
+
+def _email_legal_plain() -> list[str]:
+    return [
+        "---",
+        "Aviso de servicio, no publicidad.",
+        "Recibes este correo porque activaste los avisos por correo en tu perfil de Impersia.",
+        f"Desactivar avisos: {PROFILE_URL}",
+        f"Privacidad: {PRIVACY_URL}",
+        f"Contacto: {CONTACT_EMAIL}",
+        "Responsable: Impersia (impersia.cloud).",
+        "Tratamos tu correo para enviarte recordatorios de entradas tuyas con fecha y hora.",
+        "Base legal: tu consentimiento (RGPD art. 6.1.a), retirable en Perfil.",
+        "Puedes ejercer acceso, rectificación, supresión y otros derechos escribiendo al contacto.",
+        "© Impersia 2026",
+    ]
 
 
 def _email_html(occ: dict, when: str, module: str) -> str:
@@ -357,8 +379,10 @@ def _email_html(occ: dict, when: str, module: str) -> str:
       <td align="center" style="padding:12px 16px 24px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#ffffff" style="max-width:440px;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
           <tr>
-            <td bgcolor="#f3efe6" style="padding:14px 18px;border-bottom:3px solid {MARK};font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:20px;line-height:1.2;font-weight:700;">
-              <font color="{MARK}"><span style="color:{MARK};">Impersia</span></font>
+            <td bgcolor="#f3efe6" style="padding:16px 18px 14px;border-bottom:3px solid {MARK};">
+              <a href="{SITE_URL}" style="text-decoration:none;">
+                <img src="{LOGO_URL}" width="140" height="97" alt="Impersia" style="display:block;border:0;max-width:140px;height:auto;">
+              </a>
             </td>
           </tr>
           <tr>
@@ -395,8 +419,8 @@ def _email_html(occ: dict, when: str, module: str) -> str:
             </td>
           </tr>
           <tr>
-            <td bgcolor="#f9fafb" style="padding:12px 18px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.45;color:#6b7280;border-top:1px solid #e5e7eb;">
-              Aviso por correo activado en tu perfil de Impersia.
+            <td bgcolor="#f9fafb" style="padding:14px 18px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.55;color:#6b7280;border-top:1px solid #e5e7eb;">
+              {_email_legal_html()}
             </td>
           </tr>
         </table>
@@ -405,6 +429,16 @@ def _email_html(occ: dict, when: str, module: str) -> str:
   </table>
 </body>
 </html>"""
+
+
+def _email_legal_html() -> str:
+    return f"""<strong style="color:#374151;">Aviso de servicio, no publicidad.</strong><br><br>
+Recibes este correo porque activaste los avisos por correo en tu perfil de Impersia y tienes una entrada con fecha y hora.<br><br>
+<strong style="color:#374151;">Responsable:</strong> Impersia (impersia.cloud)<br>
+<strong style="color:#374151;">Contacto:</strong> <a href="mailto:{CONTACT_EMAIL}" style="color:{MARK};text-decoration:underline;">{CONTACT_EMAIL}</a><br><br>
+<strong style="color:#374151;">Datos personales (RGPD):</strong> usamos tu correo solo para estos recordatorios. Base legal: tu consentimiento (art. 6.1.a), que puedes retirar en <a href="{PROFILE_URL}" style="color:{MARK};text-decoration:underline;">Perfil</a> → Desactivar avisos por correo.<br><br>
+<a href="{PRIVACY_URL}" style="color:{MARK};text-decoration:underline;">Política de privacidad</a><br><br>
+© Impersia 2026"""
 
 
 def _html_escape(value: str) -> str:
