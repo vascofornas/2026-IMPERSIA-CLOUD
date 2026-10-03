@@ -350,7 +350,14 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
               <a className="connect" href={`${API}/auth/google/start`}>
                 {googleEmail ? "Pedir permiso del calendario" : "Conectar Google Calendar"}
               </a>
-              <CalendarBoard items={[...items.filter((item) => item.starts_at), ...googleDated]} />
+              <CalendarBoard
+                items={[...items.filter((item) => item.starts_at), ...googleDated]}
+                editing={editing}
+                setEditing={setEditing}
+                startEdit={startEdit}
+                saveEdit={saveEdit}
+                askRemove={askRemove}
+              />
             </>
           )}
           <div className="panes">
@@ -523,7 +530,7 @@ const CALENDAR_VIEWS = [
   { id: "mes", label: "Mes" },
 ];
 
-function CalendarBoard({ items }) {
+function CalendarBoard({ items, editing, setEditing, startEdit, saveEdit, askRemove }) {
   const today = new Date();
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   const [view, setView] = useState("mes");
@@ -582,7 +589,14 @@ function CalendarBoard({ items }) {
         </div>
       )}
       {view === "dia" ? (
-        <DayColumn items={byDay.get(dayKey(cursor)) || []} />
+        <DayColumn
+          items={byDay.get(dayKey(cursor)) || []}
+          editing={editing}
+          setEditing={setEditing}
+          startEdit={startEdit}
+          saveEdit={saveEdit}
+          askRemove={askRemove}
+        />
       ) : (
         <div className={`month-grid ${view}`}>
           {WEEKDAYS.map((name) => <p className="dow" key={name}>{name}</p>)}
@@ -596,7 +610,7 @@ function CalendarBoard({ items }) {
             return (
               <div className={classes.join(" ")} key={key}>
                 <button type="button" className="num" onClick={() => openDay(date)}>{date.getDate()}</button>
-                {shown.map((item) => <Chip item={item} key={item.occurrenceKey || item.id} />)}
+                {shown.map((item) => <Chip item={item} key={item.occurrenceKey || item.id} onPick={openDay} />)}
                 {list.length > shown.length && (
                   <button type="button" className="more" onClick={() => openDay(date)}>+{list.length - shown.length}</button>
                 )}
@@ -609,22 +623,37 @@ function CalendarBoard({ items }) {
   );
 }
 
-function DayColumn({ items }) {
+function DayColumn({ items, editing, setEditing, startEdit, saveEdit, askRemove }) {
   if (!items.length) return <p className="private">Este día no hay nada con fecha.</p>;
   return (
-    <div className="day-list">
-      {items.map((item) => <Chip item={item} wide key={item.occurrenceKey || item.id} />)}
-    </div>
+    <ItemList
+      items={items}
+      editing={editing}
+      setEditing={setEditing}
+      startEdit={startEdit}
+      saveEdit={saveEdit}
+      askRemove={askRemove}
+    />
   );
 }
 
-function Chip({ item, wide }) {
-  return (
-    <p className={`${chipClass(item)}${wide ? " wide" : ""}`} title={chipTitle(item)}>
+function Chip({ item, onPick }) {
+  const className = chipClass(item);
+  const title = chipTitle(item);
+  const body = (
+    <>
       {item.source === "google" ? <GoogleMark /> : <Icon name={item.module || "agenda"} />}
       <span>{chipText(item)}</span>
-    </p>
+    </>
   );
+  if (onPick) {
+    return (
+      <button type="button" className={className} title={title} onClick={() => onPick(new Date(item.starts_at))}>
+        {body}
+      </button>
+    );
+  }
+  return <p className={className} title={title}>{body}</p>;
 }
 
 function monthCells(cursor) {

@@ -342,9 +342,18 @@ button.more {
   gap: 3px;
   min-width: 0;
   padding: 1px 4px 1px 3px;
+  border: 0;
   border-left: 3px solid var(--chip, var(--mark));
   border-radius: 4px;
   background: color-mix(in srgb, var(--chip, var(--mark)) 16%, var(--card));
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.chip {
+  width: 100%;
+  cursor: pointer;
 }
 
 .chip span {
