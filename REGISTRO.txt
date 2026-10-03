@@ -429,3 +429,7 @@ Cambiar y Borrar pasan a enlaces discretos a la derecha. El cajón va en una pas
 3 de octubre de 2026, 09:25
 Modesto pide iconos también en Cambiar y Borrar. Con solo texto no se ve que son acciones.
 Cambiar lleva lápiz y Borrar papelera, en la ficha y en el cuadro de confirmación. Queda en la definición: toda acción va con icono y texto.
+
+3 de octubre de 2026, 09:33
+Modesto escribe: cada lunes a las 10 de la mañana hay que revisar la prensa del día. Sale mal: título roto, día 4 oct y cajón Agenda.
+«De la mañana» se leía como «mañana», el día siguiente. El título perdía lunes y mañana. A partir de ahora «de la mañana» es la hora, no el día. «Cada…» va a Hábitos. El próximo lunes con la hora que diga la frase.

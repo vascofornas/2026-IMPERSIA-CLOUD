@@ -56,6 +56,17 @@ WEEKDAYS = {
     "domingo": 6,
 }
 
+MORNING_PHRASES = (
+    "esta mañana",
+    "esta manana",
+    "pasado mañana",
+    "pasado manana",
+    "por la mañana",
+    "por la manana",
+    "de la mañana",
+    "de la manana",
+)
+
 
 def classify(text: str) -> dict:
     raw = " ".join(text.strip().split())
@@ -104,6 +115,8 @@ def _module(low: str) -> str:
         return "agenda"
     if any(word in low for word in ("lista de la compra", "comprar", "suministro", "taller", "avería", "averia")):
         return "casa"
+    if re.search(r"\bcada\b", low):
+        return "habitos"
     if any(word in low for word in ("hábito", "habito", "ejercicio", "meditación", "meditacion", "rutina")):
         return "habitos"
     if any(word in low for word in ("deseo", "quiero ir", "película", "pelicula", "restaurante")):
@@ -128,6 +141,9 @@ def _title(raw: str) -> str:
         r"\besta manana\b",
         r"\bpor la mañana\b",
         r"\bpor la manana\b",
+        r"\bde la mañana\b",
+        r"\bde la manana\b",
+        r"\bcada\b",
         r"\bpor la tarde\b",
         r"\bpor la noche\b",
         r"\bal mediodía\b",
@@ -153,7 +169,7 @@ def _when(low: str) -> datetime | None:
         day = now.date()
     elif "pasado mañana" in low or "pasado manana" in low:
         day = (now + timedelta(days=2)).date()
-    elif "mañana" in low or "manana" in low:
+    elif _means_tomorrow(low):
         day = (now + timedelta(days=1)).date()
     elif "hoy" in low:
         day = now.date()
@@ -218,9 +234,21 @@ def _is_task(low: str) -> bool:
     return bool(re.search(r"\bhacer\b", low)) and not re.search(r"\bqu[eé] hacer\b", low)
 
 
+def _without_morning_phrases(low: str) -> str:
+    text = low
+    for phrase in MORNING_PHRASES:
+        text = text.replace(phrase, " ")
+    return text
+
+
+def _means_tomorrow(low: str) -> bool:
+    rest = _without_morning_phrases(low)
+    return bool(re.search(r"\bmañana\b", rest) or re.search(r"\bmanana\b", rest))
+
+
 def _explicit_day(low: str) -> bool:
-    rest = low.replace("esta mañana", " ").replace("esta manana", " ")
-    if any(piece in rest for piece in ("pasado mañana", "pasado manana", "mañana", "manana", "hoy")):
+    rest = _without_morning_phrases(low)
+    if _means_tomorrow(rest) or re.search(r"\bhoy\b", rest):
         return True
     return any(re.search(rf"\b{name}\b", rest) for name in WEEKDAYS)
 
@@ -233,6 +261,8 @@ def _daypart(low: str) -> tuple[int, int] | None:
     if "al mediodía" in low or "al mediodia" in low:
         return 14, 0
     if "por la mañana" in low or "por la manana" in low:
+        return 10, 0
+    if "de la mañana" in low or "de la manana" in low:
         return 10, 0
     return None
 
