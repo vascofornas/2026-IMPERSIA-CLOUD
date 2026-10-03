@@ -574,3 +574,7 @@ Pasa a Apuntar (prefiere Apuntar o Anotar frente a Archivar). Suben web y dist.
 3 de octubre de 2026, 18:45
 Modesto elige seguir con Inventario en Casa.
 v1: lo que hay en casa (no la compra), lista plana con cantidad y dónde, parseo «quedan 2 cartuchos en la despensa». Suben classify, web, docs y despliegue en VPS.
+
+3 de octubre de 2026, 18:50
+Modesto reporta que «Tenemos 2 garrafas de aceite de 5 litros» fue a Diario.
+Sin regla de stock con tenemos+N, el clasificador caía al módulo por defecto. Corregido en classify.py; sube API.

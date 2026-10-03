@@ -340,6 +340,8 @@ CASA_KINDS = {
         "repuesto",
         "botes de",
         "latas de",
+        "garrafa",
+        "garrafas",
     ),
     "domestica": (
         "limpiar",
@@ -386,8 +388,14 @@ def _is_casa_supply(low: str) -> bool:
     return _is_casa(low) and _casa_kind(low) == "suministro"
 
 
+def _is_stock_count(low: str) -> bool:
+    return bool(re.search(r"(?:quedan|queda|tenemos|tengo|hay|nos quedan)\s+\d+\b", low))
+
+
 def _is_casa(low: str) -> bool:
     if re.search(r"\b(?:mi|el|en el|en la)\s+casa\b|\ben casa\b", low):
+        return True
+    if _is_stock_count(low):
         return True
     for words in CASA_KINDS.values():
         if any(word in low for word in words):
@@ -396,11 +404,13 @@ def _is_casa(low: str) -> bool:
 
 
 def _casa_kind(low: str) -> str:
+    if _is_stock_count(low):
+        return "inventario"
     stock_hint = any(
         hint in low
-        for hint in ("quedan ", "queda ", "en stock", "tengo en", "tenemos en", "guardado en")
+        for hint in ("en stock", "tengo en", "tenemos en", "guardado en")
     )
-    if stock_hint or "repuesto" in low or "cartuchos" in low:
+    if stock_hint or "repuesto" in low or "cartuchos" in low or "garrafa" in low:
         if any(word in low for word in CASA_KINDS["inventario"]):
             return "inventario"
     for kind, words in CASA_KINDS.items():
@@ -1134,24 +1144,36 @@ def _supply_kind(low: str) -> str:
 def _inventario_fields(raw: str, low: str) -> dict:
     text = " ".join(raw.strip().split())
     notes = None
-    qty = re.search(
-        r"(?:quedan|queda|tenemos|tengo|hay|nos quedan)\s+(\d+)\b",
-        low,
+    title = None
+    packed = re.search(
+        r"^(?:quedan|queda|tenemos|tengo|hay|nos quedan)\s+(\d+)\s+"
+        r"(?:garrafas?|botes?|botellas?|latas?|unidades?|paquetes?|cartuchos?)\s+de\s+(.+)$",
+        text,
+        flags=re.IGNORECASE,
     )
-    if qty:
-        notes = qty.group(1)
+    if packed:
+        notes = packed.group(1)
+        title = packed.group(2).strip(" .")
+    if not notes:
+        qty = re.search(
+            r"(?:quedan|queda|tenemos|tengo|hay|nos quedan)\s+(\d+)\b",
+            low,
+        )
+        if qty:
+            notes = qty.group(1)
     if not notes:
         lead = re.match(r"^(\d+)\s+", text)
         if lead:
             notes = lead.group(1)
     cleaned = text
-    cleaned = re.sub(
-        r"^(?:quedan|queda|tenemos|tengo|hay|nos quedan)\s+(?:\d+\s+)?",
-        "",
-        cleaned,
-        flags=re.IGNORECASE,
-    )
-    cleaned = re.sub(r"^\d+\s+", "", cleaned)
+    if not title:
+        cleaned = re.sub(
+            r"^(?:quedan|queda|tenemos|tengo|hay|nos quedan)\s+(?:\d+\s+)?",
+            "",
+            cleaned,
+            flags=re.IGNORECASE,
+        )
+        cleaned = re.sub(r"^\d+\s+", "", cleaned)
     cleaned = re.sub(
         r"\s+(?:en stock|guardado en|guardados en)\s+.+$",
         "",
@@ -1159,9 +1181,17 @@ def _inventario_fields(raw: str, low: str) -> dict:
         flags=re.IGNORECASE,
     )
     cleaned = re.sub(r"\s+en\s+(?:el|la|los|las)\s+.+$", "", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\s+en\s+(?:despensa|congelador|garaje|baño|baño|armario|trastero|cocina)\s*$", "", cleaned, flags=re.IGNORECASE)
-    cleaned = " ".join(cleaned.split()).strip(" .")
-    title = cleaned[0].upper() + cleaned[1:] if len(cleaned) > 1 else cleaned.upper() if cleaned else _title(raw)
+    if not title:
+        cleaned = re.sub(r"\s+en\s+(?:despensa|congelador|garaje|baño|baño|armario|trastero|cocina)\s*$", "", cleaned, flags=re.IGNORECASE)
+        cleaned = " ".join(cleaned.split()).strip(" .")
+        cleaned = re.sub(
+            r"^(?:garrafas?|botes?|botellas?|latas?|unidades?|paquetes?|cartuchos?)\s+(?:de\s+)?",
+            "",
+            cleaned,
+            flags=re.IGNORECASE,
+        ).strip(" .")
+        title = cleaned
+    title = title[0].upper() + title[1:] if len(title) > 1 else title.upper() if title else _title(raw)
     place = _casa_place(low)
     if not place:
         spot = re.search(
