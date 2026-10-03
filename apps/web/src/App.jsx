@@ -152,10 +152,13 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   const [pendingAction, setPendingAction] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
+  const [browserAlerts, setBrowserAlerts] = useState(
+    () => typeof Notification !== "undefined" && Notification.permission === "granted",
+  );
   const screen = useHash();
   const current = findModule(screen);
 
-  useAlerts(items);
+  useAlerts(items, browserAlerts);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -417,7 +420,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
         <>
           <h1>Perfil</h1>
           <p className="lead">{email}</p>
-          <AlertPermission alertEmail={alertEmail} onAlertEmail={onAlertEmail} setError={setError} />
+          <AlertPermission alertEmail={alertEmail} onAlertEmail={onAlertEmail} onBrowserAlerts={setBrowserAlerts} setError={setError} />
         </>
       )}
       {screen === "apariencia" && (
@@ -1050,10 +1053,11 @@ function alertLabel(minutes) {
   return `${minutes} min antes`;
 }
 
-function useAlerts(items) {
+function useAlerts(items, browserAlerts) {
   useEffect(() => {
-    if (!("Notification" in window) || Notification.permission !== "granted") return undefined;
+    if (!("Notification" in window)) return undefined;
     const tick = () => {
+      if (!browserAlerts || Notification.permission !== "granted") return;
       const now = Date.now();
       const from = dayStart(new Date());
       const to = endOfDay(new Date());
@@ -1067,18 +1071,24 @@ function useAlerts(items) {
         if (sessionStorage.getItem(key)) return;
         new Notification(item.title, {
           body: `${whenLabel(item)} · ${labelOf(item.module)}`,
+          icon: "https://impersia.cloud/logo-email.png",
           tag: key,
         });
         sessionStorage.setItem(key, "1");
       });
     };
     tick();
-    const id = window.setInterval(tick, 15000);
-    return () => window.clearInterval(id);
-  }, [items]);
+    const id = window.setInterval(tick, 10000);
+    const onShow = () => tick();
+    document.addEventListener("visibilitychange", onShow);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onShow);
+    };
+  }, [items, browserAlerts]);
 }
 
-function AlertPermission({ alertEmail, onAlertEmail, setError }) {
+function AlertPermission({ alertEmail, onAlertEmail, onBrowserAlerts, setError }) {
   const [browser, setBrowser] = useState(() => ("Notification" in window ? Notification.permission : "unsupported"));
   const [busy, setBusy] = useState(false);
 
@@ -1113,6 +1123,7 @@ function AlertPermission({ alertEmail, onAlertEmail, setError }) {
               onClick={async () => {
                 const result = await Notification.requestPermission();
                 setBrowser(result);
+                if (result === "granted") onBrowserAlerts(true);
               }}
             >
               <Icon name="aviso" /> Activar avisos del navegador

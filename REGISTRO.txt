@@ -475,6 +475,10 @@ Gmail no se ve el texto blanco sobre verde en la cabecera. Cabecera crema con Im
 Modesto activa navegador y correo pero no llega ningún aviso de prueba.
 El timer de correo fallaba cada minuto: send_alerts.py no usaba dict_row y las filas llegaban como tuplas. Corregido. El navegador sigue necesitando la pestaña abierta; el chequeo pasa a cada 15 segundos.
 
+3 de octubre de 2026, 12:05
+Modesto confirma que el correo sí llega pero la notificación en la web no.
+Si activabas avisos del navegador en Perfil, el comprobador no arrancaba hasta recargar. Ahora arranca al conceder permiso, revisa cada 10 segundos y al volver a la pestaña.
+
 3 de octubre de 2026, 11:44
 Modesto pide logo en los correos y avisos legales habituales.
 Los avisos llevan logo-email.png, pie con aviso de servicio, RGPD, enlace a desactivar en Perfil, contacto y privacidad. Se publica apps/comercial/privacidad.html y logo-email.png en impersia.cloud.
