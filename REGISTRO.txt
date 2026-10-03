@@ -578,3 +578,7 @@ v1: lo que hay en casa (no la compra), lista plana con cantidad y dónde, parseo
 3 de octubre de 2026, 18:50
 Modesto reporta que «Tenemos 2 garrafas de aceite de 5 litros» fue a Diario.
 Sin regla de stock con tenemos+N, el clasificador caía al módulo por defecto. Corregido en classify.py; sube API.
+
+3 de octubre de 2026, 18:55
+Modesto pide pulir Tareas del hogar en Casa.
+Checklist con hecho, horario/repetición visible, hechas colapsadas; título limpio sin «todos los días a las…». Suben classify, web, docs y despliegue.

@@ -1296,6 +1296,22 @@ def _casa_title(raw: str, low: str, kind: str | None) -> str:
         cleaned = re.sub(r"^(?:hay que |tengo que )?(?:arreglar|reparar|cambiar)\s+(?:el |la )?", "", cleaned, flags=re.IGNORECASE)
         if cleaned:
             return cleaned[0].upper() + cleaned[1:]
+    if kind == "domestica":
+        cleaned = re.sub(r"^(?:hay que |tengo que )", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(
+            r"\s+(?:todos los d[ií]as|todos los dias|cada d[ií]a|cada dia|cada semana|cada mes)(?:\s+a las .+|\s+por la (?:mañana|tarde|noche)|\s+de la (?:mañana|tarde|noche))?$",
+            "",
+            cleaned,
+            flags=re.IGNORECASE,
+        )
+        cleaned = re.sub(
+            r"\s+(?:a las \d[\d:]*|por la (?:mañana|tarde|noche)|de la (?:mañana|tarde|noche))$",
+            "",
+            cleaned,
+            flags=re.IGNORECASE,
+        ).strip()
+        if cleaned:
+            return cleaned[0].upper() + cleaned[1:]
     if cleaned.lower().startswith(label.lower()):
         return cleaned
     if kind and kind != "otro" and label.lower() not in cleaned.lower():
