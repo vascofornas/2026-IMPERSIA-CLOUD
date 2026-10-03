@@ -582,3 +582,7 @@ Sin regla de stock con tenemos+N, el clasificador caía al módulo por defecto. 
 3 de octubre de 2026, 18:55
 Modesto pide pulir Tareas del hogar en Casa.
 Checklist con hecho, horario/repetición visible, hechas colapsadas; título limpio sin «todos los días a las…». Suben classify, web, docs y despliegue.
+
+3 de octubre de 2026, 19:00
+Modesto reporta que «Pasar aspiradora a toda la casa» fue a Diario.
+Faltaba aspiradora en las reglas de tareas del hogar; «a toda la casa» también cuenta como Casa. Corregido en classify.py; sube API.

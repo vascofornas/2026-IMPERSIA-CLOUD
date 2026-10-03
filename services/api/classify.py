@@ -351,6 +351,9 @@ CASA_KINDS = {
         "planchar",
         "fregar",
         "aspirar",
+        "aspiradora",
+        "aspirador",
+        "pasar aspiradora",
         "quitar el polvo",
         "basura",
         "basuras",
@@ -393,7 +396,7 @@ def _is_stock_count(low: str) -> bool:
 
 
 def _is_casa(low: str) -> bool:
-    if re.search(r"\b(?:mi|el|en el|en la)\s+casa\b|\ben casa\b", low):
+    if re.search(r"\b(?:mi|el|en el|en la|a toda la|por toda la|toda la)\s+casa\b|\ben casa\b", low):
         return True
     if _is_stock_count(low):
         return True
@@ -1306,6 +1309,12 @@ def _casa_title(raw: str, low: str, kind: str | None) -> str:
         )
         cleaned = re.sub(
             r"\s+(?:a las \d[\d:]*|por la (?:mañana|tarde|noche)|de la (?:mañana|tarde|noche))$",
+            "",
+            cleaned,
+            flags=re.IGNORECASE,
+        )
+        cleaned = re.sub(
+            r"\s+(?:a toda la casa|por toda la casa|en toda la casa|toda la casa)$",
             "",
             cleaned,
             flags=re.IGNORECASE,
