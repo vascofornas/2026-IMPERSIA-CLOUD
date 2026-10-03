@@ -30,6 +30,7 @@ app.add_middleware(
 )
 
 KINDS = {"note", "task", "event"}
+MEDICAL_FOR = {"self", "child", "parent", "grandparent", "nephew", "other"}
 LOOKS = {"claro", "papel", "mar", "cielo", "oliva", "arena", "violeta", "tinta", "noche", "grafito"}
 COOKIE = "impersia_session"
 
@@ -124,6 +125,11 @@ class ItemPatch(BaseModel):
     starts_at: str | None = None
     time_known: bool = False
     alert_minutes_before: int | None = None
+    agenda_type: str | None = None
+    medical_for: str | None = None
+    medical_name: str | None = None
+    medical_place: str | None = None
+    medical_notes: str | None = None
 
 
 class ExceptionIn(BaseModel):
@@ -437,9 +443,11 @@ def create_capture(body: CaptureIn, request: Request):
             cur.execute(
                 """
                 INSERT INTO items
-                    (user_id, capture_id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before, privacy)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
-                RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before, privacy, created_at
+                    (user_id, capture_id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
+                     agenda_type, medical_for, medical_name, medical_place, medical_notes, privacy)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
+                RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
+                    agenda_type, medical_for, medical_name, medical_place, medical_notes, privacy, created_at
                 """,
                 (
                     user_id,
@@ -452,6 +460,11 @@ def create_capture(body: CaptureIn, request: Request):
                     suggestion.get("repeats"),
                     suggestion["time_known"],
                     suggestion.get("alert_minutes_before"),
+                    suggestion.get("agenda_type"),
+                    suggestion.get("medical_for"),
+                    suggestion.get("medical_name"),
+                    suggestion.get("medical_place"),
+                    suggestion.get("medical_notes"),
                 ),
             )
             item = cur.fetchone()
@@ -496,20 +509,36 @@ def confirm_capture(capture_id: str, body: ConfirmIn, request: Request):
     return _public_item(item)
 
 
+def _medical_fields(body: ItemPatch) -> tuple:
+    agenda_type = "medica" if body.agenda_type == "medica" else None
+    if agenda_type != "medica" or body.module != "agenda":
+        return None, None, None, None, None
+    medical_for = body.medical_for if body.medical_for in MEDICAL_FOR else "self"
+    medical_name = (body.medical_name or "").strip() or None
+    if medical_for == "self":
+        medical_name = None
+    medical_place = (body.medical_place or "").strip() or None
+    medical_notes = (body.medical_notes or "").strip() or None
+    return agenda_type, medical_for, medical_name, medical_place, medical_notes
+
+
 @app.patch("/items/{item_id}")
 def patch_item(item_id: str, body: ItemPatch, request: Request):
     user_id = current_user(request)
     if body.module not in MODULES:
         raise HTTPException(status_code=422, detail="Ese módulo no existe")
+    agenda_type, medical_for, medical_name, medical_place, medical_notes = _medical_fields(body)
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
                 UPDATE items
                 SET module = %s, axis = %s, kind = %s, title = %s, starts_at = %s, time_known = %s,
-                    alert_minutes_before = %s
+                    alert_minutes_before = %s, agenda_type = %s, medical_for = %s, medical_name = %s,
+                    medical_place = %s, medical_notes = %s
                 WHERE id = %s AND user_id = %s
-                RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before, privacy, created_at
+                RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
+                    agenda_type, medical_for, medical_name, medical_place, medical_notes, privacy, created_at
                 """,
                 (
                     body.module,
@@ -519,6 +548,11 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     _when_saving(body.starts_at, body.time_known),
                     body.time_known,
                     body.alert_minutes_before,
+                    agenda_type,
+                    medical_for,
+                    medical_name,
+                    medical_place,
+                    medical_notes,
                     item_id,
                     user_id,
                 ),
@@ -621,7 +655,8 @@ def list_items(request: Request):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before, privacy, created_at
+                SELECT id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
+                    agenda_type, medical_for, medical_name, medical_place, medical_notes, privacy, created_at
                 FROM items
                 WHERE user_id = %s
                 ORDER BY created_at DESC
@@ -682,7 +717,8 @@ def _fetch_exceptions(cur, user_id: str, item_ids: list[str]) -> dict[str, list]
 def _fetch_item(cur, item_id: str, user_id: str) -> dict | None:
     cur.execute(
         """
-        SELECT id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before, privacy, created_at
+        SELECT id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
+            agenda_type, medical_for, medical_name, medical_place, medical_notes, privacy, created_at
         FROM items
         WHERE id = %s AND user_id = %s
         """,
@@ -722,6 +758,11 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         "repeats": row.get("repeats"),
         "time_known": bool(row.get("time_known")),
         "alert_minutes_before": row.get("alert_minutes_before"),
+        "agenda_type": row.get("agenda_type"),
+        "medical_for": row.get("medical_for"),
+        "medical_name": row.get("medical_name"),
+        "medical_place": row.get("medical_place"),
+        "medical_notes": row.get("medical_notes"),
         "privacy": row["privacy"],
         "created_at": row["created_at"].isoformat(),
         "exceptions": [_public_exception(row) for row in (exceptions or [])],

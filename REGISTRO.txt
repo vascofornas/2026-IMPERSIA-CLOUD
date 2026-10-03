@@ -491,6 +491,10 @@ Chrome en Mac a veces ignora new Notification(). Se añade service worker (apps/
 Modesto confirma que la prueba de notificación en Chrome Mac ya funciona.
 Avisos del navegador operativos con service worker. Correo y navegador quedan activos para recordatorios.
 
+3 de octubre de 2026, 13:10
+Modesto pide citas médicas visibles y editables en Agenda, propias o de hijos, padres, abuelos y sobrinos.
+Primera variante de Agenda: agenda_type medica, campos medical_for, medical_name, medical_place y medical_notes. Reglas en classify.py. Editor y ficha en la web. Aviso por defecto 30 min. Suben schema, migración 002, API, classify, web y docs.
+
 3 de octubre de 2026, 11:44
 Modesto pide logo en los correos y avisos legales habituales.
 Los avisos llevan logo-email.png, pie con aviso de servicio, RGPD, enlace a desactivar en Perfil, contacto y privacidad. Se publica apps/comercial/privacidad.html y logo-email.png en impersia.cloud.

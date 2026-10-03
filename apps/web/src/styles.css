@@ -787,6 +787,25 @@ a.connect {
   font-weight: 500;
 }
 
+.tag.medica {
+  background: color-mix(in srgb, #b42318 14%, var(--bg));
+  color: #9b1c12;
+}
+
+.medical-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 6px 0 0;
+  font-size: 0.92rem;
+}
+
+.card.editor textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
 .tag.alert {
   --chip: var(--muted);
   background: color-mix(in srgb, var(--muted) 10%, var(--card));

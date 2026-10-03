@@ -39,6 +39,11 @@ CREATE TABLE IF NOT EXISTS items (
     repeats text,
     time_known boolean NOT NULL DEFAULT false,
     alert_minutes_before integer,
+    agenda_type text,
+    medical_for text,
+    medical_name text,
+    medical_place text,
+    medical_notes text,
     status text NOT NULL DEFAULT 'open',
     privacy text NOT NULL DEFAULT 'private',
     created_at timestamptz NOT NULL DEFAULT now()

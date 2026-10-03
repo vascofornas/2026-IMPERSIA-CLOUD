@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GoogleMark, Icon } from "./icons.jsx";
+import { isMedicalItem, MEDICAL_FOR, medicalForLabel } from "./agenda.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
 import { AXES, findModule, labelOf } from "./structure.js";
 
@@ -231,6 +232,11 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
             starts_at: editing.starts_at,
             time_known: Boolean(editing.time_known),
             alert_minutes_before: editing.time_known ? editing.alert_minutes_before ?? null : null,
+            agenda_type: editing.module === "agenda" ? editing.agenda_type || null : null,
+            medical_for: editing.agenda_type === "medica" ? editing.medical_for || "self" : null,
+            medical_name: editing.agenda_type === "medica" ? editing.medical_name || null : null,
+            medical_place: editing.agenda_type === "medica" ? editing.medical_place || null : null,
+            medical_notes: editing.agenda_type === "medica" ? editing.medical_notes || null : null,
           }),
         });
       }
@@ -751,11 +757,16 @@ function chipClass(item) {
 function chipTitle(item) {
   const clock = item.time_known ? `${clockOf(item.starts_at)} ` : "";
   if (item.source === "google") return `${clock}Google. ${item.title}`;
+  if (isMedicalItem(item)) return `${clock}Cita médica. ${item.title}. ${medicalForLabel(item.medical_for, item.medical_name)}`;
   return `${clock}${labelOf(item.module)}. ${item.title}`;
 }
 
 function chipText(item) {
   const clock = item.time_known ? `${clockOf(item.starts_at)} ` : "";
+  if (isMedicalItem(item) && item.medical_for !== "self") {
+    const who = item.medical_name || medicalForLabel(item.medical_for, null).replace("Para ", "");
+    return `${clock}${item.title} · ${who}`;
+  }
   return `${clock}${item.title}`;
 }
 
@@ -819,6 +830,71 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
                   </select>
                 </label>
               )}
+              {editing.module === "agenda" && editing.editScope !== "one" && (
+                <>
+                  <label>
+                    Tipo en Agenda
+                    <select
+                      value={editing.agenda_type || ""}
+                      onChange={(e) => {
+                        const agenda_type = e.target.value || null;
+                        setEditing({
+                          ...editing,
+                          agenda_type,
+                          medical_for: agenda_type === "medica" ? editing.medical_for || "self" : null,
+                          medical_name: agenda_type === "medica" ? editing.medical_name || "" : "",
+                          medical_place: agenda_type === "medica" ? editing.medical_place || "" : "",
+                          medical_notes: agenda_type === "medica" ? editing.medical_notes || "" : "",
+                        });
+                      }}
+                    >
+                      <option value="">Cita general</option>
+                      <option value="medica">Cita médica</option>
+                    </select>
+                  </label>
+                  {editing.agenda_type === "medica" && (
+                    <>
+                      <label>
+                        Para quién
+                        <select
+                          value={editing.medical_for || "self"}
+                          onChange={(e) => setEditing({ ...editing, medical_for: e.target.value })}
+                        >
+                          {MEDICAL_FOR.map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </select>
+                      </label>
+                      {editing.medical_for !== "self" && (
+                        <label>
+                          Nombre
+                          <input
+                            value={editing.medical_name || ""}
+                            placeholder="Luis, Ana…"
+                            onChange={(e) => setEditing({ ...editing, medical_name: e.target.value })}
+                          />
+                        </label>
+                      )}
+                      <label>
+                        Lugar
+                        <input
+                          value={editing.medical_place || ""}
+                          placeholder="Hospital, clínica, consulta…"
+                          onChange={(e) => setEditing({ ...editing, medical_place: e.target.value })}
+                        />
+                      </label>
+                      <label>
+                        Notas
+                        <textarea
+                          value={editing.medical_notes || ""}
+                          placeholder="Llevar analíticas, ayuno, documentación…"
+                          onChange={(e) => setEditing({ ...editing, medical_notes: e.target.value })}
+                        />
+                      </label>
+                    </>
+                  )}
+                </>
+              )}
               <div className="actions">
                 <button type="button" onClick={saveEdit}>Guardar cambio</button>
                 <button type="button" className="secondary" onClick={() => setEditing(null)}>Cancelar</button>
@@ -828,6 +904,14 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
             <>
               {item.starts_at && <p className="when">{whenLabel(item)}</p>}
               <p className="title">{item.title}</p>
+              {isMedicalItem(item) && (
+                <p className="medical-line">
+                  <span className="tag medica">Cita médica</span>
+                  <span>{medicalForLabel(item.medical_for, item.medical_name)}</span>
+                </p>
+              )}
+              {isMedicalItem(item) && item.medical_place && <p className="private">{item.medical_place}</p>}
+              {isMedicalItem(item) && item.medical_notes && <p className="private">{item.medical_notes}</p>}
               <p className="meta">
                 {item.source === "google" ? (
                   <span className="tag m-google"><GoogleMark /> Google</span>

@@ -73,15 +73,25 @@ def classify(text: str) -> dict:
     low = raw.lower()
     starts, time_known = _when(low)
     module = _module(low)
+    medical = module == "agenda" and _is_medical(low)
+    alert = _alert_minutes_before(low, time_known)
+    if medical and alert == 15:
+        alert = 30
+    meta = _medical_meta(raw, low) if medical else {}
     return {
         "axis": MODULES[module],
         "module": module,
         "kind": legacy_kind(module),
-        "title": _title(raw),
+        "title": _medical_title(raw, low) if medical else _title(raw),
         "starts_at": starts,
         "time_known": time_known,
         "repeats": _repeat(low),
-        "alert_minutes_before": _alert_minutes_before(low, time_known),
+        "alert_minutes_before": alert,
+        "agenda_type": "medica" if medical else None,
+        "medical_for": meta.get("medical_for"),
+        "medical_name": meta.get("medical_name"),
+        "medical_place": meta.get("medical_place"),
+        "medical_notes": None,
         "source": "rules",
     }
 
@@ -281,6 +291,135 @@ def _daypart(low: str) -> tuple[int, int] | None:
     if "de la mañana" in low or "de la manana" in low:
         return 10, 0
     return None
+
+
+MEDICAL_WORDS = (
+    "médico",
+    "medico",
+    "dentista",
+    "hospital",
+    "clínica",
+    "clinica",
+    "pediatra",
+    "dermatólogo",
+    "dermatologo",
+    "traumatólogo",
+    "traumatologo",
+    "fisioterapeuta",
+    "oftalmólogo",
+    "oftalmologo",
+    "ginecólogo",
+    "ginecologo",
+    "urólogo",
+    "urologo",
+    "cardiólogo",
+    "cardiologo",
+    "psiquiatra",
+    "analítica",
+    "analitica",
+    "radiología",
+    "radiologia",
+    "revisión médica",
+    "revision medica",
+    "consulta médica",
+    "consulta medica",
+    "urgencias",
+    "matrona",
+    "endocrino",
+    "alergólogo",
+    "alergologo",
+    "otorrino",
+    "podólogo",
+    "podologo",
+)
+
+
+def _is_medical(low: str) -> bool:
+    if any(word in low for word in MEDICAL_WORDS):
+        return True
+    return bool(re.search(r"\bcita\s+(?:con\s+)?(?:el\s+|la\s+)?(?:dr|dra|doctor|doctora)\b", low))
+
+
+def _medical_for(low: str) -> str:
+    if re.search(r"\bmi hijo\b|\bmi hija\b|\bdel hijo\b|\bde mi hijo\b|\bde mi hija\b|\bhijo de\b|\bhija de\b|\bpediatra\b", low):
+        return "child"
+    if re.search(r"\bmi madre\b|\bmi padre\b|\bmi mamá\b|\bmi mama\b|\bmi papá\b|\bmi papa\b|\bmamá\b|\bmadre\b|\bpadre\b", low):
+        return "parent"
+    if re.search(r"\bmi abuela\b|\bmi abuelo\b|\babuela\b|\babuelo\b", low):
+        return "grandparent"
+    if re.search(r"\bsobrino\b|\bsobrina\b|\bmi sobrino\b|\bmi sobrina\b", low):
+        return "nephew"
+    return "self"
+
+
+def _medical_name(raw: str, low: str) -> str | None:
+    match = re.search(
+        r"\b(?:de|del|para|con|llevar a)\s+(?:mi\s+)?([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)",
+        raw,
+    )
+    if match:
+        name = match.group(1).strip()
+        if name.lower() not in {"el", "la", "dr", "dra", "mi"} and len(name) > 1:
+            return name
+    match = re.search(r"\b(?:de|del|para|con|llevar a)\s+(?:mi\s+)?([a-záéíóúñ]+)\b", low)
+    if match:
+        name = match.group(1).strip()
+        skip = {
+            "hijo",
+            "hija",
+            "madre",
+            "padre",
+            "mamá",
+            "mama",
+            "papá",
+            "papa",
+            "abuela",
+            "abuelo",
+            "sobrino",
+            "sobrina",
+            "médico",
+            "medico",
+            "dentista",
+            "pediatra",
+        }
+        if name not in skip:
+            return name[0].upper() + name[1:]
+    return None
+
+
+def _medical_place(low: str) -> str | None:
+    match = re.search(r"\b(?:en|del|de la)\s+(?:el\s+|la\s+)?([a-z0-9áéíóúñ .-]{4,40})", low)
+    if not match:
+        return None
+    place = " ".join(match.group(1).split()).strip(" .")
+    if any(word in place for word in ("martes", "miércoles", "jueves", "viernes", "lunes", "mañana", "manana")):
+        return None
+    return place[0].upper() + place[1:]
+
+
+def _medical_meta(raw: str, low: str) -> dict:
+    medical_for = _medical_for(low)
+    name = _medical_name(raw, low)
+    if medical_for == "self":
+        name = None
+    return {
+        "medical_for": medical_for,
+        "medical_name": name,
+        "medical_place": _medical_place(low),
+    }
+
+
+def _medical_title(raw: str, low: str) -> str:
+    for word in MEDICAL_WORDS:
+        if word in low:
+            label = word.replace("ologo", "ólogo").replace("medico", "médico")
+            if label == "médico":
+                continue
+            return label[0].upper() + label[1:]
+    cleaned = _title(raw)
+    if cleaned.lower().startswith("cita "):
+        return cleaned[5:].strip() or cleaned
+    return cleaned
 
 
 def _alert_minutes_before(low: str, time_known: bool) -> int | None:
