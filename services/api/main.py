@@ -18,7 +18,7 @@ from pydantic import BaseModel, EmailStr, Field
 import psycopg
 from psycopg.rows import dict_row
 
-from classify import MODULES, classify, legacy_kind
+from classify import MODULES, classify, compra_store_name, legacy_kind, split_compra_titles
 
 app = FastAPI(title="Impersia API")
 app.add_middleware(
@@ -40,6 +40,15 @@ CASA_KIND = {"compra", "mantenimiento", "suministro", "domestica", "inventario",
 SUPPLY_KIND = {"luz", "agua", "gas", "internet", "otro"}
 LOOKS = {"claro", "papel", "mar", "cielo", "oliva", "arena", "violeta", "tinta", "noche", "grafito"}
 COOKIE = "impersia_session"
+
+ITEM_SELECT = """
+    id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
+    agenda_type, medical_for, medical_name, medical_place, medical_notes,
+    family_kind, family_for, family_name, family_place, family_notes,
+    leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
+    reminder_kind, reminder_place, reminder_notes,
+    casa_kind, casa_place, casa_notes, supply_kind, shopping_list_id, status, privacy, created_at
+"""
 
 
 def db():
@@ -166,6 +175,10 @@ class ExceptionIn(BaseModel):
     module: str | None = None
     starts_at: str | None = None
     time_known: bool | None = None
+
+
+class ShoppingListPatch(BaseModel):
+    store_name: str | None = None
 
 
 class MePatch(BaseModel):
@@ -445,10 +458,127 @@ def _google_when(value: dict, all_day: bool) -> str | None:
     return None
 
 
+def _ensure_active_shopping_list(cur, user_id: str) -> dict:
+    cur.execute(
+        """
+        SELECT id, store_name, store_lat, store_lng, status
+        FROM shopping_lists
+        WHERE user_id = %s AND status = 'active'
+        """,
+        (user_id,),
+    )
+    row = cur.fetchone()
+    if row:
+        return row
+    cur.execute(
+        """
+        INSERT INTO shopping_lists (user_id, status)
+        VALUES (%s, 'active')
+        RETURNING id, store_name, store_lat, store_lng, status
+        """,
+        (user_id,),
+    )
+    return cur.fetchone()
+
+
+def _public_shopping_list(row: dict) -> dict:
+    return {
+        "id": str(row["id"]),
+        "store_name": row.get("store_name"),
+        "store_lat": row.get("store_lat"),
+        "store_lng": row.get("store_lng"),
+        "status": row.get("status") or "active",
+    }
+
+
+def _insert_item(cur, user_id: str, capture_id: str, suggestion: dict, *, title: str | None = None, shopping_list_id: str | None = None, casa_place: str | None = None) -> dict:
+    cur.execute(
+        f"""
+        INSERT INTO items
+            (user_id, capture_id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
+             agenda_type, medical_for, medical_name, medical_place, medical_notes,
+             family_kind, family_for, family_name, family_place, family_notes,
+             leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
+             reminder_kind, reminder_place, reminder_notes,
+             casa_kind, casa_place, casa_notes, supply_kind, shopping_list_id, privacy)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
+        RETURNING {ITEM_SELECT}
+        """,
+        (
+            user_id,
+            capture_id,
+            suggestion["kind"],
+            suggestion["axis"],
+            suggestion["module"],
+            title or suggestion["title"],
+            suggestion["starts_at"],
+            suggestion.get("repeats"),
+            suggestion["time_known"],
+            suggestion.get("alert_minutes_before"),
+            suggestion.get("agenda_type"),
+            suggestion.get("medical_for"),
+            suggestion.get("medical_name"),
+            suggestion.get("medical_place"),
+            suggestion.get("medical_notes"),
+            suggestion.get("family_kind"),
+            suggestion.get("family_for"),
+            suggestion.get("family_name"),
+            suggestion.get("family_place"),
+            suggestion.get("family_notes"),
+            suggestion.get("leisure_kind"),
+            suggestion.get("leisure_with"),
+            suggestion.get("leisure_name"),
+            suggestion.get("leisure_place"),
+            suggestion.get("leisure_notes"),
+            suggestion.get("reminder_kind"),
+            suggestion.get("reminder_place"),
+            suggestion.get("reminder_notes"),
+            suggestion.get("casa_kind"),
+            casa_place if casa_place is not None else suggestion.get("casa_place"),
+            suggestion.get("casa_notes"),
+            suggestion.get("supply_kind"),
+            shopping_list_id,
+        ),
+    )
+    return cur.fetchone()
+
+
+@app.get("/shopping-lists/active")
+def get_active_shopping_list(request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            row = _ensure_active_shopping_list(cur, user_id)
+        conn.commit()
+    return _public_shopping_list(row)
+
+
+@app.patch("/shopping-lists/active")
+def patch_active_shopping_list(body: ShoppingListPatch, request: Request):
+    user_id = current_user(request)
+    store_name = (body.store_name or "").strip() or None
+    with db() as conn:
+        with conn.cursor() as cur:
+            list_row = _ensure_active_shopping_list(cur, user_id)
+            cur.execute(
+                """
+                UPDATE shopping_lists
+                SET store_name = %s
+                WHERE id = %s AND user_id = %s
+                RETURNING id, store_name, store_lat, store_lng, status
+                """,
+                (store_name, list_row["id"], user_id),
+            )
+            row = cur.fetchone()
+        conn.commit()
+    return _public_shopping_list(row)
+
+
 @app.post("/captures", status_code=201)
 def create_capture(body: CaptureIn, request: Request):
     user_id = current_user(request)
     suggestion = classify(body.text)
+    raw = body.text.strip()
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -460,7 +590,7 @@ def create_capture(body: CaptureIn, request: Request):
                 """,
                 (
                     user_id,
-                    body.text.strip(),
+                    raw,
                     suggestion["kind"],
                     suggestion["title"],
                     suggestion["starts_at"],
@@ -468,61 +598,39 @@ def create_capture(body: CaptureIn, request: Request):
                 ),
             )
             capture_id = str(cur.fetchone()["id"])
-            cur.execute(
-                """
-                INSERT INTO items
-                    (user_id, capture_id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
-                     agenda_type, medical_for, medical_name, medical_place, medical_notes,
-                     family_kind, family_for, family_name, family_place, family_notes,
-                     leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
-                     reminder_kind, reminder_place, reminder_notes,
-                     casa_kind, casa_place, casa_notes, supply_kind, privacy)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
-                RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
-                    agenda_type, medical_for, medical_name, medical_place, medical_notes,
-                    family_kind, family_for, family_name, family_place, family_notes,
-                    leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
-                    reminder_kind, reminder_place, reminder_notes,
-                    casa_kind, casa_place, casa_notes, supply_kind, status, privacy, created_at
-                """,
-                (
-                    user_id,
-                    capture_id,
-                    suggestion["kind"],
-                    suggestion["axis"],
-                    suggestion["module"],
-                    suggestion["title"],
-                    suggestion["starts_at"],
-                    suggestion.get("repeats"),
-                    suggestion["time_known"],
-                    suggestion.get("alert_minutes_before"),
-                    suggestion.get("agenda_type"),
-                    suggestion.get("medical_for"),
-                    suggestion.get("medical_name"),
-                    suggestion.get("medical_place"),
-                    suggestion.get("medical_notes"),
-                    suggestion.get("family_kind"),
-                    suggestion.get("family_for"),
-                    suggestion.get("family_name"),
-                    suggestion.get("family_place"),
-                    suggestion.get("family_notes"),
-                    suggestion.get("leisure_kind"),
-                    suggestion.get("leisure_with"),
-                    suggestion.get("leisure_name"),
-                    suggestion.get("leisure_place"),
-                    suggestion.get("leisure_notes"),
-                    suggestion.get("reminder_kind"),
-                    suggestion.get("reminder_place"),
-                    suggestion.get("reminder_notes"),
-                    suggestion.get("casa_kind"),
-                    suggestion.get("casa_place"),
-                    suggestion.get("casa_notes"),
-                    suggestion.get("supply_kind"),
-                ),
-            )
-            item = cur.fetchone()
+            if suggestion.get("module") == "casa" and suggestion.get("casa_kind") == "compra":
+                list_row = _ensure_active_shopping_list(cur, user_id)
+                store = compra_store_name(raw) or suggestion.get("casa_place")
+                if store and not list_row.get("store_name"):
+                    cur.execute(
+                        """
+                        UPDATE shopping_lists
+                        SET store_name = %s
+                        WHERE id = %s
+                        RETURNING id, store_name, store_lat, store_lng, status
+                        """,
+                        (store, list_row["id"]),
+                    )
+                    list_row = cur.fetchone()
+                titles = split_compra_titles(raw)
+                created = [
+                    _insert_item(
+                        cur,
+                        user_id,
+                        capture_id,
+                        suggestion,
+                        title=title,
+                        shopping_list_id=str(list_row["id"]),
+                        casa_place=None,
+                    )
+                    for title in titles
+                ]
+            else:
+                created = [_insert_item(cur, user_id, capture_id, suggestion)]
         conn.commit()
-    return _public_item(item)
+    if len(created) == 1:
+        return _public_item(created[0])
+    return [_public_item(row) for row in created]
 
 
 @app.post("/captures/{capture_id}/confirm", status_code=201)
@@ -664,7 +772,7 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                """
+                f"""
                 UPDATE items
                 SET module = %s, axis = %s, kind = %s, title = %s, starts_at = %s, time_known = %s,
                     alert_minutes_before = %s, agenda_type = %s, medical_for = %s, medical_name = %s,
@@ -674,12 +782,7 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     reminder_kind = %s, reminder_place = %s, reminder_notes = %s,
                     casa_kind = %s, casa_place = %s, casa_notes = %s, supply_kind = %s
                 WHERE id = %s AND user_id = %s
-                RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
-                    agenda_type, medical_for, medical_name, medical_place, medical_notes,
-                    family_kind, family_for, family_name, family_place, family_notes,
-                    leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
-                    reminder_kind, reminder_place, reminder_notes,
-                    casa_kind, casa_place, casa_notes, supply_kind, status, privacy, created_at
+                RETURNING {ITEM_SELECT}
                 """,
                 (
                     body.module,
@@ -835,13 +938,8 @@ def list_items(request: Request):
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                """
-                SELECT id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
-                    agenda_type, medical_for, medical_name, medical_place, medical_notes,
-                    family_kind, family_for, family_name, family_place, family_notes,
-                    leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
-                    reminder_kind, reminder_place, reminder_notes,
-                    casa_kind, casa_place, casa_notes, supply_kind, status, privacy, created_at
+                f"""
+                SELECT {ITEM_SELECT}
                 FROM items
                 WHERE user_id = %s
                 ORDER BY created_at DESC
@@ -901,13 +999,8 @@ def _fetch_exceptions(cur, user_id: str, item_ids: list[str]) -> dict[str, list]
 
 def _fetch_item(cur, item_id: str, user_id: str) -> dict | None:
     cur.execute(
-        """
-        SELECT id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
-            agenda_type, medical_for, medical_name, medical_place, medical_notes,
-            family_kind, family_for, family_name, family_place, family_notes,
-            leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
-            reminder_kind, reminder_place, reminder_notes,
-            casa_kind, casa_place, casa_notes, supply_kind, status, privacy, created_at
+        f"""
+        SELECT {ITEM_SELECT}
         FROM items
         WHERE id = %s AND user_id = %s
         """,
@@ -969,6 +1062,7 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         "casa_place": row.get("casa_place"),
         "casa_notes": row.get("casa_notes"),
         "supply_kind": row.get("supply_kind"),
+        "shopping_list_id": str(row["shopping_list_id"]) if row.get("shopping_list_id") else None,
         "status": row.get("status") or "open",
         "privacy": row["privacy"],
         "created_at": row["created_at"].isoformat(),

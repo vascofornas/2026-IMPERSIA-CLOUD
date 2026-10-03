@@ -172,6 +172,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   const [pendingAction, setPendingAction] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
+  const [shoppingList, setShoppingList] = useState(null);
   const screen = useHash();
   const current = findModule(screen);
 
@@ -203,6 +204,11 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   }, []);
 
   useEffect(() => {
+    if (current.id !== "casa") return;
+    call("/shopping-lists/active").then(setShoppingList).catch((err) => setError(err.message));
+  }, [current.id, items]);
+
+  useEffect(() => {
     if (!googleEmail) {
       setGoogleEvents([]);
       return;
@@ -213,11 +219,12 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   async function archive() {
     setError("");
     try {
-      const item = await call("/captures", {
+      const result = await call("/captures", {
         method: "POST",
         body: JSON.stringify({ text }),
       });
-      const next = [item, ...items];
+      const fresh = Array.isArray(result) ? result : [result];
+      const next = [...fresh, ...items];
       setItems(next);
       setText("");
       checkAlerts(next);
@@ -456,6 +463,8 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
           {current.id === "casa" ? (
             <CasaBoard
               items={items}
+              shoppingList={shoppingList}
+              onShoppingListChange={setShoppingList}
               editing={editing}
               setEditing={setEditing}
               startEdit={startEdit}
@@ -852,20 +861,43 @@ function clockOf(value) {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function CasaBoard({ items, editing, setEditing, startEdit, saveEdit, askRemove, onToggleStatus }) {
+function CasaBoard({
+  items,
+  shoppingList,
+  onShoppingListChange,
+  editing,
+  setEditing,
+  startEdit,
+  saveEdit,
+  askRemove,
+  onToggleStatus,
+}) {
   const pending = groupCasaItems(items, "open");
   const done = groupCasaItems(items, "done");
-  const hasPending = pending.some((group) => group.items.length);
-  const hasDone = done.some((group) => group.items.length);
+  const compraPending = pending.find((group) => group.id === "compra")?.items || [];
+  const compraDone = done.find((group) => group.id === "compra")?.items || [];
+  const compraAll = [...compraPending, ...compraDone];
+  const otherPending = pending.filter((group) => group.id !== "compra" && group.items.length);
+  const otherDone = done.filter((group) => group.id !== "compra" && group.items.length);
+  const hasDone = otherDone.length > 0 || compraDone.length > 0;
+  const hasOther = otherPending.length > 0 || otherDone.length > 0;
   const listProps = { editing, setEditing, startEdit, saveEdit, askRemove, onToggleStatus };
-
-  if (!hasPending && !hasDone) {
-    return <p className="private">Todavía no hay nada en Casa. Escríbelo en Entrada.</p>;
-  }
 
   return (
     <div className="casa-board">
-      {pending.map((group) => group.items.length > 0 && (
+      <section className="casa-section">
+        <h2>Lista de la compra</h2>
+        <ShoppingListPanel
+          list={shoppingList}
+          onListChange={onShoppingListChange}
+          items={compraAll}
+          {...listProps}
+        />
+      </section>
+      {!compraAll.length && !hasOther && (
+        <p className="private">Más cosas de Casa (mantenimiento, suministros…) se escriben en Entrada.</p>
+      )}
+      {otherPending.map((group) => (
         <section className="casa-section" key={group.id}>
           <h2>{group.label}</h2>
           <ItemList items={group.items} {...listProps} />
@@ -874,7 +906,7 @@ function CasaBoard({ items, editing, setEditing, startEdit, saveEdit, askRemove,
       {hasDone && (
         <section className="casa-section casa-done">
           <h2>Hecho</h2>
-          {done.filter((group) => group.items.length).map((group) => (
+          {otherDone.map((group) => (
             <div className="casa-done-group" key={group.id}>
               <h3>{group.label}</h3>
               <ItemList items={group.items} {...listProps} />
@@ -883,6 +915,113 @@ function CasaBoard({ items, editing, setEditing, startEdit, saveEdit, askRemove,
         </section>
       )}
     </div>
+  );
+}
+
+function ShoppingListPanel({ list, onListChange, items, editing, setEditing, startEdit, saveEdit, askRemove, onToggleStatus }) {
+  const [storeDraft, setStoreDraft] = useState("");
+  const [savingStore, setSavingStore] = useState(false);
+
+  useEffect(() => {
+    setStoreDraft(list?.store_name || "");
+  }, [list?.id, list?.store_name]);
+
+  async function saveStore() {
+    const store_name = storeDraft.trim();
+    if ((list?.store_name || "") === store_name) return;
+    setSavingStore(true);
+    try {
+      const updated = await call("/shopping-lists/active", {
+        method: "PATCH",
+        body: JSON.stringify({ store_name: store_name || null }),
+      });
+      onListChange(updated);
+    } finally {
+      setSavingStore(false);
+    }
+  }
+
+  return (
+    <div className="shopping-list">
+      <label className="shopping-store">
+        Tienda
+        <input
+          value={storeDraft}
+          placeholder="Mercadona, Carrefour… (opcional)"
+          onChange={(e) => setStoreDraft(e.target.value)}
+          onBlur={saveStore}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              e.currentTarget.blur();
+            }
+          }}
+        />
+        {savingStore && <span className="private">Guardando…</span>}
+      </label>
+      {items.length ? (
+        <ShoppingChecklist
+          items={items}
+          editing={editing}
+          setEditing={setEditing}
+          startEdit={startEdit}
+          saveEdit={saveEdit}
+          askRemove={askRemove}
+          onToggleStatus={onToggleStatus}
+        />
+      ) : (
+        <p className="private">Nada pendiente. Escribe «comprar leche y pan» en Entrada.</p>
+      )}
+    </div>
+  );
+}
+
+function ShoppingChecklist({ items, editing, setEditing, startEdit, saveEdit, askRemove, onToggleStatus }) {
+  return (
+    <ul className="shopping-checklist">
+      {items.map((item) => (
+        <li
+          className={["shopping-row", item.status === "done" ? "done" : "", isEditingRow(item, editing) ? "editing" : ""].filter(Boolean).join(" ")}
+          key={item.id}
+        >
+          {isEditingRow(item, editing) ? (
+            <>
+              <input
+                className="shopping-edit"
+                value={editing.title}
+                onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    saveEdit();
+                  }
+                }}
+              />
+              <span className="shopping-actions">
+                <button type="button" className="link" onClick={saveEdit}>Guardar</button>
+                <button type="button" className="link secondary" onClick={() => setEditing(null)}>Cancelar</button>
+              </span>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="shopping-check"
+                aria-label={item.status === "done" ? "Reabrir" : "Marcar hecho"}
+                onClick={() => onToggleStatus(item)}
+              >
+                {item.status === "done" ? "✓" : ""}
+              </button>
+              <span className="shopping-title">{item.title}</span>
+              <span className="shopping-actions">
+                <button type="button" className="link" onClick={() => startEdit(item)}>Cambiar</button>
+                <button type="button" className="link danger" onClick={() => askRemove(item)}>Borrar</button>
+              </span>
+            </>
+          )}
+        </li>
+      ))}
+    </ul>
   );
 }
 

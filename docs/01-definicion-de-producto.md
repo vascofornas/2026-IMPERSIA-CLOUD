@@ -29,6 +29,8 @@ La **cita médica** incluye: título (especialidad o consulta), fecha, hora, avi
 
 Dentro de **Casa** (Vida personal, la antigua logística doméstica del PDF), las variantes perfeccionadas son la **lista de la compra**, el **mantenimiento del hogar**, el **control de suministros** (luz, agua, gas, internet…), las **tareas del hogar** (limpieza, basuras, lavadora…) y el **inventario personal** (despensa, stock, repuestos). Cada entrada lleva título, tipo, dónde (tienda, habitación, compañía…) y notas; los suministros indican además el tipo de recibo. Si la frase trae fecha, sale en Hoy y en el calendario, pero sigue siendo Casa. Los suministros con fecha llevan aviso 7 días antes por defecto. Se puede marcar como hecha; en Casa lo pendiente se ve por secciones y lo hecho aparte.
 
+La **lista de la compra** es una lista activa por cuenta: «comprar leche y pan» se parte en varias líneas; cada una se marca hecha con un check y queda tachada. La tienda es opcional y va en la lista (no en cada producto), pensada para geofence en las apps móviles más adelante. Por ahora hay una sola lista; varias listas y compartir llegarán después.
+
 Agenda puede mostrar, además, un calendario que la persona ya tenga. El primero es Google Calendar, y solo si ella lo conecta. Impersia lo lee y lo junta en Agenda y en Hoy con lo que entró por Entrada. Lo de Google se distingue. Lo escrito en Impersia no se copia a Google en esta versión.
 
 Las entradas con hora pueden llevar aviso. Se cambia al editar la entrada, en el campo Aviso. Las repetidas comparten el mismo aviso para toda la serie.

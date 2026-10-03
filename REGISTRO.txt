@@ -546,3 +546,11 @@ Queda validado el arreglo de horas tarde/noche en Casa.
 3 de octubre de 2026, 15:35
 Modesto pide seguir puliendo Casa según el PDF (logística doméstica).
 Inventario personal, suministros con tipo (luz, agua, gas…), pantalla por secciones, facturas de luz/gas a Casa. Suben migración 008, API, classify, web y docs.
+
+3 de octubre de 2026, 16:00
+Modesto pide lista de la compra activa con tienda opcional (geofence móvil más adelante).
+Tabla shopping_lists, lista activa por cuenta, tienda en la lista, split «leche y pan» en varias líneas, checklist en Casa. Suben migración 009, API, classify, web y docs.
+
+3 de octubre de 2026, 16:05
+Modesto confirma que funciona y pide la lista en formato checklist, no cards.
+Se unifica pendiente y hecho en una sola lista plana. Suben web y despliegue en VPS (migración 009, API y dist).

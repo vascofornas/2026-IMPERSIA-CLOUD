@@ -27,6 +27,20 @@ CREATE TABLE IF NOT EXISTS captures (
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS shopping_lists (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL REFERENCES users (id),
+    store_name text,
+    store_lat double precision,
+    store_lng double precision,
+    status text NOT NULL DEFAULT 'active',
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS shopping_lists_one_active
+    ON shopping_lists (user_id)
+    WHERE status = 'active';
+
 CREATE TABLE IF NOT EXISTS items (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid NOT NULL REFERENCES users (id),
@@ -61,6 +75,7 @@ CREATE TABLE IF NOT EXISTS items (
     casa_place text,
     casa_notes text,
     supply_kind text,
+    shopping_list_id uuid REFERENCES shopping_lists (id),
     status text NOT NULL DEFAULT 'open',
     privacy text NOT NULL DEFAULT 'private',
     created_at timestamptz NOT NULL DEFAULT now()

@@ -1133,6 +1133,52 @@ def _casa_meta(raw: str, low: str) -> dict:
     return meta
 
 
+def _compra_store(raw: str, low: str) -> str | None:
+    match = re.search(r"\ben\s+(?:el\s+|la\s+)?([A-ZÁÉÍÓÚÑ][a-záéíóúñ0-9 .-]{2,40})", raw)
+    if match:
+        place = match.group(1).strip(" .")
+        if place.lower() not in {"la", "el", "los", "las", "mi", "casa"}:
+            return place
+    match = re.search(r"\ben\s+(mercadona|carrefour|lidl|aldi|dia|eroski|alcampo|hipercor|colmena)\b", low)
+    if match:
+        return match.group(1)[0].upper() + match.group(1)[1:]
+    return None
+
+
+def split_compra_titles(raw: str) -> list[str]:
+    text = " ".join(raw.strip().split())
+    low = text.lower()
+    store = _compra_store(text, low)
+    if store:
+        text = re.sub(r"\s+en\s+(?:el\s+|la\s+)?" + re.escape(store) + r"\s*$", "", text, flags=re.IGNORECASE).strip()
+        text = re.sub(
+            r"\s+en\s+(?:el\s+|la\s+)?(?:mercadona|carrefour|lidl|aldi|dia|eroski|alcampo|hipercor|colmena)\s*$",
+            "",
+            text,
+            flags=re.IGNORECASE,
+        ).strip()
+    text = re.sub(
+        r"^(?:comprar|compra de|hay que comprar|hace falta|necesito(?: comprar)?|añadir a la lista(?: de la compra)?)\s+",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    ).strip()
+    if not text:
+        return [_title(raw)]
+    parts = re.split(r"\s*,\s*|\s+y\s+|\s+e\s+", text)
+    titles = []
+    for part in parts:
+        cleaned = " ".join(part.split()).strip(" .")
+        if not cleaned:
+            continue
+        titles.append(cleaned[0].upper() + cleaned[1:] if len(cleaned) > 1 else cleaned.upper())
+    return titles or [_title(raw)]
+
+
+def compra_store_name(raw: str) -> str | None:
+    return _compra_store(raw, raw.lower())
+
+
 def _casa_title(raw: str, low: str, kind: str | None) -> str:
     labels = {
         "compra": "Compra",
