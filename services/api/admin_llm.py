@@ -3,6 +3,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
+import events
 import llm
 
 router = APIRouter(prefix="/admin/llm", tags=["admin-llm"])
@@ -61,7 +62,7 @@ def llm_settings(request: Request):
 def patch_llm_settings(body: LlmSettingsPatch, request: Request):
     from main import db
 
-    user_id, _ = require_admin(request)
+    user_id, email = require_admin(request)
     patch = body.model_dump(exclude_unset=True)
     if body.monthly_budget_usd is not None and body.daily_budget_usd is not None:
         if body.daily_budget_usd > body.monthly_budget_usd:
@@ -71,6 +72,14 @@ def patch_llm_settings(body: LlmSettingsPatch, request: Request):
             settings = llm.update_settings(cur, patch)
             spend = llm.spend_summary(cur)
         conn.commit()
+    events.log_from_request(
+        request,
+        "admin.llm.settings",
+        product="admin",
+        user_id=user_id,
+        email=email,
+        meta={"fields": list(patch.keys())},
+    )
     return {"settings": settings, "spend": spend, "changed_by": user_id}
 
 
@@ -90,13 +99,30 @@ def llm_usage(request: Request, limit: int = 50, offset: int = 0):
 def llm_test(request: Request):
     from main import db
 
-    user_id, _ = require_admin(request)
+    user_id, email = require_admin(request)
     with db() as conn:
         with conn.cursor() as cur:
             try:
                 result = llm.run_health_test(cur, user_id=user_id)
             except RuntimeError as exc:
                 conn.commit()
+                events.log_from_request(
+                    request,
+                    "admin.llm.test",
+                    product="admin",
+                    user_id=user_id,
+                    email=email,
+                    success=False,
+                    meta={"error": str(exc)},
+                )
                 raise HTTPException(status_code=502, detail=str(exc)) from exc
         conn.commit()
+    events.log_from_request(
+        request,
+        "admin.llm.test",
+        product="admin",
+        user_id=user_id,
+        email=email,
+        meta={"model": result.get("model")},
+    )
     return result

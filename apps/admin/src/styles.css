@@ -276,6 +276,53 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
 
 .table tr.fail td:last-child { color: #fca5a5; }
 
+.table code {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.table .meta {
+  max-width: 220px;
+  word-break: break-word;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 28px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tabs button {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  padding: 10px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.tabs button.on {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--mark) 40%, var(--line));
+  background: color-mix(in srgb, var(--mark) 12%, transparent);
+}
+
+.filters .fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+
 @media (max-width: 900px) {
-  .grid, .fields { grid-template-columns: 1fr; }
+  .grid, .fields, .filters .fields { grid-template-columns: 1fr; }
+  .tabs { padding-inline: 16px; flex-wrap: wrap; }
 }

@@ -18,12 +18,15 @@ from pydantic import BaseModel, EmailStr, Field
 import psycopg
 from psycopg.rows import dict_row
 
+from admin_events import router as admin_events_router
 from admin_llm import router as admin_llm_router
 from classify import MODULES, classify, compra_store_name, legacy_kind, split_compra_titles
+import events
 import llm
 
 app = FastAPI(title="Impersia API")
 app.include_router(admin_llm_router)
+app.include_router(admin_events_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -110,6 +113,16 @@ def current_user(request: Request) -> str:
     if not user_id:
         raise HTTPException(status_code=401, detail="Necesitas entrar")
     return user_id
+
+
+def optional_user(request: Request) -> tuple[str | None, str | None]:
+    user_id = read_token(request.cookies.get(COOKIE, ""))
+    if not user_id:
+        return None, None
+    try:
+        return user_id, read_user_email(user_id)
+    except HTTPException:
+        return None, None
 
 
 def read_user_email(user_id: str) -> str:
@@ -209,6 +222,14 @@ class MePatch(BaseModel):
     alert_email: bool | None = None
 
 
+class ClientEventIn(BaseModel):
+    action: str = Field(max_length=80)
+    product: str = Field(max_length=40)
+    screen: str | None = Field(default=None, max_length=120)
+    app_version: str | None = Field(default=None, max_length=40)
+    meta: dict = Field(default_factory=dict)
+
+
 @app.get("/health")
 def health(response: Response):
     try:
@@ -237,8 +258,15 @@ def _account(user_id: str, email: str, look: str, alert_email: bool = False) -> 
 
 
 @app.post("/auth/register", status_code=201)
-def register(body: Credentials, response: Response):
+def register(body: Credentials, response: Response, request: Request):
     if llm.registration_locked():
+        events.log_from_request(
+            request,
+            "auth.register.denied",
+            email=body.email.lower(),
+            success=False,
+            meta={"reason": "locked"},
+        )
         raise HTTPException(status_code=403, detail="Registro cerrado")
     email = body.email.lower()
     try:
@@ -251,27 +279,81 @@ def register(body: Credentials, response: Response):
                 user_id = str(cur.fetchone()["id"])
             conn.commit()
     except psycopg.errors.UniqueViolation:
+        events.log_from_request(
+            request,
+            "auth.register.denied",
+            email=email,
+            success=False,
+            meta={"reason": "duplicate"},
+        )
         raise HTTPException(status_code=409, detail="Ese correo ya tiene cuenta")
     set_session(response, user_id)
+    events.log_from_request(
+        request,
+        "auth.register.success",
+        user_id=user_id,
+        email=email,
+    )
     return public_account(user_id, email, "claro", False)
 
 
 @app.post("/auth/login")
-def login(body: Credentials, response: Response):
+def login(body: Credentials, response: Response, request: Request):
     email = body.email.lower()
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT id, password_hash, look, alert_email FROM users WHERE email = %s", (email,))
             row = cur.fetchone()
     if not row or not check_password(body.password, row["password_hash"]):
+        events.log_from_request(
+            request,
+            "auth.login.failed",
+            email=email,
+            success=False,
+        )
         raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
-    set_session(response, str(row["id"]))
-    return public_account(str(row["id"]), email, row["look"], row.get("alert_email", False))
+    user_id = str(row["id"])
+    set_session(response, user_id)
+    events.log_from_request(
+        request,
+        "auth.login.success",
+        user_id=user_id,
+        email=email,
+        meta={"admin": llm.is_admin_email(email)},
+    )
+    return public_account(user_id, email, row["look"], row.get("alert_email", False))
 
 
 @app.post("/auth/logout")
-def logout(response: Response):
+def logout(response: Response, request: Request):
+    user_id, email = optional_user(request)
     response.delete_cookie(COOKIE, domain=".impersia.cloud", path="/")
+    events.log_from_request(
+        request,
+        "auth.logout",
+        user_id=user_id,
+        email=email,
+    )
+    return {"ok": True}
+
+
+@app.post("/events", status_code=202)
+def ingest_event(body: ClientEventIn, request: Request):
+    if body.action not in events.CLIENT_ACTIONS:
+        raise HTTPException(status_code=422, detail="Acción no permitida")
+    if body.product not in events.PRODUCTS:
+        raise HTTPException(status_code=422, detail="Producto no válido")
+    user_id, email = optional_user(request)
+    events.log_from_request(
+        request,
+        body.action,
+        product=body.product,
+        screen=body.screen,
+        user_id=user_id,
+        email=email,
+        app_version=body.app_version,
+        meta=body.meta,
+    )
     return {"ok": True}
 
 
@@ -313,6 +395,13 @@ def patch_me(body: MePatch, request: Request):
         conn.commit()
     if not row:
         raise HTTPException(status_code=401, detail="Necesitas entrar")
+    events.log_from_request(
+        request,
+        "profile.update",
+        user_id=user_id,
+        email=row["email"],
+        meta={"look": body.look, "alert_email": body.alert_email},
+    )
     return public_account(user_id, row["email"], row["look"], row["alert_email"])
 
 
@@ -654,6 +743,20 @@ def create_capture(body: CaptureIn, request: Request):
             else:
                 created = [_insert_item(cur, user_id, capture_id, suggestion)]
         conn.commit()
+    email = read_user_email(user_id)
+    events.log_from_request(
+        request,
+        "capture.create",
+        user_id=user_id,
+        email=email,
+        meta={
+            "capture_id": capture_id,
+            "module": suggestion.get("module"),
+            "kind": suggestion.get("kind"),
+            "items": len(created),
+            "source": suggestion.get("source"),
+        },
+    )
     if len(created) == 1:
         return _public_item(created[0])
     return [_public_item(row) for row in created]
@@ -851,6 +954,13 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
         conn.commit()
     if not item:
         raise HTTPException(status_code=404, detail="No está en tu cuenta")
+    events.log_from_request(
+        request,
+        "item.update",
+        user_id=user_id,
+        email=read_user_email(user_id),
+        meta={"item_id": item_id, "module": body.module, "kind": item.get("kind")},
+    )
     return item
 
 
@@ -874,6 +984,13 @@ def patch_item_status(item_id: str, body: StatusIn, request: Request):
                 raise HTTPException(status_code=404, detail="No está en tu cuenta o no es una tarea")
             item = _fetch_item(cur, item_id, user_id)
         conn.commit()
+    events.log_from_request(
+        request,
+        "item.status",
+        user_id=user_id,
+        email=read_user_email(user_id),
+        meta={"item_id": item_id, "status": body.status},
+    )
     return item
 
 
@@ -955,6 +1072,13 @@ def delete_item(item_id: str, request: Request):
         conn.commit()
     if not row:
         raise HTTPException(status_code=404, detail="No está en tu cuenta")
+    events.log_from_request(
+        request,
+        "item.delete",
+        user_id=user_id,
+        email=read_user_email(user_id),
+        meta={"item_id": item_id},
+    )
     return {"ok": True}
 
 

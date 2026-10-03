@@ -20,6 +20,7 @@ import {
 } from "./agenda.js";
 import { CASA_KIND, casaEventLine, groupCasaItems, isCasaItem, SUPPLY_KIND } from "./casa.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
+import { trackScreen } from "./events.js";
 import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
@@ -174,6 +175,10 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   const [error, setError] = useState("");
   const [shoppingList, setShoppingList] = useState(null);
   const screen = useHash();
+
+  useEffect(() => {
+    trackScreen(screen);
+  }, [screen]);
   const current = findModule(screen);
 
   const checkAlerts = useAlerts(items);

@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import ActivityLog from "./ActivityLog.jsx";
+import { trackScreen } from "./events.js";
 import Panel from "./Panel.jsx";
 
 const API = "https://api.impersia.cloud";
@@ -20,6 +22,7 @@ export default function App() {
   const [me, setMe] = useState(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
+  const [tab, setTab] = useState("activity");
 
   useEffect(() => {
     call("/me")
@@ -27,6 +30,10 @@ export default function App() {
       .catch(() => setMe(null))
       .finally(() => setReady(true));
   }, []);
+
+  useEffect(() => {
+    if (me?.is_admin) trackScreen(`admin.${tab}`);
+  }, [me, tab]);
 
   if (!ready) {
     return <main className="gate"><p className="private">Cargando…</p></main>;
@@ -63,9 +70,13 @@ export default function App() {
           <button type="button" className="text" onClick={() => call("/auth/logout", { method: "POST" }).then(() => setMe(null))}>Salir</button>
         </div>
       </header>
+      <nav className="tabs">
+        <button type="button" className={tab === "activity" ? "on" : ""} onClick={() => setTab("activity")}>Actividad</button>
+        <button type="button" className={tab === "llm" ? "on" : ""} onClick={() => setTab("llm")}>IA y costes</button>
+      </nav>
       {error && <p className="error banner">{error}</p>}
       <main className="content">
-        <Panel setError={setError} />
+        {tab === "activity" ? <ActivityLog setError={setError} /> : <Panel setError={setError} />}
       </main>
     </div>
   );
