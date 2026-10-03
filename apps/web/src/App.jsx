@@ -8,10 +8,13 @@ import {
   isFamilyItem,
   isLeisureItem,
   isMedicalItem,
+  isReminderItem,
   LEISURE_KIND,
   LEISURE_WITH,
   leisureEventLine,
   leisureWithLabel,
+  REMINDER_KIND,
+  reminderEventLine,
   MEDICAL_FOR,
   medicalForLabel,
 } from "./agenda.js";
@@ -261,6 +264,9 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
             leisure_name: editing.agenda_type === "ocio" ? editing.leisure_name || null : null,
             leisure_place: editing.agenda_type === "ocio" ? editing.leisure_place || null : null,
             leisure_notes: editing.agenda_type === "ocio" ? editing.leisure_notes || null : null,
+            reminder_kind: editing.agenda_type === "recordatorio" ? editing.reminder_kind || "otro" : null,
+            reminder_place: editing.agenda_type === "recordatorio" ? editing.reminder_place || null : null,
+            reminder_notes: editing.agenda_type === "recordatorio" ? editing.reminder_notes || null : null,
           }),
         });
       }
@@ -784,6 +790,7 @@ function chipTitle(item) {
   if (isMedicalItem(item)) return `${clock}Cita médica. ${item.title}. ${medicalForLabel(item.medical_for, item.medical_name)}`;
   if (isFamilyItem(item)) return `${clock}${familyEventLine(item)}. ${item.title}`;
   if (isLeisureItem(item)) return `${clock}${leisureEventLine(item)}. ${item.title}`;
+  if (isReminderItem(item)) return `${clock}Recordatorio. ${item.title}`;
   return `${clock}${labelOf(item.module)}. ${item.title}`;
 }
 
@@ -889,6 +896,9 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
                           leisure_name: agenda_type === "ocio" ? editing.leisure_name || "" : "",
                           leisure_place: agenda_type === "ocio" ? editing.leisure_place || "" : "",
                           leisure_notes: agenda_type === "ocio" ? editing.leisure_notes || "" : "",
+                          reminder_kind: agenda_type === "recordatorio" ? editing.reminder_kind || "itv" : null,
+                          reminder_place: agenda_type === "recordatorio" ? editing.reminder_place || "" : "",
+                          reminder_notes: agenda_type === "recordatorio" ? editing.reminder_notes || "" : "",
                         });
                       }}
                     >
@@ -896,6 +906,7 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
                       <option value="medica">Cita médica</option>
                       <option value="familiar">Celebración</option>
                       <option value="ocio">Ocio / plan</option>
+                      <option value="recordatorio">Recordatorio</option>
                     </select>
                   </label>
                   {editing.agenda_type === "medica" && (
@@ -1043,6 +1054,37 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
                       </label>
                     </>
                   )}
+                  {editing.agenda_type === "recordatorio" && (
+                    <>
+                      <label>
+                        Tipo
+                        <select
+                          value={editing.reminder_kind || "otro"}
+                          onChange={(e) => setEditing({ ...editing, reminder_kind: e.target.value })}
+                        >
+                          {REMINDER_KIND.map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        Lugar o gestoría
+                        <input
+                          value={editing.reminder_place || ""}
+                          placeholder="ITV, aseguradora, banco…"
+                          onChange={(e) => setEditing({ ...editing, reminder_place: e.target.value })}
+                        />
+                      </label>
+                      <label>
+                        Notas
+                        <textarea
+                          value={editing.reminder_notes || ""}
+                          placeholder="Documentación, matrícula, referencia…"
+                          onChange={(e) => setEditing({ ...editing, reminder_notes: e.target.value })}
+                        />
+                      </label>
+                    </>
+                  )}
                 </>
               )}
               <div className="actions">
@@ -1081,6 +1123,14 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
               )}
               {isLeisureItem(item) && item.leisure_place && <p className="private">{item.leisure_place}</p>}
               {isLeisureItem(item) && item.leisure_notes && <p className="private">{item.leisure_notes}</p>}
+              {isReminderItem(item) && (
+                <p className="medical-line">
+                  <span className="tag recordatorio">Recordatorio</span>
+                  <span>{reminderEventLine(item)}</span>
+                </p>
+              )}
+              {isReminderItem(item) && item.reminder_place && <p className="private">{item.reminder_place}</p>}
+              {isReminderItem(item) && item.reminder_notes && <p className="private">{item.reminder_notes}</p>}
               <p className="meta">
                 {item.source === "google" ? (
                   <span className="tag m-google"><GoogleMark /> Google</span>

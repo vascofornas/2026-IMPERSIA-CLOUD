@@ -8,8 +8,8 @@ export const AXES = [
         label: "Agenda",
         blurb: "Tu agenda privada: citas, celebraciones y planes con familia, amigos o pareja. El eje social no es calendario.",
         examples: [
-          ["Cine el viernes a las 21", "con amigos"],
-          ["Partido de tenis", "sábado por la mañana"],
+          ["ITV del coche", "jueves, 16:00"],
+          ["Renovar seguro", "antes del 15 de marzo"],
         ],
       },
       {

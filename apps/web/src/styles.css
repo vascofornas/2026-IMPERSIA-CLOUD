@@ -802,6 +802,11 @@ a.connect {
   color: #05603a;
 }
 
+.tag.recordatorio {
+  background: color-mix(in srgb, #175cd3 14%, var(--bg));
+  color: #1849a9;
+}
+
 .medical-line {
   display: flex;
   flex-wrap: wrap;

@@ -23,7 +23,7 @@ Personal, profesional y social son destino y permiso de cada elemento. La person
 
 Entrada es siempre el inicio. Decide qué hacer con cada frase: abrir algo nuevo o meterlo dentro de algo que ya existe. «Proyecto Capenergy 2026» abre el proyecto. «Avanzar en los foros de Capenergy» entra dentro. Abrir Proyectos sirve para verlo y para corregirlo, no para armarlo a mano. Lo mismo para un viaje, un hábito o un deseo.
 
-Dentro de Agenda (Vida personal), las variantes perfeccionadas son la **cita médica**, la **celebración** (cumpleaños de cualquiera — familiar o amigo —, aniversario, boda, bautizo, comida…) y el **plan de ocio** (cine, restaurante, concierto, deporte, quedar…). Familia y amistades comparten el mismo calendario privado; no hace falta elegir eje. En médicas y celebraciones importa de quién es; en ocio, con quién va. Cumpleaños y aniversarios se repiten cada año.
+Dentro de Agenda (Vida personal), las variantes perfeccionadas son la **cita médica**, la **celebración** (cumpleaños de cualquiera — familiar o amigo —, aniversario, boda, bautizo, comida…), el **plan de ocio** (cine, restaurante, concierto, deporte, quedar…) y el **recordatorio** (ITV, seguro, impuestos, documentos, trámites del hogar). Familia y amistades comparten el mismo calendario privado; no hace falta elegir eje. Cumpleaños y aniversarios se repiten cada año.
 
 La **cita médica** incluye: título (especialidad o consulta), fecha, hora, aviso, para quién es (yo, hijo/a, padre o madre, abuelo/a, sobrino/a u otra persona con nombre), lugar y notas. Son citas de interés para la persona, no solo las suyas propias. Se archivan desde Entrada y se ven y editan en Agenda con ese detalle.
 

@@ -511,6 +511,10 @@ Tercera variante: agenda_type ocio, leisure_kind, leisure_with, leisure_name, le
 Modesto pide dejar claro que Agenda es Vida personal (familia y amigos) y que el eje social no es calendario.
 En pantalla «Evento familiar» pasa a «Celebración», con opción Amigo/a. Queda escrito en docs/01-definicion-de-producto.md y en el blurb de Agenda.
 
+3 de octubre de 2026, 15:15
+Modesto confirma seguir con recordatorios genéricos en Agenda.
+Cuarta variante: agenda_type recordatorio, reminder_kind, reminder_place y reminder_notes. ITV, seguro, impuestos, documentos y hogar. Aviso 7 días antes si no hay hora. Suben migración 005, API, classify, web y docs.
+
 3 de octubre de 2026, 11:44
 Modesto pide logo en los correos y avisos legales habituales.
 Los avisos llevan logo-email.png, pie con aviso de servicio, RGPD, enlace a desactivar en Perfil, contacto y privacidad. Se publica apps/comercial/privacidad.html y logo-email.png en impersia.cloud.

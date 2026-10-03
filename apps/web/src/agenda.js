@@ -107,3 +107,26 @@ export function leisureEventLine(item) {
   const who = leisureWithLabel(item.leisure_with, item.leisure_name);
   return `${kind} · ${who}`;
 }
+
+export const REMINDER_KIND = [
+  ["itv", "ITV o coche"],
+  ["seguro", "Seguro"],
+  ["impuesto", "Impuestos"],
+  ["documento", "Documento"],
+  ["hogar", "Hogar / trámite"],
+  ["otro", "Otro"],
+];
+
+const REMINDER_KIND_LABEL = Object.fromEntries(REMINDER_KIND);
+
+export function reminderKindLabel(kind) {
+  return REMINDER_KIND_LABEL[kind] || "Recordatorio";
+}
+
+export function isReminderItem(item) {
+  return item?.agenda_type === "recordatorio";
+}
+
+export function reminderEventLine(item) {
+  return reminderKindLabel(item.reminder_kind);
+}

@@ -35,6 +35,7 @@ CELEBRATION_FOR = PERSON_FOR | {"friend"}
 FAMILY_KIND = {"cumpleanos", "aniversario", "boda", "bautizo", "comunion", "comida", "otro"}
 LEISURE_KIND = {"cine", "restaurante", "concierto", "teatro", "deporte", "excursion", "quedar", "otro"}
 LEISURE_WITH = {"solo", "partner", "friends", "family", "other"}
+REMINDER_KIND = {"itv", "seguro", "impuesto", "documento", "hogar", "otro"}
 LOOKS = {"claro", "papel", "mar", "cielo", "oliva", "arena", "violeta", "tinta", "noche", "grafito"}
 COOKIE = "impersia_session"
 
@@ -144,6 +145,9 @@ class ItemPatch(BaseModel):
     leisure_name: str | None = None
     leisure_place: str | None = None
     leisure_notes: str | None = None
+    reminder_kind: str | None = None
+    reminder_place: str | None = None
+    reminder_notes: str | None = None
 
 
 class ExceptionIn(BaseModel):
@@ -460,12 +464,14 @@ def create_capture(body: CaptureIn, request: Request):
                     (user_id, capture_id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
                      agenda_type, medical_for, medical_name, medical_place, medical_notes,
                      family_kind, family_for, family_name, family_place, family_notes,
-                     leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes, privacy)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
+                     leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
+                     reminder_kind, reminder_place, reminder_notes, privacy)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
                 RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
                     agenda_type, medical_for, medical_name, medical_place, medical_notes,
                     family_kind, family_for, family_name, family_place, family_notes,
-                    leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes, privacy, created_at
+                    leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
+                    reminder_kind, reminder_place, reminder_notes, privacy, created_at
                 """,
                 (
                     user_id,
@@ -493,6 +499,9 @@ def create_capture(body: CaptureIn, request: Request):
                     suggestion.get("leisure_name"),
                     suggestion.get("leisure_place"),
                     suggestion.get("leisure_notes"),
+                    suggestion.get("reminder_kind"),
+                    suggestion.get("reminder_place"),
+                    suggestion.get("reminder_notes"),
                 ),
             )
             item = cur.fetchone()
@@ -554,10 +563,13 @@ def _agenda_fields(body: ItemPatch) -> dict:
         "leisure_name": None,
         "leisure_place": None,
         "leisure_notes": None,
+        "reminder_kind": None,
+        "reminder_place": None,
+        "reminder_notes": None,
     }
     if body.module != "agenda":
         return empty
-    agenda_type = body.agenda_type if body.agenda_type in {"medica", "familiar", "ocio"} else None
+    agenda_type = body.agenda_type if body.agenda_type in {"medica", "familiar", "ocio", "recordatorio"} else None
     if agenda_type == "medica":
         medical_for = body.medical_for if body.medical_for in PERSON_FOR else "self"
         medical_name = (body.medical_name or "").strip() or None
@@ -599,6 +611,14 @@ def _agenda_fields(body: ItemPatch) -> dict:
             "leisure_place": (body.leisure_place or "").strip() or None,
             "leisure_notes": (body.leisure_notes or "").strip() or None,
         }
+    if agenda_type == "recordatorio":
+        return {
+            **empty,
+            "agenda_type": "recordatorio",
+            "reminder_kind": body.reminder_kind if body.reminder_kind in REMINDER_KIND else "otro",
+            "reminder_place": (body.reminder_place or "").strip() or None,
+            "reminder_notes": (body.reminder_notes or "").strip() or None,
+        }
     return empty
 
 
@@ -617,12 +637,14 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     alert_minutes_before = %s, agenda_type = %s, medical_for = %s, medical_name = %s,
                     medical_place = %s, medical_notes = %s, family_kind = %s, family_for = %s,
                     family_name = %s, family_place = %s, family_notes = %s, leisure_kind = %s,
-                    leisure_with = %s, leisure_name = %s, leisure_place = %s, leisure_notes = %s
+                    leisure_with = %s, leisure_name = %s, leisure_place = %s, leisure_notes = %s,
+                    reminder_kind = %s, reminder_place = %s, reminder_notes = %s
                 WHERE id = %s AND user_id = %s
                 RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
                     agenda_type, medical_for, medical_name, medical_place, medical_notes,
                     family_kind, family_for, family_name, family_place, family_notes,
-                    leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes, privacy, created_at
+                    leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
+                    reminder_kind, reminder_place, reminder_notes, privacy, created_at
                 """,
                 (
                     body.module,
@@ -647,6 +669,9 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     extra["leisure_name"],
                     extra["leisure_place"],
                     extra["leisure_notes"],
+                    extra["reminder_kind"],
+                    extra["reminder_place"],
+                    extra["reminder_notes"],
                     item_id,
                     user_id,
                 ),
@@ -752,7 +777,8 @@ def list_items(request: Request):
                 SELECT id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
                     agenda_type, medical_for, medical_name, medical_place, medical_notes,
                     family_kind, family_for, family_name, family_place, family_notes,
-                    leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes, privacy, created_at
+                    leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
+                    reminder_kind, reminder_place, reminder_notes, privacy, created_at
                 FROM items
                 WHERE user_id = %s
                 ORDER BY created_at DESC
@@ -816,7 +842,8 @@ def _fetch_item(cur, item_id: str, user_id: str) -> dict | None:
         SELECT id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
             agenda_type, medical_for, medical_name, medical_place, medical_notes,
             family_kind, family_for, family_name, family_place, family_notes,
-            leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes, privacy, created_at
+            leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
+            reminder_kind, reminder_place, reminder_notes, privacy, created_at
         FROM items
         WHERE id = %s AND user_id = %s
         """,
@@ -871,6 +898,9 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         "leisure_name": row.get("leisure_name"),
         "leisure_place": row.get("leisure_place"),
         "leisure_notes": row.get("leisure_notes"),
+        "reminder_kind": row.get("reminder_kind"),
+        "reminder_place": row.get("reminder_place"),
+        "reminder_notes": row.get("reminder_notes"),
         "privacy": row["privacy"],
         "created_at": row["created_at"].isoformat(),
         "exceptions": [_public_exception(row) for row in (exceptions or [])],

@@ -73,9 +73,12 @@ def classify(text: str) -> dict:
     low = raw.lower()
     starts, time_known = _when(low)
     module = _module(low)
+    if _is_reminder(low):
+        module = "agenda"
     medical = module == "agenda" and _is_medical(low)
     family = module == "agenda" and not medical and _is_family(low)
     leisure = module == "agenda" and not medical and not family and _is_leisure(low)
+    reminder = module == "agenda" and not medical and not family and not leisure and _is_reminder(low)
     alert = _alert_minutes_before(low, time_known)
     if medical and alert == 15:
         alert = 30
@@ -97,6 +100,7 @@ def classify(text: str) -> dict:
             medical_fields={},
             family_fields=fam,
             leisure_fields={},
+            reminder_fields={},
         )
     if medical:
         meta = _medical_meta(raw, low)
@@ -111,6 +115,7 @@ def classify(text: str) -> dict:
             medical_fields=meta,
             family_fields={},
             leisure_fields={},
+            reminder_fields={},
         )
     if leisure:
         plan = _leisure_meta(raw, low)
@@ -125,6 +130,24 @@ def classify(text: str) -> dict:
             medical_fields={},
             family_fields={},
             leisure_fields=plan,
+            reminder_fields={},
+        )
+    if reminder:
+        rem = _reminder_meta(raw, low)
+        if alert is None and not time_known:
+            alert = 10080
+        return _classify_result(
+            module,
+            _reminder_title(raw, low, rem.get("reminder_kind")),
+            starts,
+            time_known,
+            repeats,
+            alert,
+            "recordatorio",
+            medical_fields={},
+            family_fields={},
+            leisure_fields={},
+            reminder_fields=rem,
         )
     return _classify_result(
         module,
@@ -137,6 +160,7 @@ def classify(text: str) -> dict:
         medical_fields={},
         family_fields={},
         leisure_fields={},
+        reminder_fields={},
     )
 
 
@@ -151,6 +175,7 @@ def _classify_result(
     medical_fields: dict,
     family_fields: dict,
     leisure_fields: dict,
+    reminder_fields: dict,
 ) -> dict:
     return {
         "axis": MODULES[module],
@@ -176,6 +201,9 @@ def _classify_result(
         "leisure_name": leisure_fields.get("leisure_name"),
         "leisure_place": leisure_fields.get("leisure_place"),
         "leisure_notes": leisure_fields.get("leisure_notes"),
+        "reminder_kind": reminder_fields.get("reminder_kind"),
+        "reminder_place": reminder_fields.get("reminder_place"),
+        "reminder_notes": reminder_fields.get("reminder_notes"),
         "source": "rules",
     }
 
@@ -216,6 +244,8 @@ def _module(low: str) -> str:
     if any(word in low for word in ("hábito", "habito", "ejercicio", "meditación", "meditacion", "rutina")):
         return "habitos"
     if _is_leisure(low) and _has_agenda_when(low):
+        return "agenda"
+    if _is_reminder(low) and _has_agenda_when(low):
         return "agenda"
     if any(word in low for word in ("deseo", "quiero ir")) and not _has_agenda_when(low):
         return "deseos"
@@ -684,6 +714,57 @@ def _leisure_title(raw: str, low: str, kind: str | None) -> str:
         return cleaned
     if kind == "cine" and "cine" not in cleaned.lower():
         return f"Cine · {cleaned}" if cleaned else "Cine"
+    return cleaned or label
+
+
+REMINDER_KINDS = {
+    "itv": ("itv", "pasar la itv", "inspección técnica", "inspeccion tecnica", "revisión del coche", "revision del coche"),
+    "seguro": ("seguro", "renovar seguro", "renovar el seguro", "vencimiento del seguro", "póliza", "poliza"),
+    "impuesto": ("impuesto", "hacienda", "renta", "declaración", "declaracion", "irpf", "tasas"),
+    "documento": ("dni", "pasaporte", "carnet", "permiso de conducir", "caduca el", "renovar dni"),
+    "hogar": ("recibo", "factura", "suministro", "contrato", "alquiler"),
+}
+
+
+def _is_reminder(low: str) -> bool:
+    if re.search(r"\brecordatorio\b", low):
+        return True
+    for words in REMINDER_KINDS.values():
+        if any(word in low for word in words):
+            return True
+    return False
+
+
+def _reminder_kind(low: str) -> str:
+    for kind, words in REMINDER_KINDS.items():
+        if any(word in low for word in words):
+            return kind
+    return "otro"
+
+
+def _reminder_meta(raw: str, low: str) -> dict:
+    return {
+        "reminder_kind": _reminder_kind(low),
+        "reminder_place": _medical_place(low),
+        "reminder_notes": None,
+    }
+
+
+def _reminder_title(raw: str, low: str, kind: str | None) -> str:
+    labels = {
+        "itv": "ITV",
+        "seguro": "Seguro",
+        "impuesto": "Impuestos",
+        "documento": "Documento",
+        "hogar": "Trámite del hogar",
+        "otro": "Recordatorio",
+    }
+    label = labels.get(kind or "otro", "Recordatorio")
+    cleaned = _title(raw)
+    if cleaned.lower().startswith(label.lower()):
+        return cleaned
+    if kind and kind != "otro" and label.lower() not in cleaned.lower():
+        return f"{label} · {cleaned}" if cleaned else label
     return cleaned or label
 
 
