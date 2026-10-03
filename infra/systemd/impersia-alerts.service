@@ -1,0 +1,11 @@
+[Unit]
+Description=Send Impersia email alerts
+After=network.target postgresql.service
+
+[Service]
+Type=oneshot
+User=impersia
+Group=impersia
+WorkingDirectory=/opt/impersia-os/services/api
+EnvironmentFile=/etc/impersia/api.env
+ExecStart=/opt/impersia-os/services/api/.venv/bin/python send_alerts.py

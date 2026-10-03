@@ -49,7 +49,7 @@ Tres tipos de elemento, y una pantalla:
 
 - **Nota.** Texto libre. Cubre el diario y la nota rápida hasta que el diario merezca módulo propio.
 - **Tarea.** Título, estado (pendiente o hecha) y fecha opcional. Un proyecto es solo una etiqueta de la tarea, no un tablero.
-- **Cita.** Título, inicio y fin. El recordatorio se guarda. Si la frase lleva hora, Impersia pone aviso quince minutos antes, salvo que diga otra cosa («avísame a la hora», «sin aviso», «una hora antes»). En la web, con los avisos del navegador activos en Perfil, suena mientras la pestaña está abierta. La notificación push del móvil llega con las apps Flutter.
+- **Cita.** Título, inicio y fin. El recordatorio se guarda. Si la frase lleva hora, Impersia pone aviso quince minutos antes, salvo que diga otra cosa («avísame a la hora», «sin aviso», «una hora antes»). Hay tres canales, activados en Perfil: aviso del navegador con la web abierta; correo a la cuenta (aunque no haya nada abierto); push en el móvil con las apps Flutter, más adelante.
 
 La pantalla de inicio se llama **Hoy**: lo del día. **Entrada** es donde se escribe. Debajo, en cada módulo, lo archivado.
 

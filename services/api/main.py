@@ -134,8 +134,9 @@ class ExceptionIn(BaseModel):
     time_known: bool | None = None
 
 
-class LookIn(BaseModel):
-    look: str
+class MePatch(BaseModel):
+    look: str | None = None
+    alert_email: bool | None = None
 
 
 @app.get("/health")
@@ -151,7 +152,7 @@ def health(response: Response):
     return {"status": "ok", "database": "ok"}
 
 
-def _account(user_id: str, email: str, look: str) -> dict:
+def _account(user_id: str, email: str, look: str, alert_email: bool = False) -> dict:
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT google_email FROM google_links WHERE user_id = %s", (user_id,))
@@ -159,6 +160,7 @@ def _account(user_id: str, email: str, look: str) -> dict:
     return {
         "email": email,
         "look": look if look in LOOKS else "claro",
+        "alert_email": bool(alert_email),
         "google_email": link["google_email"] if link else None,
     }
 
@@ -178,7 +180,7 @@ def register(body: Credentials, response: Response):
     except psycopg.errors.UniqueViolation:
         raise HTTPException(status_code=409, detail="Ese correo ya tiene cuenta")
     set_session(response, user_id)
-    return {"email": email, "look": "claro", "google_email": None}
+    return {"email": email, "look": "claro", "alert_email": False, "google_email": None}
 
 
 @app.post("/auth/login")
@@ -186,12 +188,12 @@ def login(body: Credentials, response: Response):
     email = body.email.lower()
     with db() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, password_hash, look FROM users WHERE email = %s", (email,))
+            cur.execute("SELECT id, password_hash, look, alert_email FROM users WHERE email = %s", (email,))
             row = cur.fetchone()
     if not row or not check_password(body.password, row["password_hash"]):
         raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
     set_session(response, str(row["id"]))
-    return _account(str(row["id"]), email, row["look"])
+    return _account(str(row["id"]), email, row["look"], row.get("alert_email", False))
 
 
 @app.post("/auth/logout")
@@ -205,29 +207,40 @@ def me(request: Request):
     user_id = current_user(request)
     with db() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT email, look FROM users WHERE id = %s", (user_id,))
+            cur.execute("SELECT email, look, alert_email FROM users WHERE id = %s", (user_id,))
             row = cur.fetchone()
     if not row:
         raise HTTPException(status_code=401, detail="Necesitas entrar")
-    return _account(user_id, row["email"], row["look"])
+    return _account(user_id, row["email"], row["look"], row["alert_email"])
 
 
 @app.patch("/me")
-def patch_me(body: LookIn, request: Request):
+def patch_me(body: MePatch, request: Request):
     user_id = current_user(request)
-    if body.look not in LOOKS:
+    if body.look is None and body.alert_email is None:
+        raise HTTPException(status_code=422, detail="Nada que cambiar")
+    if body.look is not None and body.look not in LOOKS:
         raise HTTPException(status_code=400, detail="Esa apariencia no existe")
+    updates = []
+    params = []
+    if body.look is not None:
+        updates.append("look = %s")
+        params.append(body.look)
+    if body.alert_email is not None:
+        updates.append("alert_email = %s")
+        params.append(body.alert_email)
+    params.append(user_id)
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE users SET look = %s WHERE id = %s RETURNING email, look",
-                (body.look, user_id),
+                f"UPDATE users SET {', '.join(updates)} WHERE id = %s RETURNING email, look, alert_email",
+                params,
             )
             row = cur.fetchone()
         conn.commit()
     if not row:
         raise HTTPException(status_code=401, detail="Necesitas entrar")
-    return _account(user_id, row["email"], row["look"])
+    return _account(user_id, row["email"], row["look"], row["alert_email"])
 
 
 APP_HOME = "https://impersia.cloud/app/#agenda"

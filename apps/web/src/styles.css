@@ -793,6 +793,23 @@ a.connect {
   color: var(--muted);
 }
 
+.alert-prefs {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 36rem;
+  margin-top: 20px;
+}
+
+.alert-prefs h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.alert-prefs section > button {
+  margin-top: 12px;
+}
+
 .item-actions {
   display: inline-flex;
   gap: 4px;

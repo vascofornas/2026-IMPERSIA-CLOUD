@@ -85,7 +85,9 @@ export default function App() {
       email={me.email}
       googleEmail={me.google_email || ""}
       look={me.look || "claro"}
+      alertEmail={Boolean(me.alert_email)}
       onLook={(look) => setMe({ ...me, look })}
+      onAlertEmail={(alertEmail) => setMe({ ...me, alert_email: alertEmail })}
       onLeave={() => setMe(null)}
     />
   );
@@ -141,7 +143,7 @@ function Auth({ onEnter }) {
   );
 }
 
-function Home({ email, googleEmail, look, onLook, onLeave }) {
+function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLeave }) {
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
   const [googleEvents, setGoogleEvents] = useState([]);
@@ -415,7 +417,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
         <>
           <h1>Perfil</h1>
           <p className="lead">{email}</p>
-          <AlertPermission />
+          <AlertPermission alertEmail={alertEmail} onAlertEmail={onAlertEmail} setError={setError} />
         </>
       )}
       {screen === "apariencia" && (
@@ -1076,30 +1078,65 @@ function useAlerts(items) {
   }, [items]);
 }
 
-function AlertPermission() {
-  const [state, setState] = useState(() => ("Notification" in window ? Notification.permission : "unsupported"));
-  if (state === "unsupported") {
-    return <p className="private">Este navegador no puede avisarte fuera de la pestaña.</p>;
+function AlertPermission({ alertEmail, onAlertEmail, setError }) {
+  const [browser, setBrowser] = useState(() => ("Notification" in window ? Notification.permission : "unsupported"));
+  const [busy, setBusy] = useState(false);
+
+  async function toggleEmail() {
+    setBusy(true);
+    setError("");
+    try {
+      const data = await call("/me", {
+        method: "PATCH",
+        body: JSON.stringify({ alert_email: !alertEmail }),
+      });
+      onAlertEmail(Boolean(data.alert_email));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
-  if (state === "granted") {
-    return <p className="private"><Icon name="aviso" /> Los avisos del navegador están activos.</p>;
-  }
-  if (state === "denied") {
-    return <p className="private">El navegador tiene los avisos bloqueados. Actívalos en los ajustes del sitio.</p>;
-  }
+
   return (
-    <>
-      <p className="lead">Para que Impersia te avise a la hora de tus entradas, activa las notificaciones del navegador.</p>
-      <button
-        type="button"
-        onClick={async () => {
-          const result = await Notification.requestPermission();
-          setState(result);
-        }}
-      >
-        <Icon name="aviso" /> Activar avisos
-      </button>
-    </>
+    <div className="alert-prefs">
+      <section>
+        <h2>Navegador</h2>
+        {browser === "unsupported" && <p className="private">Este navegador no puede avisarte con la pestaña abierta.</p>}
+        {browser === "granted" && <p className="private"><Icon name="aviso" /> Los avisos del navegador están activos.</p>}
+        {browser === "denied" && <p className="private">El navegador tiene los avisos bloqueados. Actívalos en los ajustes del sitio.</p>}
+        {browser === "default" && (
+          <>
+            <p className="lead">Con la web abierta, Impersia puede avisarte a la hora de tus entradas.</p>
+            <button
+              type="button"
+              onClick={async () => {
+                const result = await Notification.requestPermission();
+                setBrowser(result);
+              }}
+            >
+              <Icon name="aviso" /> Activar avisos del navegador
+            </button>
+          </>
+        )}
+      </section>
+      <section>
+        <h2>Correo</h2>
+        <p className="lead">Te escribimos a tu cuenta cuando toque, aunque no tengas Impersia abierto.</p>
+        {alertEmail ? (
+          <>
+            <p className="private"><Icon name="aviso" /> Los avisos por correo están activos.</p>
+            <button type="button" className="secondary" onClick={toggleEmail} disabled={busy}>
+              <Icon name="aviso" /> {busy ? "Guardando…" : "Desactivar correo"}
+            </button>
+          </>
+        ) : (
+          <button type="button" onClick={toggleEmail} disabled={busy}>
+            <Icon name="aviso" /> {busy ? "Guardando…" : "Activar avisos por correo"}
+          </button>
+        )}
+      </section>
+    </div>
   );
 }
 

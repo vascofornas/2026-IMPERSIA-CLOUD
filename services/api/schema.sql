@@ -3,7 +3,16 @@ CREATE TABLE IF NOT EXISTS users (
     email text UNIQUE NOT NULL,
     password_hash text NOT NULL,
     look text NOT NULL DEFAULT 'claro',
+    alert_email boolean NOT NULL DEFAULT false,
     created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS alert_deliveries (
+    item_id uuid NOT NULL REFERENCES items (id) ON DELETE CASCADE,
+    occurrence_day date NOT NULL,
+    channel text NOT NULL DEFAULT 'email',
+    sent_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (item_id, occurrence_day, channel)
 );
 
 CREATE TABLE IF NOT EXISTS captures (
