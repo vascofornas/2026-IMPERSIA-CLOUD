@@ -445,3 +445,7 @@ Desde el calendario o Hoy, al cambiar o borrar una repetición pregunta: solo es
 3 de octubre de 2026, 09:48
 Modesto prueba y dice que desde el calendario no puede cambiar ni borrar un hábito repetido, uno por uno.
 El calendario solo enseñaba la pastilla, sin acciones. En vista Día salen Cambiar y Borrar como en Hoy. En mes o semana, al pulsar una entrada se abre ese día.
+
+3 de octubre de 2026, 09:52
+Modesto pide implementar las alertas de las entradas.
+Las entradas con hora guardan cuándo avisar (minutos antes). Si la frase lo dice, se respeta; si no, quince minutos antes. Al editar hay campo Aviso. En Perfil se activan los avisos del navegador. La web avisa con la pestaña abierta; el móvil llegará con Flutter. Suben schema, API, classify, web y docs. En el VPS se añade la columna y se pone aviso a las entradas que ya tenían hora.

@@ -787,6 +787,12 @@ a.connect {
   font-weight: 500;
 }
 
+.tag.alert {
+  --chip: var(--muted);
+  background: color-mix(in srgb, var(--muted) 10%, var(--card));
+  color: var(--muted);
+}
+
 .item-actions {
   display: inline-flex;
   gap: 4px;

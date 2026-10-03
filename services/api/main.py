@@ -123,6 +123,7 @@ class ItemPatch(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     starts_at: str | None = None
     time_known: bool = False
+    alert_minutes_before: int | None = None
 
 
 class ExceptionIn(BaseModel):
@@ -423,9 +424,9 @@ def create_capture(body: CaptureIn, request: Request):
             cur.execute(
                 """
                 INSERT INTO items
-                    (user_id, capture_id, kind, axis, module, title, starts_at, repeats, time_known, privacy)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
-                RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, privacy, created_at
+                    (user_id, capture_id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before, privacy)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
+                RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before, privacy, created_at
                 """,
                 (
                     user_id,
@@ -437,6 +438,7 @@ def create_capture(body: CaptureIn, request: Request):
                     suggestion["starts_at"],
                     suggestion.get("repeats"),
                     suggestion["time_known"],
+                    suggestion.get("alert_minutes_before"),
                 ),
             )
             item = cur.fetchone()
@@ -491,9 +493,10 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
             cur.execute(
                 """
                 UPDATE items
-                SET module = %s, axis = %s, kind = %s, title = %s, starts_at = %s, time_known = %s
+                SET module = %s, axis = %s, kind = %s, title = %s, starts_at = %s, time_known = %s,
+                    alert_minutes_before = %s
                 WHERE id = %s AND user_id = %s
-                RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, privacy, created_at
+                RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before, privacy, created_at
                 """,
                 (
                     body.module,
@@ -502,6 +505,7 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     body.title.strip(),
                     _when_saving(body.starts_at, body.time_known),
                     body.time_known,
+                    body.alert_minutes_before,
                     item_id,
                     user_id,
                 ),
@@ -604,7 +608,7 @@ def list_items(request: Request):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT id, kind, axis, module, title, starts_at, repeats, time_known, privacy, created_at
+                SELECT id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before, privacy, created_at
                 FROM items
                 WHERE user_id = %s
                 ORDER BY created_at DESC
@@ -665,7 +669,7 @@ def _fetch_exceptions(cur, user_id: str, item_ids: list[str]) -> dict[str, list]
 def _fetch_item(cur, item_id: str, user_id: str) -> dict | None:
     cur.execute(
         """
-        SELECT id, kind, axis, module, title, starts_at, repeats, time_known, privacy, created_at
+        SELECT id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before, privacy, created_at
         FROM items
         WHERE id = %s AND user_id = %s
         """,
@@ -704,6 +708,7 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         "starts_at": starts.isoformat() if starts else None,
         "repeats": row.get("repeats"),
         "time_known": bool(row.get("time_known")),
+        "alert_minutes_before": row.get("alert_minutes_before"),
         "privacy": row["privacy"],
         "created_at": row["created_at"].isoformat(),
         "exceptions": [_public_exception(row) for row in (exceptions or [])],

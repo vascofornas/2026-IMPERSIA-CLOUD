@@ -23,6 +23,8 @@ Entrada es siempre el inicio. Decide qué hacer con cada frase: abrir algo nuevo
 
 Agenda puede mostrar, además, un calendario que la persona ya tenga. El primero es Google Calendar, y solo si ella lo conecta. Impersia lo lee y lo junta en Agenda y en Hoy con lo que entró por Entrada. Lo de Google se distingue. Lo escrito en Impersia no se copia a Google en esta versión.
 
+Las entradas con hora pueden llevar aviso. Se cambia al editar la entrada, en el campo Aviso. Las repetidas comparten el mismo aviso para toda la serie.
+
 En Agenda el calendario se abre en el mes. También se puede ver la semana o un solo día. Cada día muestra lo que tiene fecha, venga del eje que venga, más Google si está conectado. Si la frase dice «cada lunes», «cada día» o «cada mes», la entrada se repite y sale en todos esos días, como en un calendario normal. Al cambiar o borrar desde un día concreto, la persona elige si afecta solo a ese día o a toda la serie. Cada cajón tiene su color y su icono. El mismo icono, con el mismo color, encabeza la pantalla de ese módulo y cada ficha. Una acción lleva siempre icono y texto; el texto solo no basta, porque no se distingue de un rótulo. Un calendario ajeno, hoy Google, lleva su propia marca. La entrada sigue en su sitio. Pasar de día, de semana o de mes no la mueve. Arrastrar un día llega más adelante.
 
 Impersia se registra una vez en Google, con la cuenta del producto `impersia@impersia.cloud`, no con la personal de quien lo lleva. Cada persona solo acepta que se lea su calendario.
@@ -47,7 +49,7 @@ Tres tipos de elemento, y una pantalla:
 
 - **Nota.** Texto libre. Cubre el diario y la nota rápida hasta que el diario merezca módulo propio.
 - **Tarea.** Título, estado (pendiente o hecha) y fecha opcional. Un proyecto es solo una etiqueta de la tarea, no un tablero.
-- **Cita.** Título, inicio y fin. El recordatorio se guarda; la notificación push llega con las apps móviles.
+- **Cita.** Título, inicio y fin. El recordatorio se guarda. Si la frase lleva hora, Impersia pone aviso quince minutos antes, salvo que diga otra cosa («avísame a la hora», «sin aviso», «una hora antes»). En la web, con los avisos del navegador activos en Perfil, suena mientras la pestaña está abierta. La notificación push del móvil llega con las apps Flutter.
 
 La pantalla de inicio se llama **Hoy**: lo del día. **Entrada** es donde se escribe. Debajo, en cada módulo, lo archivado.
 

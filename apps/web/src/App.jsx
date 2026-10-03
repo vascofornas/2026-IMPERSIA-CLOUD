@@ -4,6 +4,16 @@ import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
 
+const ALERT_OPTIONS = [
+  { value: "", label: "Sin aviso" },
+  { value: "0", label: "A la hora" },
+  { value: "5", label: "5 minutos antes" },
+  { value: "15", label: "15 minutos antes" },
+  { value: "30", label: "30 minutos antes" },
+  { value: "60", label: "1 hora antes" },
+  { value: "1440", label: "1 día antes" },
+];
+
 const LOOKS = [
   { id: "claro", name: "Claro", note: "Gris claro y verde" },
   { id: "papel", name: "Papel", note: "Crema y verde bosque" },
@@ -143,6 +153,8 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
   const screen = useHash();
   const current = findModule(screen);
 
+  useAlerts(items);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("google") === "permiso") {
@@ -196,6 +208,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
             title: editing.title,
             starts_at: editing.starts_at,
             time_known: Boolean(editing.time_known),
+            alert_minutes_before: editing.time_known ? editing.alert_minutes_before ?? null : null,
           }),
         });
       }
@@ -402,7 +415,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
         <>
           <h1>Perfil</h1>
           <p className="lead">{email}</p>
-          <p className="private">El resto de esta pantalla lo vemos más adelante.</p>
+          <AlertPermission />
         </>
       )}
       {screen === "apariencia" && (
@@ -771,6 +784,19 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
                   onChange={(e) => setEditing(withWhen(editing, datePart(editing.starts_at), e.target.value))}
                 />
               </label>
+              {editing.time_known && editing.editScope !== "one" && (
+                <label>
+                  Aviso
+                  <select
+                    value={alertValue(editing)}
+                    onChange={(e) => setEditing({ ...editing, alert_minutes_before: parseAlert(e.target.value) })}
+                  >
+                    {ALERT_OPTIONS.map((option) => (
+                      <option key={option.value || "none"} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <div className="actions">
                 <button type="button" onClick={saveEdit}>Guardar cambio</button>
                 <button type="button" className="secondary" onClick={() => setEditing(null)}>Cancelar</button>
@@ -786,6 +812,9 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
                 ) : (
                   <>
                     <span className={`tag m-${item.module}`}><Icon name={item.module} /> {labelOf(item.module)}</span>
+                    {item.time_known && item.alert_minutes_before != null && (
+                      <span className="tag alert"><Icon name="aviso" /> {alertLabel(item.alert_minutes_before)}</span>
+                    )}
                     <span className="item-actions">
                       <button type="button" className="link" onClick={() => startEdit(item)}><Icon name="editar" /> Cambiar</button>
                       <button type="button" className="link danger" onClick={() => askRemove(item)}><Icon name="borrar" /> Borrar</button>
@@ -991,9 +1020,87 @@ function timePart(proposal) {
 }
 
 function withWhen(proposal, day, time) {
-  if (!day) return { ...proposal, starts_at: null, time_known: false };
-  if (!time) return { ...proposal, starts_at: day, time_known: false };
+  if (!day) return { ...proposal, starts_at: null, time_known: false, alert_minutes_before: null };
+  if (!time) return { ...proposal, starts_at: day, time_known: false, alert_minutes_before: null };
   return { ...proposal, starts_at: `${day}T${time}`, time_known: true };
+}
+
+function alertValue(item) {
+  const value = item.alert_minutes_before;
+  return value == null ? "" : String(value);
+}
+
+function parseAlert(value) {
+  if (value === "") return null;
+  return Number(value);
+}
+
+function alertLabel(minutes) {
+  if (minutes === 0) return "A la hora";
+  if (minutes === 5) return "5 min antes";
+  if (minutes === 15) return "15 min antes";
+  if (minutes === 30) return "30 min antes";
+  if (minutes === 60) return "1 h antes";
+  if (minutes === 1440) return "1 día antes";
+  if (minutes < 60) return `${minutes} min antes`;
+  if (minutes % 1440 === 0) return `${minutes / 1440} días antes`;
+  if (minutes % 60 === 0) return `${minutes / 60} h antes`;
+  return `${minutes} min antes`;
+}
+
+function useAlerts(items) {
+  useEffect(() => {
+    if (!("Notification" in window) || Notification.permission !== "granted") return undefined;
+    const tick = () => {
+      const now = Date.now();
+      const from = dayStart(new Date());
+      const to = endOfDay(new Date());
+      to.setDate(to.getDate() + 1);
+      const dated = items.filter((item) => item.starts_at && item.alert_minutes_before != null && item.source !== "google");
+      expandItems(dated, from, to).forEach((item) => {
+        const start = new Date(item.starts_at).getTime();
+        const alertAt = start - item.alert_minutes_before * 60000;
+        const key = `impersia-alert-${item.occurrenceKey || item.id}-${item.alert_minutes_before}`;
+        if (now < alertAt || now > start + 300000) return;
+        if (sessionStorage.getItem(key)) return;
+        new Notification(item.title, {
+          body: `${whenLabel(item)} · ${labelOf(item.module)}`,
+          tag: key,
+        });
+        sessionStorage.setItem(key, "1");
+      });
+    };
+    tick();
+    const id = window.setInterval(tick, 30000);
+    return () => window.clearInterval(id);
+  }, [items]);
+}
+
+function AlertPermission() {
+  const [state, setState] = useState(() => ("Notification" in window ? Notification.permission : "unsupported"));
+  if (state === "unsupported") {
+    return <p className="private">Este navegador no puede avisarte fuera de la pestaña.</p>;
+  }
+  if (state === "granted") {
+    return <p className="private"><Icon name="aviso" /> Los avisos del navegador están activos.</p>;
+  }
+  if (state === "denied") {
+    return <p className="private">El navegador tiene los avisos bloqueados. Actívalos en los ajustes del sitio.</p>;
+  }
+  return (
+    <>
+      <p className="lead">Para que Impersia te avise a la hora de tus entradas, activa las notificaciones del navegador.</p>
+      <button
+        type="button"
+        onClick={async () => {
+          const result = await Notification.requestPermission();
+          setState(result);
+        }}
+      >
+        <Icon name="aviso" /> Activar avisos
+      </button>
+    </>
+  );
 }
 
 function todayLine() {

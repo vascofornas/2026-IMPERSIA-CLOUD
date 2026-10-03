@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS items (
     starts_at timestamptz,
     repeats text,
     time_known boolean NOT NULL DEFAULT false,
+    alert_minutes_before integer,
     status text NOT NULL DEFAULT 'open',
     privacy text NOT NULL DEFAULT 'private',
     created_at timestamptz NOT NULL DEFAULT now()

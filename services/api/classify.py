@@ -81,6 +81,7 @@ def classify(text: str) -> dict:
         "starts_at": starts,
         "time_known": time_known,
         "repeats": _repeat(low),
+        "alert_minutes_before": _alert_minutes_before(low, time_known),
         "source": "rules",
     }
 
@@ -154,6 +155,10 @@ def _title(raw: str) -> str:
         r"\bmañana\b",
         r"\bmanana\b",
         r"\bhoy\b",
+        r"\bsin (?:aviso|recordatorio|alerta)\b",
+        r"\b(?:av[ií]same|recu[eé]rdame|con recordatorio|con aviso)\b",
+        r"\b(?:a la hora|en el momento)\b",
+        r"\b\d+\s*(?:minutos?|horas?|d[ií]as?)\s*antes\b",
     )
     for pattern in cuts:
         text = re.sub(pattern, " ", text, flags=re.IGNORECASE)
@@ -275,6 +280,27 @@ def _daypart(low: str) -> tuple[int, int] | None:
         return 10, 0
     if "de la mañana" in low or "de la manana" in low:
         return 10, 0
+    return None
+
+
+def _alert_minutes_before(low: str, time_known: bool) -> int | None:
+    if re.search(r"\bsin (?:aviso|recordatorio|alerta)\b", low):
+        return None
+    match = re.search(r"(\d+)\s*minutos?\s*antes", low)
+    if match:
+        return int(match.group(1))
+    match = re.search(r"(\d+)\s*horas?\s*antes", low)
+    if match:
+        return int(match.group(1)) * 60
+    match = re.search(r"(\d+)\s*d[ií]as?\s*antes", low)
+    if match:
+        return int(match.group(1)) * 1440
+    if re.search(r"\b(?:a la hora|en el momento)\b", low):
+        return 0
+    if re.search(r"\b(?:av[ií]same|recu[eé]rdame|con recordatorio|con aviso|recordatorio)\b", low):
+        return 15
+    if time_known:
+        return 15
     return None
 
 
