@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { Icon } from "./icons.jsx";
 
 const API = "https://api.impersia.cloud";
 
@@ -33,7 +32,7 @@ function pct(spent, budget) {
   return Math.min(100, Math.round((spent / budget) * 100));
 }
 
-export default function AdminPanel({ setError }) {
+export default function Panel({ setError }) {
   const [data, setData] = useState(null);
   const [usage, setUsage] = useState([]);
   const [draft, setDraft] = useState(null);
@@ -123,35 +122,34 @@ export default function AdminPanel({ setError }) {
   }
 
   return (
-    <div className="admin-panel">
-      <header className="admin-hero">
+    <div className="panel">
+      <header className="hero">
         <div>
-          <p className="private kicker"><Icon name="admin" /> Solo tú</p>
-          <h1>Panel de administración</h1>
+          <h1>IA y costes</h1>
           <p className="lead">Coste, límites y configuración del archivado con IA. No hace falta OpenRouter para ver ni guardar ajustes.</p>
         </div>
-        <div className="admin-status on">
+        <div className="status on">
           <strong>Panel disponible</strong>
           <span>{IA_STATUS[operational.reason] || operational.reason}</span>
         </div>
       </header>
 
-      <div className="admin-grid">
-        <section className="admin-card">
+      <div className="grid">
+        <section className="card">
           <h2>Hoy</h2>
-          <p className="admin-big">{money(spend.today_usd)}</p>
-          <div className="admin-bar"><i style={{ width: `${dailyPct}%` }} /></div>
+          <p className="big">{money(spend.today_usd)}</p>
+          <div className="bar"><i style={{ width: `${dailyPct}%` }} /></div>
           <p className="private">De {money(draft.daily_budget_usd)} · {spend.calls_today} llamadas</p>
         </section>
-        <section className="admin-card">
+        <section className="card">
           <h2>Este mes</h2>
-          <p className="admin-big">{money(spend.month_usd)}</p>
-          <div className="admin-bar"><i style={{ width: `${monthPct}%` }} /></div>
+          <p className="big">{money(spend.month_usd)}</p>
+          <div className="bar"><i style={{ width: `${monthPct}%` }} /></div>
           <p className="private">De {money(draft.monthly_budget_usd)} · {spend.calls_month} llamadas</p>
         </section>
-        <section className="admin-card">
+        <section className="card">
           <h2>Calidad hoy</h2>
-          <p className="admin-big">{spend.success_rate_today}%</p>
+          <p className="big">{spend.success_rate_today}%</p>
           <p className="private">
             {spend.avg_latency_ms_today != null ? `${spend.avg_latency_ms_today} ms de media` : "Sin llamadas aún"}
           </p>
@@ -161,22 +159,18 @@ export default function AdminPanel({ setError }) {
         </section>
       </div>
 
-      <section className="admin-panel-block">
-        <div className="admin-row">
-          <label className="admin-toggle">
-            <input
-              type="checkbox"
-              checked={draft.enabled}
-              onChange={(e) => setDraft({ ...draft, enabled: e.target.checked })}
-            />
+      <section className="block">
+        <div className="row">
+          <label className="toggle">
+            <input type="checkbox" checked={draft.enabled} onChange={(e) => setDraft({ ...draft, enabled: e.target.checked })} />
             <span>Archivado con IA encendido</span>
           </label>
-          <div className="admin-actions">
+          <div className="actions inline">
             <button type="button" className="secondary" onClick={testConnection} disabled={testing}>
               {testing ? "Probando…" : "Probar OpenRouter (opcional)"}
             </button>
             <button type="button" onClick={save} disabled={busy}>{busy ? "Guardando…" : "Guardar"}</button>
-            {saved && <em className="admin-saved">{saved}</em>}
+            {saved && <em className="saved">{saved}</em>}
           </div>
         </div>
 
@@ -189,57 +183,33 @@ export default function AdminPanel({ setError }) {
           </select>
         </label>
 
-        <div className="admin-fields">
+        <div className="fields">
           <label>
             Presupuesto diario (USD)
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={draft.daily_budget_usd}
-              onChange={(e) => setDraft({ ...draft, daily_budget_usd: e.target.value })}
-            />
+            <input type="number" min="0" step="0.01" value={draft.daily_budget_usd} onChange={(e) => setDraft({ ...draft, daily_budget_usd: e.target.value })} />
           </label>
           <label>
             Presupuesto mensual (USD)
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={draft.monthly_budget_usd}
-              onChange={(e) => setDraft({ ...draft, monthly_budget_usd: e.target.value })}
-            />
+            <input type="number" min="0" step="0.01" value={draft.monthly_budget_usd} onChange={(e) => setDraft({ ...draft, monthly_budget_usd: e.target.value })} />
           </label>
           <label>
             Precio entrada / 1M tokens
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={draft.input_price_per_mtok}
-              onChange={(e) => setDraft({ ...draft, input_price_per_mtok: e.target.value })}
-            />
+            <input type="number" min="0" step="0.01" value={draft.input_price_per_mtok} onChange={(e) => setDraft({ ...draft, input_price_per_mtok: e.target.value })} />
           </label>
           <label>
             Precio salida / 1M tokens
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={draft.output_price_per_mtok}
-              onChange={(e) => setDraft({ ...draft, output_price_per_mtok: e.target.value })}
-            />
+            <input type="number" min="0" step="0.01" value={draft.output_price_per_mtok} onChange={(e) => setDraft({ ...draft, output_price_per_mtok: e.target.value })} />
           </label>
         </div>
       </section>
 
-      <section className="admin-panel-block">
+      <section className="block">
         <h2>Últimas llamadas</h2>
         {!usage.length ? (
           <p className="private">Todavía no hay llamadas registradas.</p>
         ) : (
-          <div className="admin-table-wrap">
-            <table className="admin-table">
+          <div className="table-wrap">
+            <table className="table">
               <thead>
                 <tr>
                   <th>Cuándo</th>

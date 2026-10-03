@@ -19,15 +19,19 @@ class LlmSettingsPatch(BaseModel):
     use_preset_prices: bool = True
 
 
-def require_admin(request: Request, db_factory) -> tuple[str, str]:
+def require_admin(request: Request) -> tuple[str, str]:
     from main import current_user, read_user_email
 
+    if not llm.admin_email():
+        raise HTTPException(status_code=503, detail="Falta ADMIN_EMAIL en el servidor")
+    try:
+        llm.assert_admin_network(request)
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
     user_id = current_user(request)
     email = read_user_email(user_id)
     if not llm.is_admin_email(email):
-        raise HTTPException(status_code=403, detail="Solo el administrador puede entrar aquí")
-    if not llm.admin_email():
-        raise HTTPException(status_code=503, detail="Falta ADMIN_EMAIL en el servidor")
+        raise HTTPException(status_code=403, detail="Acceso restringido")
     return user_id, email
 
 
@@ -35,7 +39,7 @@ def require_admin(request: Request, db_factory) -> tuple[str, str]:
 def llm_overview(request: Request):
     from main import db
 
-    require_admin(request, db)
+    require_admin(request)
     with db() as conn:
         with conn.cursor() as cur:
             return llm.overview(cur)
@@ -45,7 +49,7 @@ def llm_overview(request: Request):
 def llm_settings(request: Request):
     from main import db
 
-    require_admin(request, db)
+    require_admin(request)
     with db() as conn:
         with conn.cursor() as cur:
             settings = llm.get_settings(cur)
@@ -57,7 +61,7 @@ def llm_settings(request: Request):
 def patch_llm_settings(body: LlmSettingsPatch, request: Request):
     from main import db
 
-    user_id, _ = require_admin(request, db)
+    user_id, _ = require_admin(request)
     patch = body.model_dump(exclude_unset=True)
     if body.monthly_budget_usd is not None and body.daily_budget_usd is not None:
         if body.daily_budget_usd > body.monthly_budget_usd:
@@ -74,7 +78,7 @@ def patch_llm_settings(body: LlmSettingsPatch, request: Request):
 def llm_usage(request: Request, limit: int = 50, offset: int = 0):
     from main import db
 
-    require_admin(request, db)
+    require_admin(request)
     with db() as conn:
         with conn.cursor() as cur:
             rows, total = llm.list_usage(cur, limit=limit, offset=offset)
@@ -86,7 +90,7 @@ def llm_usage(request: Request, limit: int = 50, offset: int = 0):
 def llm_test(request: Request):
     from main import db
 
-    user_id, _ = require_admin(request, db)
+    user_id, _ = require_admin(request)
     with db() as conn:
         with conn.cursor() as cur:
             try:

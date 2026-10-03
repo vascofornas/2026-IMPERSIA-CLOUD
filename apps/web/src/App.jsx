@@ -20,7 +20,6 @@ import {
 } from "./agenda.js";
 import { CASA_KIND, casaEventLine, groupCasaItems, isCasaItem, SUPPLY_KIND } from "./casa.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
-import AdminPanel from "./AdminPanel.jsx";
 import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
@@ -109,7 +108,6 @@ export default function App() {
       alertEmail={Boolean(me.alert_email)}
       onLook={(look) => setMe({ ...me, look })}
       onAlertEmail={(alertEmail) => setMe({ ...me, alert_email: alertEmail })}
-      isAdmin={Boolean(me.is_admin)}
       onLeave={() => setMe(null)}
     />
   );
@@ -165,7 +163,7 @@ function Auth({ onEnter }) {
   );
 }
 
-function Home({ email, googleEmail, look, alertEmail, isAdmin, onLook, onAlertEmail, onLeave }) {
+function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLeave }) {
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
   const [googleEvents, setGoogleEvents] = useState([]);
@@ -423,9 +421,6 @@ function Home({ email, googleEmail, look, alertEmail, isAdmin, onLook, onAlertEm
         <div className="who">
           <a className={screen === "perfil" ? "session on" : "session"} href="#perfil"><Icon name="perfil" /> <span>{email}</span></a>
           <a className={screen === "apariencia" ? "on" : ""} href="#apariencia"><Icon name="apariencia" /> Apariencia</a>
-          {isAdmin && (
-            <a className={screen === "admin" ? "on" : ""} href="#admin"><Icon name="admin" /> Administración</a>
-          )}
           <button type="button" className="text" onClick={leave}>Salir</button>
         </div>
       </aside>
@@ -561,8 +556,7 @@ function Home({ email, googleEmail, look, alertEmail, isAdmin, onLook, onAlertEm
           </div>
         </>
       )}
-      {screen === "admin" && isAdmin && <AdminPanel setError={setError} />}
-      {screen !== "hoy" && screen !== "entrada" && screen !== "apariencia" && screen !== "perfil" && screen !== "admin" && !current && (
+      {screen !== "hoy" && screen !== "entrada" && screen !== "apariencia" && screen !== "perfil" && !current && (
         <>
           <h1>Hoy</h1>
           <p className="lead">Esa pantalla no existe. Vuelve a Hoy.</p>

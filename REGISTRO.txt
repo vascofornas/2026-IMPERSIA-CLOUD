@@ -618,3 +618,7 @@ Desplegado en VPS (commit 7d3e20b). Migración 010 aplicada, impersia-api reinic
 
 3 de octubre de 2026, 19:55
 Modesto: el panel no debe exigir OpenRouter para verse ni configurarse; prefiere el nombre «Panel de administración». Renombrado (#admin, menú Administración). OpenRouter solo para «Probar OpenRouter (opcional)» y Fase A. Suben web y REGISTRO.
+
+3 de octubre de 2026, 20:00
+Modesto pide panel independiente de la web app, acceso super restringido.
+Nueva app estática apps/admin en admin.impersia.cloud. Quitado de la web app (sin enlace ni ruta). Registro cerrado si hay ADMIN_EMAIL. Login solo admin. Rutas /admin/llm protegidas. Opcional ADMIN_IP_ALLOWLIST. noindex. Suben API, admin, web, nginx y despliegue VPS.

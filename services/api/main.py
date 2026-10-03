@@ -26,7 +26,10 @@ app = FastAPI(title="Impersia API")
 app.include_router(admin_llm_router)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://impersia.cloud"],
+    allow_origins=[
+        "https://impersia.cloud",
+        "https://admin.impersia.cloud",
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
     allow_headers=["Content-Type"],
@@ -119,10 +122,11 @@ def read_user_email(user_id: str) -> str:
     return row["email"]
 
 
-def assert_account_allowed(email: str) -> None:
-    admin = llm.admin_email()
-    if admin and email.lower() != admin:
-        raise HTTPException(status_code=403, detail="Acceso restringido")
+def public_account(user_id: str, email: str, look: str, alert_email: bool = False) -> dict:
+    account = _account(user_id, email, look, alert_email)
+    if not llm.is_admin_email(email):
+        account.pop("is_admin", None)
+    return account
 
 
 def set_session(response: Response, user_id: str) -> None:
@@ -234,8 +238,9 @@ def _account(user_id: str, email: str, look: str, alert_email: bool = False) -> 
 
 @app.post("/auth/register", status_code=201)
 def register(body: Credentials, response: Response):
+    if llm.registration_locked():
+        raise HTTPException(status_code=403, detail="Registro cerrado")
     email = body.email.lower()
-    assert_account_allowed(email)
     try:
         with db() as conn:
             with conn.cursor() as cur:
@@ -248,13 +253,12 @@ def register(body: Credentials, response: Response):
     except psycopg.errors.UniqueViolation:
         raise HTTPException(status_code=409, detail="Ese correo ya tiene cuenta")
     set_session(response, user_id)
-    return _account(user_id, email, "claro", False)
+    return public_account(user_id, email, "claro", False)
 
 
 @app.post("/auth/login")
 def login(body: Credentials, response: Response):
     email = body.email.lower()
-    assert_account_allowed(email)
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT id, password_hash, look, alert_email FROM users WHERE email = %s", (email,))
@@ -262,7 +266,7 @@ def login(body: Credentials, response: Response):
     if not row or not check_password(body.password, row["password_hash"]):
         raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
     set_session(response, str(row["id"]))
-    return _account(str(row["id"]), email, row["look"], row.get("alert_email", False))
+    return public_account(str(row["id"]), email, row["look"], row.get("alert_email", False))
 
 
 @app.post("/auth/logout")
@@ -280,7 +284,7 @@ def me(request: Request):
             row = cur.fetchone()
     if not row:
         raise HTTPException(status_code=401, detail="Necesitas entrar")
-    return _account(user_id, row["email"], row["look"], row["alert_email"])
+    return public_account(user_id, row["email"], row["look"], row["alert_email"])
 
 
 @app.patch("/me")
@@ -309,7 +313,7 @@ def patch_me(body: MePatch, request: Request):
         conn.commit()
     if not row:
         raise HTTPException(status_code=401, detail="Necesitas entrar")
-    return _account(user_id, row["email"], row["look"], row["alert_email"])
+    return public_account(user_id, row["email"], row["look"], row["alert_email"])
 
 
 APP_HOME = "https://impersia.cloud/app/#agenda"

@@ -39,6 +39,29 @@ def is_admin_email(email: str) -> bool:
     return email.strip().lower() == target
 
 
+def registration_locked() -> bool:
+    return bool(admin_email())
+
+
+def client_ip(request) -> str:
+    forwarded = request.headers.get("x-forwarded-for", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    if request.client and request.client.host:
+        return request.client.host
+    return ""
+
+
+def assert_admin_network(request) -> None:
+    """Opcional: ADMIN_IP_ALLOWLIST=ip1,ip2 restringe /admin a esas redes."""
+    raw = os.environ.get("ADMIN_IP_ALLOWLIST", "").strip()
+    if not raw:
+        return
+    allowed = {part.strip() for part in raw.split(",") if part.strip()}
+    if client_ip(request) not in allowed:
+        raise PermissionError("Acceso denegado desde esta red")
+
+
 def api_key_configured() -> bool:
     return bool(os.environ.get("OPENROUTER_API_KEY", "").strip())
 
