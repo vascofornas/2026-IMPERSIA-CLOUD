@@ -554,3 +554,7 @@ Tabla shopping_lists, lista activa por cuenta, tienda en la lista, split «leche
 3 de octubre de 2026, 16:05
 Modesto confirma que funciona y pide la lista en formato checklist, no cards.
 Se unifica pendiente y hecho en una sola lista plana. Suben web y despliegue en VPS (migración 009, API y dist).
+
+3 de octubre de 2026, 16:10
+Modesto reporta que no aparece Entrada tras el despliegue.
+El useEffect de la lista de compra leía current.id con current null en Hoy y Entrada; corregido usando screen. Suben web y dist.

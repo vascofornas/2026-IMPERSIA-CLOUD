@@ -204,9 +204,9 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   }, []);
 
   useEffect(() => {
-    if (current.id !== "casa") return;
+    if (screen !== "casa") return;
     call("/shopping-lists/active").then(setShoppingList).catch((err) => setError(err.message));
-  }, [current.id, items]);
+  }, [screen, items]);
 
   useEffect(() => {
     if (!googleEmail) {
