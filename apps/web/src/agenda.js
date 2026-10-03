@@ -9,6 +9,16 @@ export const PERSON_FOR = [
 
 export const MEDICAL_FOR = PERSON_FOR;
 
+export const CELEBRATION_FOR = [
+  ["self", "Yo"],
+  ["child", "Hijo/a"],
+  ["parent", "Padre o madre"],
+  ["grandparent", "Abuelo/a"],
+  ["nephew", "Sobrino/a"],
+  ["friend", "Amigo/a"],
+  ["other", "Otra persona"],
+];
+
 export const FAMILY_KIND = [
   ["cumpleanos", "Cumpleaños"],
   ["aniversario", "Aniversario"],
@@ -38,7 +48,7 @@ export const LEISURE_WITH = [
   ["other", "Otra persona"],
 ];
 
-const PERSON_FOR_LABEL = Object.fromEntries(PERSON_FOR);
+const PERSON_FOR_LABEL = Object.fromEntries([...PERSON_FOR, ...CELEBRATION_FOR]);
 const FAMILY_KIND_LABEL = Object.fromEntries(FAMILY_KIND);
 const LEISURE_KIND_LABEL = Object.fromEntries(LEISURE_KIND);
 const LEISURE_WITH_LABEL = Object.fromEntries(LEISURE_WITH);
@@ -61,7 +71,13 @@ export function leisureWithLabel(withKey, name) {
 }
 
 export function familyKindLabel(kind) {
-  return FAMILY_KIND_LABEL[kind] || "Evento familiar";
+  return FAMILY_KIND_LABEL[kind] || "Celebración";
+}
+
+export function celebrationForLabel(forKey, name) {
+  if (!forKey || forKey === "self") return "Mío/a";
+  if (forKey === "friend") return name ? `De ${name} (amigo/a)` : "De un amigo/a";
+  return personForLabel(forKey, name).replace("Para ", "De ");
 }
 
 export function leisureKindLabel(kind) {
@@ -82,7 +98,7 @@ export function isLeisureItem(item) {
 
 export function familyEventLine(item) {
   const kind = familyKindLabel(item.family_kind);
-  const who = personForLabel(item.family_for, item.family_name);
+  const who = celebrationForLabel(item.family_for, item.family_name);
   return `${kind} · ${who}`;
 }
 

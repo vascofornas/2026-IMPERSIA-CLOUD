@@ -19,9 +19,11 @@ Una compra con día y hora sigue siendo Casa. Si tiene fecha, sale en Hoy y tamb
 
 Personal, profesional y social son destino y permiso de cada elemento. La persona ve un solo flujo. Esas tres palabras organizan el almacenamiento y quién puede verlo. No son tres aplicaciones dentro de Impersia.
 
+**Agenda vive en Vida personal, no en Social.** Todas las citas y planes con fecha — médicos, celebraciones, ocio con amigos, pareja o familia — se archivan en Agenda (eje personal). El eje social sirve para compartir: muro, listas, círculos y espacios. No es un calendario ni sustituye a Agenda.
+
 Entrada es siempre el inicio. Decide qué hacer con cada frase: abrir algo nuevo o meterlo dentro de algo que ya existe. «Proyecto Capenergy 2026» abre el proyecto. «Avanzar en los foros de Capenergy» entra dentro. Abrir Proyectos sirve para verlo y para corregirlo, no para armarlo a mano. Lo mismo para un viaje, un hábito o un deseo.
 
-Dentro de Agenda, las variantes perfeccionadas son la **cita médica**, el **evento familiar** (cumpleaños, aniversario, boda, bautizo, comida familiar…) y el **plan de ocio** (cine, restaurante, concierto, deporte, quedar con alguien…). En médicas y familiares importa para quién es; en ocio, con quién va — solo/a, pareja, amigos, familia u otra persona con nombre —, además de lugar y notas. Cumpleaños y aniversarios se repiten cada año.
+Dentro de Agenda (Vida personal), las variantes perfeccionadas son la **cita médica**, la **celebración** (cumpleaños de cualquiera — familiar o amigo —, aniversario, boda, bautizo, comida…) y el **plan de ocio** (cine, restaurante, concierto, deporte, quedar…). Familia y amistades comparten el mismo calendario privado; no hace falta elegir eje. En médicas y celebraciones importa de quién es; en ocio, con quién va. Cumpleaños y aniversarios se repiten cada año.
 
 La **cita médica** incluye: título (especialidad o consulta), fecha, hora, aviso, para quién es (yo, hijo/a, padre o madre, abuelo/a, sobrino/a u otra persona con nombre), lugar y notas. Son citas de interés para la persona, no solo las suyas propias. Se archivan desde Entrada y se ven y editan en Agenda con ese detalle.
 

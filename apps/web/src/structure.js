@@ -6,7 +6,7 @@ export const AXES = [
       {
         id: "agenda",
         label: "Agenda",
-        blurb: "Citas, cumpleaños, ocio y recordatorios. Médicas, familiares y planes de ocio llevan detalle propio.",
+        blurb: "Tu agenda privada: citas, celebraciones y planes con familia, amigos o pareja. El eje social no es calendario.",
         examples: [
           ["Cine el viernes a las 21", "con amigos"],
           ["Partido de tenis", "sábado por la mañana"],

@@ -458,6 +458,8 @@ def _person_for(low: str) -> str:
         return "grandparent"
     if re.search(r"\bsobrino\b|\bsobrina\b|\bmi sobrino\b|\bmi sobrina\b", low):
         return "nephew"
+    if re.search(r"\bmi amig[oa]\b|\bamig[oa]\s", low):
+        return "friend"
     if re.search(r"\bmi hermano\b|\bmi hermana\b|\bhermano de\b|\bhermana de\b", low):
         return "other"
     if re.search(r"\bmi pareja\b|\bmi marido\b|\bmi mujer\b|\bmi esposo\b|\bmi esposa\b", low):
@@ -567,7 +569,7 @@ def _family_meta(raw: str, low: str) -> dict:
         name = None
     kind = _family_kind(low)
     if kind == "cumpleanos" and name and family_for == "self":
-        family_for = "other"
+        family_for = "friend" if re.search(r"\bamig[oa]\b", low) else "other"
     if family_for == "grandparent":
         name = None
     return {

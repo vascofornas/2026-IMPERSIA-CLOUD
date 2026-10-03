@@ -31,6 +31,7 @@ app.add_middleware(
 
 KINDS = {"note", "task", "event"}
 PERSON_FOR = {"self", "child", "parent", "grandparent", "nephew", "other"}
+CELEBRATION_FOR = PERSON_FOR | {"friend"}
 FAMILY_KIND = {"cumpleanos", "aniversario", "boda", "bautizo", "comunion", "comida", "otro"}
 LEISURE_KIND = {"cine", "restaurante", "concierto", "teatro", "deporte", "excursion", "quedar", "otro"}
 LEISURE_WITH = {"solo", "partner", "friends", "family", "other"}
@@ -571,7 +572,7 @@ def _agenda_fields(body: ItemPatch) -> dict:
             "medical_notes": (body.medical_notes or "").strip() or None,
         }
     if agenda_type == "familiar":
-        family_for = body.family_for if body.family_for in PERSON_FOR else "self"
+        family_for = body.family_for if body.family_for in CELEBRATION_FOR else "self"
         family_name = (body.family_name or "").strip() or None
         if family_for == "self":
             family_name = None

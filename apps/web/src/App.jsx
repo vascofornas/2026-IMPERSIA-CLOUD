@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GoogleMark, Icon } from "./icons.jsx";
 import {
+  CELEBRATION_FOR,
   FAMILY_KIND,
   familyEventLine,
   familyForLabel,
@@ -893,7 +894,7 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
                     >
                       <option value="">Cita general</option>
                       <option value="medica">Cita médica</option>
-                      <option value="familiar">Evento familiar</option>
+                      <option value="familiar">Celebración</option>
                       <option value="ocio">Ocio / plan</option>
                     </select>
                   </label>
@@ -957,7 +958,7 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
                           value={editing.family_for || "self"}
                           onChange={(e) => setEditing({ ...editing, family_for: e.target.value })}
                         >
-                          {MEDICAL_FOR.map(([value, label]) => (
+                          {CELEBRATION_FOR.map(([value, label]) => (
                             <option key={value} value={value}>{label}</option>
                           ))}
                         </select>
@@ -1063,7 +1064,7 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
               {isMedicalItem(item) && item.medical_notes && <p className="private">{item.medical_notes}</p>}
               {isFamilyItem(item) && (
                 <p className="medical-line">
-                  <span className="tag familiar">Evento familiar</span>
+                  <span className="tag familiar">Celebración</span>
                   <span>{familyEventLine(item)}</span>
                 </p>
               )}
