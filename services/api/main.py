@@ -3,6 +3,7 @@ from zoneinfo import ZoneInfo
 import hashlib
 import hmac
 import json
+import re
 import os
 import base64
 import time
@@ -24,7 +25,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://impersia.cloud"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
     allow_headers=["Content-Type"],
 )
 
@@ -122,6 +123,14 @@ class ItemPatch(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     starts_at: str | None = None
     time_known: bool = False
+
+
+class ExceptionIn(BaseModel):
+    kind: str
+    title: str | None = None
+    module: str | None = None
+    starts_at: str | None = None
+    time_known: bool | None = None
 
 
 class LookIn(BaseModel):
@@ -498,10 +507,78 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                 ),
             )
             item = cur.fetchone()
+            if item:
+                cur.execute("DELETE FROM item_exceptions WHERE item_id = %s", (item_id,))
+                item = _fetch_item(cur, item_id, user_id)
         conn.commit()
     if not item:
         raise HTTPException(status_code=404, detail="No está en tu cuenta")
-    return _public_item(item)
+    return item
+
+
+@app.put("/items/{item_id}/days/{day}")
+def put_item_day(item_id: str, day: str, body: ExceptionIn, request: Request):
+    user_id = current_user(request)
+    if body.kind not in {"skip", "override"}:
+        raise HTTPException(status_code=422, detail="La excepción tiene que ser omitir o cambiar")
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
+        raise HTTPException(status_code=422, detail="El día no es válido")
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, repeats FROM items WHERE id = %s AND user_id = %s",
+                (item_id, user_id),
+            )
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="No está en tu cuenta")
+            if not row["repeats"]:
+                raise HTTPException(status_code=422, detail="Esta entrada no se repite")
+            if body.kind == "skip":
+                cur.execute(
+                    """
+                    INSERT INTO item_exceptions (item_id, user_id, day, kind)
+                    VALUES (%s, %s, %s, 'skip')
+                    ON CONFLICT (item_id, day) DO UPDATE SET kind = 'skip',
+                        title = NULL, module = NULL, axis = NULL, item_kind = NULL,
+                        starts_at = NULL, time_known = NULL
+                    """,
+                    (item_id, user_id, day),
+                )
+            else:
+                if not body.title or not body.module or body.module not in MODULES:
+                    raise HTTPException(status_code=422, detail="Faltan datos para cambiar este día")
+                cur.execute(
+                    """
+                    INSERT INTO item_exceptions
+                        (item_id, user_id, day, kind, title, module, axis, item_kind, starts_at, time_known)
+                    VALUES (%s, %s, %s, 'override', %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (item_id, day) DO UPDATE SET
+                        kind = 'override',
+                        title = EXCLUDED.title,
+                        module = EXCLUDED.module,
+                        axis = EXCLUDED.axis,
+                        item_kind = EXCLUDED.item_kind,
+                        starts_at = EXCLUDED.starts_at,
+                        time_known = EXCLUDED.time_known
+                    """,
+                    (
+                        item_id,
+                        user_id,
+                        day,
+                        body.title.strip(),
+                        body.module,
+                        MODULES[body.module],
+                        legacy_kind(body.module),
+                        _when_saving(body.starts_at, bool(body.time_known)),
+                        bool(body.time_known),
+                    ),
+                )
+            item = _fetch_item(cur, item_id, user_id)
+        conn.commit()
+    if not item:
+        raise HTTPException(status_code=404, detail="No está en tu cuenta")
+    return item
 
 
 @app.delete("/items/{item_id}")
@@ -536,7 +613,8 @@ def list_items(request: Request):
                 (user_id,),
             )
             rows = cur.fetchall()
-    return [_public_item(row) for row in rows]
+            exceptions = _fetch_exceptions(cur, user_id, [str(row["id"]) for row in rows])
+    return [_public_item(row, exceptions.get(str(row["id"]), [])) for row in rows]
 
 
 def _when_saving(value: str | None, time_known: bool):
@@ -566,7 +644,56 @@ def _public_suggestion(suggestion: dict) -> dict:
     }
 
 
-def _public_item(row: dict) -> dict:
+def _fetch_exceptions(cur, user_id: str, item_ids: list[str]) -> dict[str, list]:
+    if not item_ids:
+        return {}
+    cur.execute(
+        """
+        SELECT item_id, day, kind, title, module, starts_at, time_known
+        FROM item_exceptions
+        WHERE user_id = %s AND item_id = ANY(%s::uuid[])
+        """,
+        (user_id, item_ids),
+    )
+    grouped: dict[str, list] = {}
+    for row in cur.fetchall():
+        key = str(row["item_id"])
+        grouped.setdefault(key, []).append(row)
+    return grouped
+
+
+def _fetch_item(cur, item_id: str, user_id: str) -> dict | None:
+    cur.execute(
+        """
+        SELECT id, kind, axis, module, title, starts_at, repeats, time_known, privacy, created_at
+        FROM items
+        WHERE id = %s AND user_id = %s
+        """,
+        (item_id, user_id),
+    )
+    row = cur.fetchone()
+    if not row:
+        return None
+    exceptions = _fetch_exceptions(cur, user_id, [item_id])
+    return _public_item(row, exceptions.get(item_id, []))
+
+
+def _public_exception(row: dict) -> dict:
+    out = {"day": row["day"].isoformat(), "kind": row["kind"]}
+    if row["kind"] == "override":
+        starts = row["starts_at"]
+        out.update(
+            {
+                "title": row["title"],
+                "module": row["module"],
+                "starts_at": starts.isoformat() if starts else None,
+                "time_known": bool(row["time_known"]),
+            }
+        )
+    return out
+
+
+def _public_item(row: dict, exceptions: list | None = None) -> dict:
     starts = row["starts_at"]
     return {
         "id": str(row["id"]),
@@ -579,4 +706,5 @@ def _public_item(row: dict) -> dict:
         "time_known": bool(row.get("time_known")),
         "privacy": row["privacy"],
         "created_at": row["created_at"].isoformat(),
+        "exceptions": [_public_exception(row) for row in (exceptions or [])],
     }

@@ -437,3 +437,7 @@ Modesto escribe: cada lunes a las 10 de la mañana hay que revisar la prensa del
 3 de octubre de 2026, 09:38
 Modesto dice que las repeticiones ya deberían contarse, como en Google Calendar.
 Cada entrada puede llevar repetición: cada día, cada semana o cada mes. «Cada lunes» es semanal. El calendario y Hoy pintan todos los días que tocan, no solo el primero. Cambiar o borrar afecta toda la serie. Editar un solo día de la serie llega más adelante.
+
+3 de octubre de 2026, 09:42
+Modesto pide editar o borrar solo el día elegido o toda la serie, como en Google Calendar.
+Desde el calendario o Hoy, al cambiar o borrar una repetición pregunta: solo ese día o toda la serie. Solo ese día guarda una excepción. Borrar ese día lo omite. Cambiar ese día no toca los demás. Toda la serie sigue como antes. Desde la ficha del módulo, sin día concreto, cambia o borra toda la serie. Suben schema.sql, main.py, App.jsx, styles.css, docs y el build de la web. En el VPS se crea la tabla item_exceptions y se reinicia la API.

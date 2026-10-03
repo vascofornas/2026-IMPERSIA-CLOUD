@@ -613,6 +613,18 @@ a.connect {
 
 .dialog .actions button { margin-top: 0; }
 
+.dialog .actions.stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.dialog .actions.stack button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
 .dialog .actions button.danger {
   background: #b91c1c;
   color: #ffffff;

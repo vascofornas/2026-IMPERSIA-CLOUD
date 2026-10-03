@@ -34,6 +34,20 @@ CREATE TABLE IF NOT EXISTS items (
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS item_exceptions (
+    item_id uuid NOT NULL REFERENCES items (id) ON DELETE CASCADE,
+    user_id uuid NOT NULL REFERENCES users (id),
+    day date NOT NULL,
+    kind text NOT NULL,
+    title text,
+    module text,
+    axis text,
+    item_kind text,
+    starts_at timestamptz,
+    time_known boolean,
+    PRIMARY KEY (item_id, day)
+);
+
 CREATE TABLE IF NOT EXISTS google_links (
     user_id uuid PRIMARY KEY REFERENCES users (id),
     google_email text,

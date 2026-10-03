@@ -137,6 +137,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
   const [googleEvents, setGoogleEvents] = useState([]);
   const [editing, setEditing] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const screen = useHash();
@@ -175,15 +176,29 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
   async function saveEdit() {
     setError("");
     try {
-      const item = await call(`/items/${editing.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          module: editing.module,
-          title: editing.title,
-          starts_at: editing.starts_at,
-          time_known: Boolean(editing.time_known),
-        }),
-      });
+      let item;
+      if (editing.editScope === "one" && editing.occurrenceDay) {
+        item = await call(`/items/${editing.id}/days/${editing.occurrenceDay}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            kind: "override",
+            module: editing.module,
+            title: editing.title,
+            starts_at: editing.starts_at,
+            time_known: Boolean(editing.time_known),
+          }),
+        });
+      } else {
+        item = await call(`/items/${editing.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            module: editing.module,
+            title: editing.title,
+            starts_at: editing.starts_at,
+            time_known: Boolean(editing.time_known),
+          }),
+        });
+      }
       setItems(items.map((row) => (row.id === item.id ? item : row)));
       setEditing(null);
     } catch (err) {
@@ -191,17 +206,63 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
     }
   }
 
+  function startEdit(item) {
+    if (item.repeats && item.occurrenceKey) {
+      setPendingAction({ item, mode: "edit" });
+      return;
+    }
+    setEditing({ ...baseItem(item), editScope: "all" });
+  }
+
+  function beginEditOne(item) {
+    setPendingAction(null);
+    setEditing({
+      ...baseItem(item),
+      occurrenceDay: dayKey(item.starts_at),
+      editScope: "one",
+    });
+  }
+
+  function beginEditAll(item) {
+    setPendingAction(null);
+    const row = items.find((entry) => entry.id === item.id) || baseItem(item);
+    setEditing({
+      ...row,
+      occurrenceKey: item.occurrenceKey || null,
+      editScope: "all",
+    });
+  }
+
   function askRemove(item) {
     setPendingDelete(item);
   }
 
-  async function confirmRemove() {
+  async function confirmRemoveAll() {
     if (!pendingDelete) return;
     setError("");
     setDeleting(true);
     try {
       await call(`/items/${pendingDelete.id}`, { method: "DELETE" });
       setItems(items.filter((row) => row.id !== pendingDelete.id));
+      if (editing?.id === pendingDelete.id) setEditing(null);
+      setPendingDelete(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function confirmRemoveOne() {
+    if (!pendingDelete) return;
+    setError("");
+    setDeleting(true);
+    try {
+      const item = await call(`/items/${pendingDelete.id}/days/${dayKey(pendingDelete.starts_at)}`, {
+        method: "PUT",
+        body: JSON.stringify({ kind: "skip" }),
+      });
+      setItems(items.map((row) => (row.id === item.id ? item : row)));
       if (editing?.id === pendingDelete.id) setEditing(null);
       setPendingDelete(null);
     } catch (err) {
@@ -260,7 +321,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
           <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Llamar al taller el viernes" />
           <button type="button" onClick={archive} disabled={!text.trim()}>Dejar</button>
           <h2>Archivado</h2>
-          <ItemList items={items} editing={editing} setEditing={setEditing} saveEdit={saveEdit} askRemove={askRemove} />
+          <ItemList items={items} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} />
         </>
       )}
       {screen === "hoy" && (
@@ -269,11 +330,11 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
           <div className="panes">
             <section>
               <h2>Para hoy</h2>
-              {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} askRemove={askRemove} /> : <p className="private">Hoy no hay nada con fecha.</p>}
+              {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} /> : <p className="private">Hoy no hay nada con fecha.</p>}
             </section>
             <section>
               <h2>Próximos</h2>
-              {laterItems.length ? <ItemList items={laterItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} askRemove={askRemove} /> : <p className="private">No hay nada con fecha después de hoy.</p>}
+              {laterItems.length ? <ItemList items={laterItems} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} /> : <p className="private">No hay nada con fecha después de hoy.</p>}
             </section>
           </div>
         </>
@@ -296,7 +357,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
             <section>
               <h2>Tuyo</h2>
               {items.some((item) => item.module === current.id) ? (
-                <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} saveEdit={saveEdit} askRemove={askRemove} />
+                <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} />
               ) : (
                 <p className="private">Todavía no hay nada tuyo aquí. Escríbelo en Entrada.</p>
               )}
@@ -367,12 +428,30 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
         </>
       )}
       </main>
-      {pendingDelete && (
+      {pendingDelete && (pendingDelete.repeats && pendingDelete.occurrenceKey ? (
+        <RepeatScopeDialog
+          item={pendingDelete}
+          mode="delete"
+          busy={deleting}
+          onCancel={() => setPendingDelete(null)}
+          onOne={confirmRemoveOne}
+          onAll={confirmRemoveAll}
+        />
+      ) : (
         <ConfirmDialog
           item={pendingDelete}
           busy={deleting}
           onCancel={() => setPendingDelete(null)}
-          onConfirm={confirmRemove}
+          onConfirm={confirmRemoveAll}
+        />
+      ))}
+      {pendingAction?.mode === "edit" && (
+        <RepeatScopeDialog
+          item={pendingAction.item}
+          mode="edit"
+          onCancel={() => setPendingAction(null)}
+          onOne={() => beginEditOne(pendingAction.item)}
+          onAll={() => beginEditAll(pendingAction.item)}
         />
       )}
     </div>
@@ -388,6 +467,26 @@ function ConfirmDialog({ item, busy, onCancel, onConfirm }) {
         <div className="actions">
           <button type="button" className="secondary" onClick={onCancel} disabled={busy}>Cancelar</button>
           <button type="button" className="danger" onClick={onConfirm} disabled={busy}><Icon name="borrar" /> {busy ? "Borrando…" : "Borrar"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RepeatScopeDialog({ item, mode, busy, onCancel, onOne, onAll }) {
+  const when = dayLabel(item.starts_at);
+  const verb = mode === "delete" ? "borrar" : "cambiar";
+  return (
+    <div className="overlay" role="dialog" aria-modal="true" aria-labelledby="scope-title" onClick={onCancel}>
+      <div className="dialog" onClick={(event) => event.stopPropagation()}>
+        <h2 id="scope-title">{mode === "delete" ? "Borrar entrada" : "Cambiar entrada"}</h2>
+        <p className="lead">«{item.title}» se repite. ¿Qué quieres {verb}?</p>
+        <div className="actions stack">
+          <button type="button" onClick={onOne} disabled={busy}><Icon name={mode === "delete" ? "borrar" : "editar"} /> Solo {when}</button>
+          <button type="button" className={mode === "delete" ? "danger" : ""} onClick={onAll} disabled={busy}>
+            <Icon name={mode === "delete" ? "borrar" : "editar"} /> Toda la serie
+          </button>
+          <button type="button" className="secondary" onClick={onCancel} disabled={busy}>Cancelar</button>
         </div>
       </div>
     </div>
@@ -602,13 +701,14 @@ function clockOf(value) {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function ItemList({ items, editing, setEditing, saveEdit, askRemove }) {
+function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }) {
   return (
     <div className="cards">
       {items.map((item) => (
-        <article className={editing && editing.id === item.id ? "card editor" : "card"} key={item.occurrenceKey || item.id}>
-          {editing && editing.id === item.id ? (
+        <article className={isEditingRow(item, editing) ? "card editor" : "card"} key={item.occurrenceKey || item.id}>
+          {isEditingRow(item, editing) ? (
             <>
+              {editing.editScope === "one" && <p className="private">Solo cambias {dayLabel(editing.starts_at)}.</p>}
               <label>
                 Módulo
                 <select value={editing.module} onChange={(e) => setEditing({ ...editing, module: e.target.value })}>
@@ -630,6 +730,7 @@ function ItemList({ items, editing, setEditing, saveEdit, askRemove }) {
                 <input
                   type="date"
                   value={datePart(editing.starts_at)}
+                  disabled={editing.editScope === "one"}
                   onChange={(e) => setEditing(withWhen(editing, e.target.value, timePart(editing)))}
                 />
               </label>
@@ -657,7 +758,7 @@ function ItemList({ items, editing, setEditing, saveEdit, askRemove }) {
                   <>
                     <span className={`tag m-${item.module}`}><Icon name={item.module} /> {labelOf(item.module)}</span>
                     <span className="item-actions">
-                      <button type="button" className="link" onClick={() => setEditing({ ...item })}><Icon name="editar" /> Cambiar</button>
+                      <button type="button" className="link" onClick={() => startEdit(item)}><Icon name="editar" /> Cambiar</button>
                       <button type="button" className="link danger" onClick={() => askRemove(item)}><Icon name="borrar" /> Borrar</button>
                     </span>
                   </>
@@ -732,8 +833,51 @@ function occurrences(item, from, to) {
   return [];
 }
 
+function baseItem(item) {
+  const { occurrenceKey, ...rest } = item;
+  return rest;
+}
+
+function isEditingRow(item, editing) {
+  if (!editing || editing.id !== item.id) return false;
+  if (editing.editScope === "one") {
+    return item.occurrenceKey && dayKey(item.starts_at) === editing.occurrenceDay;
+  }
+  if (editing.editScope === "all" && editing.occurrenceKey) {
+    return item.occurrenceKey === editing.occurrenceKey;
+  }
+  return !item.occurrenceKey;
+}
+
+function exceptionFor(item, key) {
+  return (item.exceptions || []).find((ex) => ex.day === key);
+}
+
 function occurrence(item, at) {
   return { ...item, starts_at: at.toISOString(), occurrenceKey: `${item.id}-${dayKey(at)}` };
+}
+
+function applyOccurrence(item, at) {
+  const ex = exceptionFor(item, dayKey(at));
+  if (ex?.kind === "skip") return null;
+  if (ex?.kind === "override") {
+    return occurrence(
+      {
+        ...item,
+        title: ex.title,
+        module: ex.module,
+        starts_at: ex.starts_at,
+        time_known: ex.time_known,
+      },
+      new Date(ex.starts_at),
+    );
+  }
+  return occurrence(item, at);
+}
+
+function pushOccurrence(results, item, at) {
+  const row = applyOccurrence(item, at);
+  if (row) results.push(row);
 }
 
 function dailyOccurrences(item, from, to) {
@@ -745,7 +889,7 @@ function dailyOccurrences(item, from, to) {
   while (d <= to) {
     const at = new Date(d);
     at.setHours(anchor.getHours(), anchor.getMinutes(), 0, 0);
-    results.push(occurrence(item, at));
+    pushOccurrence(results, item, at);
     d.setDate(d.getDate() + 1);
   }
   return results;
@@ -761,7 +905,7 @@ function weeklyOccurrences(item, from, to) {
   while (d <= to) {
     const at = new Date(d);
     at.setHours(anchor.getHours(), anchor.getMinutes(), 0, 0);
-    results.push(occurrence(item, at));
+    pushOccurrence(results, item, at);
     d.setDate(d.getDate() + 7);
   }
   return results;
@@ -778,7 +922,7 @@ function monthlyOccurrences(item, from, to) {
     const last = new Date(year, month + 1, 0).getDate();
     const at = new Date(year, month, Math.min(day, last), anchor.getHours(), anchor.getMinutes(), 0, 0);
     if (at > to) break;
-    if (at >= from && at >= anchorDay) results.push(occurrence(item, at));
+    if (at >= from && at >= anchorDay) pushOccurrence(results, item, at);
     month += 1;
     if (month === 12) {
       month = 0;
@@ -786,6 +930,11 @@ function monthlyOccurrences(item, from, to) {
     }
   }
   return results;
+}
+
+function dayLabel(value) {
+  const raw = new Date(value).toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
 function dayKey(value) {
