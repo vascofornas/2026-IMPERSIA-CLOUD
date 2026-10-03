@@ -558,3 +558,7 @@ Se unifica pendiente y hecho en una sola lista plana. Suben web y despliegue en 
 3 de octubre de 2026, 16:10
 Modesto reporta que no aparece Entrada tras el despliegue.
 El useEffect de la lista de compra leía current.id con current null en Hoy y Entrada; corregido usando screen. Suben web y dist.
+
+3 de octubre de 2026, 16:15
+Modesto pide que la lista no crezca con los comprados y que cada artículo lleve la fecha de registro.
+Comprados ocultos bajo «Mostrar N comprados», botón para quitarlos, fecha entre paréntesis en cada línea. Suben web, docs y dist.

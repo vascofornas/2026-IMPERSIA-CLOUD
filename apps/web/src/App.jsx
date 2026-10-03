@@ -305,6 +305,19 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
     }
   }
 
+  async function clearCompraDone(doneItems) {
+    if (!doneItems.length) return;
+    setError("");
+    try {
+      await Promise.all(doneItems.map((item) => call(`/items/${item.id}`, { method: "DELETE" })));
+      const ids = new Set(doneItems.map((item) => item.id));
+      setItems(items.filter((row) => !ids.has(row.id)));
+      if (editing && ids.has(editing.id)) setEditing(null);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   function startEdit(item) {
     if (item.repeats && item.occurrenceKey) {
       setPendingAction({ item, mode: "edit" });
@@ -465,6 +478,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
               items={items}
               shoppingList={shoppingList}
               onShoppingListChange={setShoppingList}
+              onClearCompraDone={clearCompraDone}
               editing={editing}
               setEditing={setEditing}
               startEdit={startEdit}
@@ -865,6 +879,7 @@ function CasaBoard({
   items,
   shoppingList,
   onShoppingListChange,
+  onClearCompraDone,
   editing,
   setEditing,
   startEdit,
@@ -876,10 +891,9 @@ function CasaBoard({
   const done = groupCasaItems(items, "done");
   const compraPending = pending.find((group) => group.id === "compra")?.items || [];
   const compraDone = done.find((group) => group.id === "compra")?.items || [];
-  const compraAll = [...compraPending, ...compraDone];
   const otherPending = pending.filter((group) => group.id !== "compra" && group.items.length);
   const otherDone = done.filter((group) => group.id !== "compra" && group.items.length);
-  const hasDone = otherDone.length > 0 || compraDone.length > 0;
+  const hasDone = otherDone.length > 0;
   const hasOther = otherPending.length > 0 || otherDone.length > 0;
   const listProps = { editing, setEditing, startEdit, saveEdit, askRemove, onToggleStatus };
 
@@ -890,11 +904,13 @@ function CasaBoard({
         <ShoppingListPanel
           list={shoppingList}
           onListChange={onShoppingListChange}
-          items={compraAll}
+          pending={compraPending}
+          done={compraDone}
+          onClearDone={onClearCompraDone}
           {...listProps}
         />
       </section>
-      {!compraAll.length && !hasOther && (
+      {!compraPending.length && !compraDone.length && !hasOther && (
         <p className="private">Más cosas de Casa (mantenimiento, suministros…) se escriben en Entrada.</p>
       )}
       {otherPending.map((group) => (
@@ -918,13 +934,31 @@ function CasaBoard({
   );
 }
 
-function ShoppingListPanel({ list, onListChange, items, editing, setEditing, startEdit, saveEdit, askRemove, onToggleStatus }) {
+function ShoppingListPanel({
+  list,
+  onListChange,
+  pending,
+  done,
+  onClearDone,
+  editing,
+  setEditing,
+  startEdit,
+  saveEdit,
+  askRemove,
+  onToggleStatus,
+}) {
   const [storeDraft, setStoreDraft] = useState("");
   const [savingStore, setSavingStore] = useState(false);
+  const [showDone, setShowDone] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     setStoreDraft(list?.store_name || "");
   }, [list?.id, list?.store_name]);
+
+  useEffect(() => {
+    if (!done.length) setShowDone(false);
+  }, [done.length]);
 
   async function saveStore() {
     const store_name = storeDraft.trim();
@@ -940,6 +974,21 @@ function ShoppingListPanel({ list, onListChange, items, editing, setEditing, sta
       setSavingStore(false);
     }
   }
+
+  async function clearDone() {
+    if (!done.length || clearing) return;
+    const label = done.length === 1 ? "1 artículo comprado" : `${done.length} artículos comprados`;
+    if (!window.confirm(`¿Quitar ${label} de la lista?`)) return;
+    setClearing(true);
+    try {
+      await onClearDone(done);
+      setShowDone(false);
+    } finally {
+      setClearing(false);
+    }
+  }
+
+  const doneLabel = done.length === 1 ? "1 comprado" : `${done.length} comprados`;
 
   return (
     <div className="shopping-list">
@@ -959,9 +1008,9 @@ function ShoppingListPanel({ list, onListChange, items, editing, setEditing, sta
         />
         {savingStore && <span className="private">Guardando…</span>}
       </label>
-      {items.length ? (
+      {pending.length ? (
         <ShoppingChecklist
-          items={items}
+          items={pending}
           editing={editing}
           setEditing={setEditing}
           startEdit={startEdit}
@@ -971,6 +1020,29 @@ function ShoppingListPanel({ list, onListChange, items, editing, setEditing, sta
         />
       ) : (
         <p className="private">Nada pendiente. Escribe «comprar leche y pan» en Entrada.</p>
+      )}
+      {done.length > 0 && (
+        <div className="shopping-done">
+          <button type="button" className="link shopping-done-toggle" onClick={() => setShowDone(!showDone)}>
+            {showDone ? "Ocultar comprados" : `Mostrar ${doneLabel}`}
+          </button>
+          {showDone && (
+            <>
+              <ShoppingChecklist
+                items={done}
+                editing={editing}
+                setEditing={setEditing}
+                startEdit={startEdit}
+                saveEdit={saveEdit}
+                askRemove={askRemove}
+                onToggleStatus={onToggleStatus}
+              />
+              <button type="button" className="link danger shopping-clear-done" onClick={clearDone} disabled={clearing}>
+                {clearing ? "Quitando…" : "Quitar comprados de la lista"}
+              </button>
+            </>
+          )}
+        </div>
       )}
     </div>
   );
@@ -1012,7 +1084,12 @@ function ShoppingChecklist({ items, editing, setEditing, startEdit, saveEdit, as
               >
                 {item.status === "done" ? "✓" : ""}
               </button>
-              <span className="shopping-title">{item.title}</span>
+              <span className="shopping-title">
+                {item.title}
+                {item.created_at && (
+                  <span className="shopping-when"> ({registeredLabel(item.created_at)})</span>
+                )}
+              </span>
               <span className="shopping-actions">
                 <button type="button" className="link" onClick={() => startEdit(item)}>Cambiar</button>
                 <button type="button" className="link danger" onClick={() => askRemove(item)}>Borrar</button>
@@ -1606,6 +1683,12 @@ function yearlyOccurrences(item, from, to) {
 function dayLabel(value) {
   const raw = new Date(value).toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
   return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+function registeredLabel(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
 }
 
 function dayKey(value) {
