@@ -563,6 +563,11 @@ button.text {
   color: var(--muted);
 }
 
+button.text.danger { color: #b91c1c; }
+
+[data-look="noche"] button.text.danger,
+[data-look="grafito"] button.text.danger { color: #fca5a5; }
+
 a.connect {
   display: inline-block;
   margin-top: 8px;

@@ -413,3 +413,7 @@ No. Encima del calendario están las tres opciones. Al abrir se ve el mes. Anter
 
 3 de octubre de 2026, 01:43
 Modesto ve Día, Semana y Mes y dice que está perfecto. El calendario queda así. Al abrir se sigue viendo el mes.
+
+3 de octubre de 2026, 09:15
+Modesto pregunta si se pueden editar o borrar entradas. Cambiar ya existía. Borrar no.
+Se añade Borrar en cada ficha propia, junto a Cambiar. Pide confirmación con el título. Lo de Google no se borra desde Impersia. La API tiene DELETE /items/{id}.

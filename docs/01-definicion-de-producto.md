@@ -9,7 +9,7 @@ El problema que resuelve es la fragmentación: notas, agenda, tareas, diario, li
 1. La persona escribe, y más adelante dicta o adjunta una imagen, en un único campo.
 2. La IA, en el servidor, archiva esa entrada en el eje y el módulo que le corresponden, en privado.
 3. Aparece ya guardada en su sitio.
-4. Más tarde la persona puede editar lo que haga falta: el módulo, el título, la fecha o la privacidad.
+4. Más tarde la persona puede editar lo que haga falta: el módulo, el título, la fecha o la privacidad. También puede borrar una entrada, con confirmación.
 
 No hay un paso de confirmar antes de guardar. El PDF lo llama entrada de fricción cero. Si el archivo queda mal, se corrige después, sin volver a escribir la frase.
 

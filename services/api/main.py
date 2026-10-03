@@ -24,7 +24,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://impersia.cloud"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["Content-Type"],
 )
 
@@ -501,6 +501,22 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
     if not item:
         raise HTTPException(status_code=404, detail="No está en tu cuenta")
     return _public_item(item)
+
+
+@app.delete("/items/{item_id}")
+def delete_item(item_id: str, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM items WHERE id = %s AND user_id = %s RETURNING id",
+                (item_id, user_id),
+            )
+            row = cur.fetchone()
+        conn.commit()
+    if not row:
+        raise HTTPException(status_code=404, detail="No está en tu cuenta")
+    return {"ok": True}
 
 
 @app.get("/items")

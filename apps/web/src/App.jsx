@@ -189,6 +189,18 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
     }
   }
 
+  async function removeItem(item) {
+    if (!window.confirm(`¿Borrar «${item.title}»? No se puede deshacer.`)) return;
+    setError("");
+    try {
+      await call(`/items/${item.id}`, { method: "DELETE" });
+      setItems(items.filter((row) => row.id !== item.id));
+      if (editing?.id === item.id) setEditing(null);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   async function leave() {
     await call("/auth/logout", { method: "POST", body: "{}" });
     onLeave();
@@ -234,7 +246,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
           <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Llamar al taller el viernes" />
           <button type="button" onClick={archive} disabled={!text.trim()}>Dejar</button>
           <h2>Archivado</h2>
-          <ItemList items={items} editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
+          <ItemList items={items} editing={editing} setEditing={setEditing} saveEdit={saveEdit} removeItem={removeItem} />
         </>
       )}
       {screen === "hoy" && (
@@ -243,11 +255,11 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
           <div className="panes">
             <section>
               <h2>Para hoy</h2>
-              {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} /> : <p className="private">Hoy no hay nada con fecha.</p>}
+              {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} removeItem={removeItem} /> : <p className="private">Hoy no hay nada con fecha.</p>}
             </section>
             <section>
               <h2>Próximos</h2>
-              {laterItems.length ? <ItemList items={laterItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} /> : <p className="private">No hay nada con fecha después de hoy.</p>}
+              {laterItems.length ? <ItemList items={laterItems} editing={editing} setEditing={setEditing} saveEdit={saveEdit} removeItem={removeItem} /> : <p className="private">No hay nada con fecha después de hoy.</p>}
             </section>
           </div>
         </>
@@ -270,7 +282,7 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
             <section>
               <h2>Tuyo</h2>
               {items.some((item) => item.module === current.id) ? (
-                <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
+                <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} saveEdit={saveEdit} removeItem={removeItem} />
               ) : (
                 <p className="private">Todavía no hay nada tuyo aquí. Escríbelo en Entrada.</p>
               )}
@@ -552,7 +564,7 @@ function clockOf(value) {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function ItemList({ items, editing, setEditing, saveEdit }) {
+function ItemList({ items, editing, setEditing, saveEdit, removeItem }) {
   return (
     <div className="cards">
       {items.map((item) => (
@@ -607,6 +619,7 @@ function ItemList({ items, editing, setEditing, saveEdit }) {
                   <>
                     <span className={`m-${item.module}`}><Icon name={item.module} /> {labelOf(item.module)}</span>
                     <button type="button" className="text" onClick={() => setEditing({ ...item })}>Cambiar</button>
+                    <button type="button" className="text danger" onClick={() => removeItem(item)}>Borrar</button>
                   </>
                 )}
               </p>
