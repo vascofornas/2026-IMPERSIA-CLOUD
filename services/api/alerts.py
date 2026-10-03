@@ -148,7 +148,31 @@ def expand_item(item: dict, exceptions: list, from_dt: datetime, to_dt: datetime
         return _weekly(item, exceptions, from_dt, to_dt)
     if item["repeats"] == "monthly":
         return _monthly(item, exceptions, from_dt, to_dt)
+    if item["repeats"] == "yearly":
+        return _yearly(item, exceptions, from_dt, to_dt)
     return []
+
+
+def _yearly(item, exceptions, from_dt, to_dt):
+    anchor = _as_madrid(item["starts_at"])
+    if anchor is None:
+        return []
+    anchor_day = day_start(anchor)
+    out = []
+    year = max(anchor.year, from_dt.year)
+    while year <= to_dt.year + 1:
+        try:
+            at = anchor.replace(year=year)
+        except ValueError:
+            at = anchor.replace(year=year, day=28)
+        if at > to_dt:
+            break
+        if at >= from_dt and at >= anchor_day:
+            occ = _apply_occurrence(item, exceptions, at)
+            if occ:
+                out.append(occ)
+        year += 1
+    return out
 
 
 def _daily(item, exceptions, from_dt, to_dt):

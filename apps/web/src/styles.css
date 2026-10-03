@@ -792,6 +792,11 @@ a.connect {
   color: #9b1c12;
 }
 
+.tag.familiar {
+  background: color-mix(in srgb, #b54708 14%, var(--bg));
+  color: #93370d;
+}
+
 .medical-line {
   display: flex;
   flex-wrap: wrap;

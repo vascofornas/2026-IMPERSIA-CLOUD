@@ -495,6 +495,14 @@ Avisos del navegador operativos con service worker. Correo y navegador quedan ac
 Modesto pide citas médicas visibles y editables en Agenda, propias o de hijos, padres, abuelos y sobrinos.
 Primera variante de Agenda: agenda_type medica, campos medical_for, medical_name, medical_place y medical_notes. Reglas en classify.py. Editor y ficha en la web. Aviso por defecto 30 min. Suben schema, migración 002, API, classify, web y docs.
 
+3 de octubre de 2026, 14:55
+Modesto confirma que las citas médicas en Agenda funcionan.
+Queda validada la primera variante de Agenda. Siguiente paso natural: cumpleaños u otro tipo de cita.
+
+3 de octubre de 2026, 15:00
+Modesto pide seguir con eventos familiares en Agenda.
+Segunda variante: agenda_type familiar, family_kind, family_for, family_name, family_place y family_notes. Cumpleaños y aniversarios se repiten cada año (repeats yearly). Editor y ficha en la web. Suben migración 003, API, classify, alerts, web y docs.
+
 3 de octubre de 2026, 11:44
 Modesto pide logo en los correos y avisos legales habituales.
 Los avisos llevan logo-email.png, pie con aviso de servicio, RGPD, enlace a desactivar en Perfil, contacto y privacidad. Se publica apps/comercial/privacidad.html y logo-email.png en impersia.cloud.

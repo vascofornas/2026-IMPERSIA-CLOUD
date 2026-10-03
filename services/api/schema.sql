@@ -44,6 +44,11 @@ CREATE TABLE IF NOT EXISTS items (
     medical_name text,
     medical_place text,
     medical_notes text,
+    family_kind text,
+    family_for text,
+    family_name text,
+    family_place text,
+    family_notes text,
     status text NOT NULL DEFAULT 'open',
     privacy text NOT NULL DEFAULT 'private',
     created_at timestamptz NOT NULL DEFAULT now()

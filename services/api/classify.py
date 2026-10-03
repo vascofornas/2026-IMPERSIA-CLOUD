@@ -74,24 +74,84 @@ def classify(text: str) -> dict:
     starts, time_known = _when(low)
     module = _module(low)
     medical = module == "agenda" and _is_medical(low)
+    family = module == "agenda" and not medical and _is_family(low)
     alert = _alert_minutes_before(low, time_known)
     if medical and alert == 15:
         alert = 30
-    meta = _medical_meta(raw, low) if medical else {}
+    repeats = _repeat(low)
+    if family:
+        fam = _family_meta(raw, low)
+        if not repeats and fam.get("family_kind") in {"cumpleanos", "aniversario"}:
+            repeats = "yearly"
+        if alert is None and fam.get("family_kind") in {"cumpleanos", "aniversario"} and not time_known:
+            alert = 1440
+        return _classify_result(
+            module,
+            _family_title(raw, low, fam.get("family_kind")),
+            starts,
+            time_known,
+            repeats,
+            alert,
+            "familiar",
+            medical_fields={},
+            family_fields=fam,
+        )
+    if medical:
+        meta = _medical_meta(raw, low)
+        return _classify_result(
+            module,
+            _medical_title(raw, low),
+            starts,
+            time_known,
+            repeats,
+            alert,
+            "medica",
+            medical_fields=meta,
+            family_fields={},
+        )
+    return _classify_result(
+        module,
+        _title(raw),
+        starts,
+        time_known,
+        repeats,
+        alert,
+        None,
+        medical_fields={},
+        family_fields={},
+    )
+
+
+def _classify_result(
+    module: str,
+    title: str,
+    starts,
+    time_known: bool,
+    repeats,
+    alert,
+    agenda_type: str | None,
+    medical_fields: dict,
+    family_fields: dict,
+) -> dict:
     return {
         "axis": MODULES[module],
         "module": module,
         "kind": legacy_kind(module),
-        "title": _medical_title(raw, low) if medical else _title(raw),
+        "title": title,
         "starts_at": starts,
         "time_known": time_known,
-        "repeats": _repeat(low),
+        "repeats": repeats,
         "alert_minutes_before": alert,
-        "agenda_type": "medica" if medical else None,
-        "medical_for": meta.get("medical_for"),
-        "medical_name": meta.get("medical_name"),
-        "medical_place": meta.get("medical_place"),
-        "medical_notes": None,
+        "agenda_type": agenda_type,
+        "medical_for": medical_fields.get("medical_for"),
+        "medical_name": medical_fields.get("medical_name"),
+        "medical_place": medical_fields.get("medical_place"),
+        "medical_notes": medical_fields.get("medical_notes"),
+        "family_kind": family_fields.get("family_kind"),
+        "family_for": family_fields.get("family_for"),
+        "family_name": family_fields.get("family_name"),
+        "family_place": family_fields.get("family_place"),
+        "family_notes": family_fields.get("family_notes"),
         "source": "rules",
     }
 
@@ -133,7 +193,26 @@ def _module(low: str) -> str:
         return "habitos"
     if any(word in low for word in ("deseo", "quiero ir", "película", "pelicula", "restaurante")):
         return "deseos"
-    if any(word in low for word in ("cita", "médico", "medico", "dentista", "cumpleaños", "cumpleanos")):
+    if any(
+        word in low
+        for word in (
+            "cita",
+            "médico",
+            "medico",
+            "dentista",
+            "cumpleaños",
+            "cumpleanos",
+            "aniversario",
+            "boda",
+            "bautizo",
+            "comunión",
+            "comunion",
+            "comida familiar",
+            "cena familiar",
+            "reunión familiar",
+            "reunion familiar",
+        )
+    ):
         return "agenda"
     if any(word in low for word in ("he dormido", "me siento", "diario", "ánimo", "animo")):
         return "diario"
@@ -253,6 +332,8 @@ def _is_task(low: str) -> bool:
 def _repeat(low: str) -> str | None:
     if re.search(r"\bcada d[ií]a\b", low) or re.search(r"\btodos los d[ií]as\b", low):
         return "daily"
+    if re.search(r"\bcada a[nñ]o\b", low) or re.search(r"\btodos los a[nñ]os\b", low):
+        return "yearly"
     if re.search(r"\bcada mes\b", low):
         return "monthly"
     if re.search(r"\bcada semana\b", low) or re.search(r"\bcada\b", low):
@@ -340,19 +421,27 @@ def _is_medical(low: str) -> bool:
     return bool(re.search(r"\bcita\s+(?:con\s+)?(?:el\s+|la\s+)?(?:dr|dra|doctor|doctora)\b", low))
 
 
-def _medical_for(low: str) -> str:
-    if re.search(r"\bmi hijo\b|\bmi hija\b|\bdel hijo\b|\bde mi hijo\b|\bde mi hija\b|\bhijo de\b|\bhija de\b|\bpediatra\b", low):
+def _person_for(low: str) -> str:
+    if re.search(r"\bmi hijo\b|\bmi hija\b|\bdel hijo\b|\bde mi hijo\b|\bde mi hija\b|\bhijo de\b|\bhija de\b", low):
         return "child"
-    if re.search(r"\bmi madre\b|\bmi padre\b|\bmi mamá\b|\bmi mama\b|\bmi papá\b|\bmi papa\b|\bmamá\b|\bmadre\b|\bpadre\b", low):
+    if re.search(r"\bmis padres\b|\bmi madre\b|\bmi padre\b|\bmi mamá\b|\bmi mama\b|\bmi papá\b|\bmi papa\b", low):
         return "parent"
-    if re.search(r"\bmi abuela\b|\bmi abuelo\b|\babuela\b|\babuelo\b", low):
+    if re.search(r"\b(?:mis|los|las)\s+abuelos\b|\bmi abuela\b|\bmi abuelo\b|\bcon mis abuelos\b", low):
         return "grandparent"
     if re.search(r"\bsobrino\b|\bsobrina\b|\bmi sobrino\b|\bmi sobrina\b", low):
         return "nephew"
+    if re.search(r"\bmi hermano\b|\bmi hermana\b|\bhermano de\b|\bhermana de\b", low):
+        return "other"
+    if re.search(r"\bmi pareja\b|\bmi marido\b|\bmi mujer\b|\bmi esposo\b|\bmi esposa\b", low):
+        return "other"
     return "self"
 
 
-def _medical_name(raw: str, low: str) -> str | None:
+def _person_name(raw: str, low: str) -> str | None:
+    match = re.search(r"\bsobrin[oa]\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)\b", raw, flags=re.IGNORECASE)
+    if match:
+        name = match.group(1).strip()
+        return name[0].upper() + name[1:]
     match = re.search(
         r"\b(?:de|del|para|con|llevar a)\s+(?:mi\s+)?([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)",
         raw,
@@ -375,12 +464,17 @@ def _medical_name(raw: str, low: str) -> str | None:
             "papa",
             "abuela",
             "abuelo",
+            "abuelos",
             "sobrino",
             "sobrina",
             "médico",
             "medico",
             "dentista",
             "pediatra",
+            "mis",
+            "los",
+            "las",
+            "mi",
         }
         if name not in skip:
             return name[0].upper() + name[1:]
@@ -398,15 +492,83 @@ def _medical_place(low: str) -> str | None:
 
 
 def _medical_meta(raw: str, low: str) -> dict:
-    medical_for = _medical_for(low)
-    name = _medical_name(raw, low)
+    medical_for = _person_for(low)
+    if medical_for == "self" and "pediatra" in low:
+        medical_for = "child"
+    name = _person_name(raw, low)
     if medical_for == "self":
         name = None
     return {
         "medical_for": medical_for,
         "medical_name": name,
         "medical_place": _medical_place(low),
+        "medical_notes": None,
     }
+
+
+FAMILY_KINDS = {
+    "cumpleanos": ("cumpleaños", "cumpleanos"),
+    "aniversario": ("aniversario",),
+    "boda": ("boda", "casamiento"),
+    "bautizo": ("bautizo",),
+    "comunion": ("comunión", "comunion", "confirmación", "confirmacion"),
+    "comida": ("comida familiar", "cena familiar", "reunión familiar", "reunion familiar"),
+}
+
+
+def _is_family(low: str) -> bool:
+    for words in FAMILY_KINDS.values():
+        if any(word in low for word in words):
+            return True
+    return bool(re.search(r"\bcelebraci[oó]n familiar\b", low))
+
+
+def _family_kind(low: str) -> str:
+    for kind, words in FAMILY_KINDS.items():
+        if any(word in low for word in words):
+            return kind
+    return "otro"
+
+
+def _family_meta(raw: str, low: str) -> dict:
+    family_for = _person_for(low)
+    name = _person_name(raw, low)
+    if family_for == "self" and name:
+        family_for = "other"
+    if family_for == "self":
+        name = None
+    kind = _family_kind(low)
+    if kind == "cumpleanos" and name and family_for == "self":
+        family_for = "other"
+    if family_for == "grandparent":
+        name = None
+    return {
+        "family_kind": kind,
+        "family_for": family_for,
+        "family_name": name,
+        "family_place": _medical_place(low),
+        "family_notes": None,
+    }
+
+
+def _family_title(raw: str, low: str, kind: str | None) -> str:
+    name = _person_name(raw, low)
+    labels = {
+        "cumpleanos": "Cumpleaños",
+        "aniversario": "Aniversario",
+        "boda": "Boda",
+        "bautizo": "Bautizo",
+        "comunion": "Comunión",
+        "comida": "Comida familiar",
+        "otro": "Evento familiar",
+    }
+    label = labels.get(kind or "otro", "Evento familiar")
+    if name:
+        return f"{label} de {name}"
+    cleaned = _title(raw)
+    if cleaned.lower().startswith(label.lower()):
+        return cleaned
+    return cleaned or label
 
 
 def _medical_title(raw: str, low: str) -> str:

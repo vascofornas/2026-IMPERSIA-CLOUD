@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GoogleMark, Icon } from "./icons.jsx";
-import { isMedicalItem, MEDICAL_FOR, medicalForLabel } from "./agenda.js";
+import {
+  FAMILY_KIND,
+  familyEventLine,
+  familyForLabel,
+  isFamilyItem,
+  isMedicalItem,
+  MEDICAL_FOR,
+  medicalForLabel,
+} from "./agenda.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
 import { AXES, findModule, labelOf } from "./structure.js";
 
@@ -237,6 +245,11 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
             medical_name: editing.agenda_type === "medica" ? editing.medical_name || null : null,
             medical_place: editing.agenda_type === "medica" ? editing.medical_place || null : null,
             medical_notes: editing.agenda_type === "medica" ? editing.medical_notes || null : null,
+            family_kind: editing.agenda_type === "familiar" ? editing.family_kind || "otro" : null,
+            family_for: editing.agenda_type === "familiar" ? editing.family_for || "self" : null,
+            family_name: editing.agenda_type === "familiar" ? editing.family_name || null : null,
+            family_place: editing.agenda_type === "familiar" ? editing.family_place || null : null,
+            family_notes: editing.agenda_type === "familiar" ? editing.family_notes || null : null,
           }),
         });
       }
@@ -758,6 +771,7 @@ function chipTitle(item) {
   const clock = item.time_known ? `${clockOf(item.starts_at)} ` : "";
   if (item.source === "google") return `${clock}Google. ${item.title}`;
   if (isMedicalItem(item)) return `${clock}Cita médica. ${item.title}. ${medicalForLabel(item.medical_for, item.medical_name)}`;
+  if (isFamilyItem(item)) return `${clock}${familyEventLine(item)}. ${item.title}`;
   return `${clock}${labelOf(item.module)}. ${item.title}`;
 }
 
@@ -765,6 +779,10 @@ function chipText(item) {
   const clock = item.time_known ? `${clockOf(item.starts_at)} ` : "";
   if (isMedicalItem(item) && item.medical_for !== "self") {
     const who = item.medical_name || medicalForLabel(item.medical_for, null).replace("Para ", "");
+    return `${clock}${item.title} · ${who}`;
+  }
+  if (isFamilyItem(item) && item.family_for !== "self") {
+    const who = item.family_name || familyForLabel(item.family_for, null).replace("Para ", "");
     return `${clock}${item.title} · ${who}`;
   }
   return `${clock}${item.title}`;
@@ -845,11 +863,17 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
                           medical_name: agenda_type === "medica" ? editing.medical_name || "" : "",
                           medical_place: agenda_type === "medica" ? editing.medical_place || "" : "",
                           medical_notes: agenda_type === "medica" ? editing.medical_notes || "" : "",
+                          family_kind: agenda_type === "familiar" ? editing.family_kind || "cumpleanos" : null,
+                          family_for: agenda_type === "familiar" ? editing.family_for || "other" : null,
+                          family_name: agenda_type === "familiar" ? editing.family_name || "" : "",
+                          family_place: agenda_type === "familiar" ? editing.family_place || "" : "",
+                          family_notes: agenda_type === "familiar" ? editing.family_notes || "" : "",
                         });
                       }}
                     >
                       <option value="">Cita general</option>
                       <option value="medica">Cita médica</option>
+                      <option value="familiar">Evento familiar</option>
                     </select>
                   </label>
                   {editing.agenda_type === "medica" && (
@@ -893,6 +917,58 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
                       </label>
                     </>
                   )}
+                  {editing.agenda_type === "familiar" && (
+                    <>
+                      <label>
+                        Tipo de evento
+                        <select
+                          value={editing.family_kind || "otro"}
+                          onChange={(e) => setEditing({ ...editing, family_kind: e.target.value })}
+                        >
+                          {FAMILY_KIND.map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        De quién es
+                        <select
+                          value={editing.family_for || "self"}
+                          onChange={(e) => setEditing({ ...editing, family_for: e.target.value })}
+                        >
+                          {MEDICAL_FOR.map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </select>
+                      </label>
+                      {editing.family_for !== "self" && (
+                        <label>
+                          Nombre
+                          <input
+                            value={editing.family_name || ""}
+                            placeholder="Ana, Luis…"
+                            onChange={(e) => setEditing({ ...editing, family_name: e.target.value })}
+                          />
+                        </label>
+                      )}
+                      <label>
+                        Lugar
+                        <input
+                          value={editing.family_place || ""}
+                          placeholder="Casa, restaurante, pueblo…"
+                          onChange={(e) => setEditing({ ...editing, family_place: e.target.value })}
+                        />
+                      </label>
+                      <label>
+                        Notas
+                        <textarea
+                          value={editing.family_notes || ""}
+                          placeholder="Regalo, quién va, qué llevar…"
+                          onChange={(e) => setEditing({ ...editing, family_notes: e.target.value })}
+                        />
+                      </label>
+                    </>
+                  )}
                 </>
               )}
               <div className="actions">
@@ -912,6 +988,17 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove }
               )}
               {isMedicalItem(item) && item.medical_place && <p className="private">{item.medical_place}</p>}
               {isMedicalItem(item) && item.medical_notes && <p className="private">{item.medical_notes}</p>}
+              {isFamilyItem(item) && (
+                <p className="medical-line">
+                  <span className="tag familiar">Evento familiar</span>
+                  <span>{familyEventLine(item)}</span>
+                </p>
+              )}
+              {isFamilyItem(item) && item.repeats === "yearly" && (
+                <p className="private">Se repite cada año</p>
+              )}
+              {isFamilyItem(item) && item.family_place && <p className="private">{item.family_place}</p>}
+              {isFamilyItem(item) && item.family_notes && <p className="private">{item.family_notes}</p>}
               <p className="meta">
                 {item.source === "google" ? (
                   <span className="tag m-google"><GoogleMark /> Google</span>
@@ -994,6 +1081,7 @@ function occurrences(item, from, to) {
   if (item.repeats === "daily") return dailyOccurrences(item, from, to);
   if (item.repeats === "weekly") return weeklyOccurrences(item, from, to);
   if (item.repeats === "monthly") return monthlyOccurrences(item, from, to);
+  if (item.repeats === "yearly") return yearlyOccurrences(item, from, to);
   return [];
 }
 
@@ -1092,6 +1180,22 @@ function monthlyOccurrences(item, from, to) {
       month = 0;
       year += 1;
     }
+  }
+  return results;
+}
+
+function yearlyOccurrences(item, from, to) {
+  const anchor = new Date(item.starts_at);
+  const anchorDay = dayStart(anchor);
+  const results = [];
+  let year = Math.max(anchor.getFullYear(), from.getFullYear());
+  while (year <= to.getFullYear() + 1) {
+    const at = new Date(anchor);
+    at.setFullYear(year);
+    if (at.getMonth() !== anchor.getMonth()) at.setDate(0);
+    if (at > to) break;
+    if (at >= from && at >= anchorDay) pushOccurrence(results, item, at);
+    year += 1;
   }
   return results;
 }
@@ -1326,6 +1430,7 @@ function todayLine() {
 function repeatLabel(repeats, startsAt) {
   if (repeats === "daily") return "Cada día";
   if (repeats === "monthly") return "Cada mes";
+  if (repeats === "yearly") return "Cada año";
   if (repeats === "weekly") {
     const raw = new Date(startsAt).toLocaleDateString("es-ES", { weekday: "long" });
     return `Cada ${raw}`;

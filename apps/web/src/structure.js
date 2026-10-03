@@ -6,10 +6,10 @@ export const AXES = [
       {
         id: "agenda",
         label: "Agenda",
-        blurb: "Citas, cumpleaños, ocio y recordatorios. Las citas médicas — tuyas o de familia — llevan detalle propio.",
+        blurb: "Citas, cumpleaños, ocio y recordatorios. Citas médicas y eventos familiares llevan detalle propio.",
         examples: [
-          ["Pediatra de Luis", "martes, 10:30 · hijo"],
-          ["Dermatólogo", "viernes, 12:00 · para mí"],
+          ["Cumpleaños de Ana", "12 oct · cada año"],
+          ["Comida familiar", "domingo · abuelos"],
         ],
       },
       {
