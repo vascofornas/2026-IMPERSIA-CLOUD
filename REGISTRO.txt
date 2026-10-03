@@ -466,3 +466,6 @@ El aviso pasa a HTML con estilo Impersia: cabecera verde, ficha con color del m�
 
 3 de octubre de 2026, 11:39
 Modesto enseña captura: mucho hueco beige, Impersia y Hábitos sin color. Se compacta en una sola tarjeta blanca, cabecera verde con bgcolor, pastilla del módulo y menos margen.
+
+3 de octubre de 2026, 11:41
+Gmail no se ve el texto blanco sobre verde en la cabecera. Cabecera crema con Impersia en verde oscuro, botón con borde verde y meta color-scheme light para que Gmail no invierta colores.

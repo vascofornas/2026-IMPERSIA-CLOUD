@@ -347,19 +347,27 @@ def _email_html(occ: dict, when: str, module: str) -> str:
     when_text = _html_escape(when)
     return f"""<!doctype html>
 <html lang="es">
+<head>
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+</head>
 <body style="margin:0;padding:0;background:#ffffff;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#ffffff">
     <tr>
       <td align="center" style="padding:12px 16px 24px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:440px;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#ffffff" style="max-width:440px;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
           <tr>
-            <td bgcolor="{MARK}" style="padding:14px 18px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:18px;line-height:1.2;font-weight:700;color:#ffffff;">Impersia</td>
+            <td bgcolor="#f3efe6" style="padding:14px 18px;border-bottom:3px solid {MARK};font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:20px;line-height:1.2;font-weight:700;">
+              <font color="{MARK}"><span style="color:{MARK};">Impersia</span></font>
+            </td>
           </tr>
           <tr>
             <td bgcolor="#ffffff" style="border-left:4px solid {color};padding:18px 18px 16px;">
               <table role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td bgcolor="#f3f4f6" style="padding:5px 11px;border-radius:999px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:11px;line-height:1;font-weight:700;letter-spacing:0.05em;color:{color};">{module_label}</td>
+                  <td style="padding:5px 11px;border:1px solid {color};border-radius:999px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:11px;line-height:1;font-weight:700;letter-spacing:0.05em;">
+                    <font color="{color}"><span style="color:{color};">{module_label}</span></font>
+                  </td>
                 </tr>
               </table>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:14px;">
@@ -377,15 +385,17 @@ def _email_html(occ: dict, when: str, module: str) -> str:
             <td bgcolor="#ffffff" style="padding:0 18px 18px;">
               <table role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td bgcolor="{MARK}" style="border-radius:999px;">
-                    <a href="{link}" style="display:inline-block;padding:11px 18px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:15px;line-height:1;font-weight:700;color:#ffffff;text-decoration:none;">Ver en Impersia</a>
+                  <td style="border:2px solid {MARK};border-radius:999px;">
+                    <a href="{link}" style="display:inline-block;padding:11px 18px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:15px;line-height:1;font-weight:700;text-decoration:none;">
+                      <font color="{MARK}"><span style="color:{MARK};">Ver en Impersia</span></font>
+                    </a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
           <tr>
-            <td bgcolor="#f9fafb" style="padding:12px 18px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.45;color:#9ca3af;border-top:1px solid #e5e7eb;">
+            <td bgcolor="#f9fafb" style="padding:12px 18px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.45;color:#6b7280;border-top:1px solid #e5e7eb;">
               Aviso por correo activado en tu perfil de Impersia.
             </td>
           </tr>
