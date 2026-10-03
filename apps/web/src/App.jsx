@@ -916,7 +916,11 @@ function CasaBoard({
       {otherPending.map((group) => (
         <section className="casa-section" key={group.id}>
           <h2>{group.label}</h2>
-          <ItemList items={group.items} {...listProps} />
+          {group.id === "inventario" ? (
+            <InventarioList items={group.items} {...listProps} />
+          ) : (
+            <ItemList items={group.items} {...listProps} />
+          )}
         </section>
       ))}
       {hasDone && (
@@ -1065,6 +1069,61 @@ function ShoppingListPanel({
         </div>
       )}
     </div>
+  );
+}
+
+function InventarioList({ items, editing, setEditing, startEdit, saveEdit, askRemove }) {
+  if (!items.length) {
+    return <p className="private">Nada apuntado. Escribe «quedan 2 cartuchos en la despensa» en Entrada.</p>;
+  }
+  return (
+    <ul className="inventario-list">
+      {items.map((item) => (
+        <li
+          className={["inventario-row", isEditingRow(item, editing) ? "editing" : ""].filter(Boolean).join(" ")}
+          key={item.id}
+        >
+          {isEditingRow(item, editing) ? (
+            <>
+              <input
+                className="inventario-edit"
+                value={editing.title}
+                onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+              />
+              <input
+                className="inventario-edit-qty"
+                value={editing.casa_notes || ""}
+                placeholder="Cantidad"
+                onChange={(e) => setEditing({ ...editing, casa_notes: e.target.value })}
+              />
+              <input
+                className="inventario-edit-where"
+                value={editing.casa_place || ""}
+                placeholder="Dónde"
+                onChange={(e) => setEditing({ ...editing, casa_place: e.target.value })}
+              />
+              <span className="inventario-actions">
+                <button type="button" className="link" onClick={saveEdit}>Guardar</button>
+                <button type="button" className="link secondary" onClick={() => setEditing(null)}>Cancelar</button>
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="inventario-title">{item.title}</span>
+              {item.casa_notes && <span className="inventario-qty">{item.casa_notes}</span>}
+              {item.casa_place && <span className="inventario-where">{item.casa_place}</span>}
+              {item.created_at && (
+                <span className="inventario-when">({registeredLabel(item.created_at)})</span>
+              )}
+              <span className="inventario-actions">
+                <button type="button" className="link" onClick={() => startEdit(item)}>Cambiar</button>
+                <button type="button" className="link danger" onClick={() => askRemove(item)}>Borrar</button>
+              </span>
+            </>
+          )}
+        </li>
+      ))}
+    </ul>
   );
 }
 

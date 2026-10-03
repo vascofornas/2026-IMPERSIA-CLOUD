@@ -31,6 +31,8 @@ Dentro de **Casa** (Vida personal, la antigua logística doméstica del PDF), la
 
 La **lista de la compra** es una lista activa por cuenta: «comprar leche y pan» se parte en varias líneas; cada una se marca hecha con un check. Lo pendiente se ve siempre; lo comprado queda oculto bajo «Mostrar N comprados» y se puede quitar de la lista para que no crezca sin límite. La tienda es opcional y va en la lista (no en cada producto), pensada para geofence en las apps móviles más adelante. Por ahora hay una sola lista; varias listas y compartir llegarán después.
 
+El **inventario personal** es lo contrario: lo que ya hay en casa (despensa, congelador, repuestos). «Quedan 2 cartuchos en la despensa» guarda producto, cantidad y dónde. No es lo que falta comprar; eso sigue yendo a la lista de la compra. Más adelante, un aviso de stock bajo podrá pasar a la lista con un clic.
+
 Agenda puede mostrar, además, un calendario que la persona ya tenga. El primero es Google Calendar, y solo si ella lo conecta. Impersia lo lee y lo junta en Agenda y en Hoy con lo que entró por Entrada. Lo de Google se distingue. Lo escrito en Impersia no se copia a Google en esta versión.
 
 Las entradas con hora pueden llevar aviso. Se cambia al editar la entrada, en el campo Aviso. Las repetidas comparten el mismo aviso para toda la serie.

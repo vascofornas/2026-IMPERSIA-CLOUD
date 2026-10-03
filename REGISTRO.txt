@@ -570,3 +570,7 @@ Tienda oculta por defecto con explicación al abrirla; enlaces de texto sin pill
 3 de octubre de 2026, 16:25
 Modesto pide que el botón de Entrada no diga Dejar.
 Pasa a Apuntar (prefiere Apuntar o Anotar frente a Archivar). Suben web y dist.
+
+3 de octubre de 2026, 18:45
+Modesto elige seguir con Inventario en Casa.
+v1: lo que hay en casa (no la compra), lista plana con cantidad y dónde, parseo «quedan 2 cartuchos en la despensa». Suben classify, web, docs y despliegue en VPS.

@@ -188,9 +188,10 @@ def classify(text: str) -> dict:
         home = _casa_meta(raw, low)
         if home.get("casa_kind") == "suministro" and alert is None:
             alert = 10080
+        inv_title = home.pop("inventario_title", None)
         return _classify_result(
             module,
-            _casa_title(raw, low, home.get("casa_kind")),
+            inv_title or _casa_title(raw, low, home.get("casa_kind")),
             starts,
             time_known,
             repeats,
@@ -395,6 +396,13 @@ def _is_casa(low: str) -> bool:
 
 
 def _casa_kind(low: str) -> str:
+    stock_hint = any(
+        hint in low
+        for hint in ("quedan ", "queda ", "en stock", "tengo en", "tenemos en", "guardado en")
+    )
+    if stock_hint or "repuesto" in low or "cartuchos" in low:
+        if any(word in low for word in CASA_KINDS["inventario"]):
+            return "inventario"
     for kind, words in CASA_KINDS.items():
         if kind == "otro":
             continue
@@ -1081,7 +1089,10 @@ def _casa_place(low: str) -> str | None:
         low,
     )
     if not match:
-        match = re.search(r"\b(?:baño|salón|salon|cocina|garaje|dormitorio|terraza)\b", low)
+        match = re.search(
+            r"\b(?:baño|bano|salón|salon|cocina|garaje|dormitorio|terraza|despensa|congelador|trastero|armario|almacén|almacen)\b",
+            low,
+        )
         if match:
             return match.group(0)[0].upper() + match.group(0)[1:]
         return None
@@ -1120,6 +1131,53 @@ def _supply_kind(low: str) -> str:
     return "otro"
 
 
+def _inventario_fields(raw: str, low: str) -> dict:
+    text = " ".join(raw.strip().split())
+    notes = None
+    qty = re.search(
+        r"(?:quedan|queda|tenemos|tengo|hay|nos quedan)\s+(\d+)\b",
+        low,
+    )
+    if qty:
+        notes = qty.group(1)
+    if not notes:
+        lead = re.match(r"^(\d+)\s+", text)
+        if lead:
+            notes = lead.group(1)
+    cleaned = text
+    cleaned = re.sub(
+        r"^(?:quedan|queda|tenemos|tengo|hay|nos quedan)\s+(?:\d+\s+)?",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(r"^\d+\s+", "", cleaned)
+    cleaned = re.sub(
+        r"\s+(?:en stock|guardado en|guardados en)\s+.+$",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(r"\s+en\s+(?:el|la|los|las)\s+.+$", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s+en\s+(?:despensa|congelador|garaje|baño|baño|armario|trastero|cocina)\s*$", "", cleaned, flags=re.IGNORECASE)
+    cleaned = " ".join(cleaned.split()).strip(" .")
+    title = cleaned[0].upper() + cleaned[1:] if len(cleaned) > 1 else cleaned.upper() if cleaned else _title(raw)
+    place = _casa_place(low)
+    if not place:
+        spot = re.search(
+            r"\ben (?:el |la |los |las )?(despensa|congelador|garaje|baño|bano|armario|trastero|cocina|almacén|almacen)\b",
+            low,
+        )
+        if spot:
+            word = spot.group(1)
+            if word in {"bano", "almacen"}:
+                word = "Baño" if word == "bano" else "Almacén"
+            else:
+                word = word[0].upper() + word[1:]
+            place = word
+    return {"title": title, "casa_place": place, "casa_notes": notes}
+
+
 def _casa_meta(raw: str, low: str) -> dict:
     kind = _casa_kind(low)
     meta = {
@@ -1130,6 +1188,11 @@ def _casa_meta(raw: str, low: str) -> dict:
     }
     if kind == "suministro":
         meta["supply_kind"] = _supply_kind(low)
+    if kind == "inventario":
+        inv = _inventario_fields(raw, low)
+        meta["casa_place"] = inv["casa_place"] or meta["casa_place"]
+        meta["casa_notes"] = inv["casa_notes"]
+        meta["inventario_title"] = inv["title"]
     return meta
 
 

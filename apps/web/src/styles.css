@@ -981,6 +981,89 @@ a.connect {
   color: #b91c1c;
 }
 
+.inventario-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.inventario-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.inventario-row:last-child {
+  border-bottom: none;
+}
+
+.inventario-row.editing {
+  gap: 8px;
+}
+
+.inventario-title {
+  flex: 1;
+  min-width: 120px;
+  font-size: 1rem;
+}
+
+.inventario-qty {
+  font-weight: 600;
+  color: #6d28d9;
+  min-width: 1.5rem;
+}
+
+.inventario-where {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.inventario-when {
+  font-size: 0.88rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.inventario-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  font-size: 0.88rem;
+}
+
+.inventario-edit {
+  flex: 2;
+  min-width: 140px;
+}
+
+.inventario-edit-qty {
+  flex: 0 0 72px;
+}
+
+.inventario-edit-where {
+  flex: 1;
+  min-width: 100px;
+}
+
+@media (hover: hover) {
+  .inventario-actions {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .inventario-row:hover .inventario-actions,
+  .inventario-row:focus-within .inventario-actions {
+    opacity: 1;
+  }
+}
+
 .casa-section h2 {
   margin: 0 0 10px;
   font-size: 1.05rem;
