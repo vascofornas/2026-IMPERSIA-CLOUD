@@ -433,3 +433,7 @@ Cambiar lleva lápiz y Borrar papelera, en la ficha y en el cuadro de confirmaci
 3 de octubre de 2026, 09:33
 Modesto escribe: cada lunes a las 10 de la mañana hay que revisar la prensa del día. Sale mal: título roto, día 4 oct y cajón Agenda.
 «De la mañana» se leía como «mañana», el día siguiente. El título perdía lunes y mañana. A partir de ahora «de la mañana» es la hora, no el día. «Cada…» va a Hábitos. El próximo lunes con la hora que diga la frase.
+
+3 de octubre de 2026, 09:38
+Modesto dice que las repeticiones ya deberían contarse, como en Google Calendar.
+Cada entrada puede llevar repetición: cada día, cada semana o cada mes. «Cada lunes» es semanal. El calendario y Hoy pintan todos los días que tocan, no solo el primero. Cambiar o borrar afecta toda la serie. Editar un solo día de la serie llega más adelante.

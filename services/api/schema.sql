@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS items (
     module text NOT NULL DEFAULT 'diario',
     title text NOT NULL,
     starts_at timestamptz,
+    repeats text,
     time_known boolean NOT NULL DEFAULT false,
     status text NOT NULL DEFAULT 'open',
     privacy text NOT NULL DEFAULT 'private',

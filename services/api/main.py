@@ -414,9 +414,9 @@ def create_capture(body: CaptureIn, request: Request):
             cur.execute(
                 """
                 INSERT INTO items
-                    (user_id, capture_id, kind, axis, module, title, starts_at, time_known, privacy)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'private')
-                RETURNING id, kind, axis, module, title, starts_at, time_known, privacy, created_at
+                    (user_id, capture_id, kind, axis, module, title, starts_at, repeats, time_known, privacy)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
+                RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, privacy, created_at
                 """,
                 (
                     user_id,
@@ -426,6 +426,7 @@ def create_capture(body: CaptureIn, request: Request):
                     suggestion["module"],
                     suggestion["title"],
                     suggestion["starts_at"],
+                    suggestion.get("repeats"),
                     suggestion["time_known"],
                 ),
             )
@@ -483,7 +484,7 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                 UPDATE items
                 SET module = %s, axis = %s, kind = %s, title = %s, starts_at = %s, time_known = %s
                 WHERE id = %s AND user_id = %s
-                RETURNING id, kind, axis, module, title, starts_at, time_known, privacy, created_at
+                RETURNING id, kind, axis, module, title, starts_at, repeats, time_known, privacy, created_at
                 """,
                 (
                     body.module,
@@ -526,7 +527,7 @@ def list_items(request: Request):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT id, kind, axis, module, title, starts_at, time_known, privacy, created_at
+                SELECT id, kind, axis, module, title, starts_at, repeats, time_known, privacy, created_at
                 FROM items
                 WHERE user_id = %s
                 ORDER BY created_at DESC
@@ -574,6 +575,7 @@ def _public_item(row: dict) -> dict:
         "module": row.get("module") or "diario",
         "title": row["title"],
         "starts_at": starts.isoformat() if starts else None,
+        "repeats": row.get("repeats"),
         "time_known": bool(row.get("time_known")),
         "privacy": row["privacy"],
         "created_at": row["created_at"].isoformat(),

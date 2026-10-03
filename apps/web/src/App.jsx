@@ -216,12 +216,16 @@ function Home({ email, googleEmail, look, onLook, onLeave }) {
     onLeave();
   }
 
-  const todayKey = dayKey(new Date());
+  const todayStart = dayStart(new Date());
+  const tomorrow = new Date(todayStart);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const horizon = endOfDay(todayStart);
+  horizon.setDate(horizon.getDate() + 60);
   const googleDated = googleEvents.filter((event) => event.starts_at).map(asGoogle);
-  const dated = [...items.filter((item) => item.starts_at), ...googleDated];
+  const datedItems = items.filter((item) => item.starts_at);
   const byDate = (a, b) => new Date(a.starts_at) - new Date(b.starts_at);
-  const todayItems = dated.filter((item) => dayKey(item.starts_at) === todayKey).sort(byDate);
-  const laterItems = dated.filter((item) => dayKey(item.starts_at) > todayKey).sort(byDate);
+  const todayItems = [...expandItems(datedItems, todayStart, endOfDay(todayStart)), ...googleDated.filter((item) => dayKey(item.starts_at) === dayKey(todayStart))].sort(byDate);
+  const laterItems = [...expandItems(datedItems, tomorrow, horizon), ...googleDated.filter((item) => dayKey(item.starts_at) > dayKey(todayStart))].sort(byDate);
 
   return (
     <div className="shell">
@@ -424,15 +428,16 @@ function CalendarBoard({ items }) {
   const today = new Date();
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   const [view, setView] = useState("mes");
+  const cells = view === "dia" ? [cursor] : view === "semana" ? weekCells(cursor) : monthCells(cursor);
+  const rangeFrom = dayStart(cells[0]);
+  const rangeTo = endOfDay(cells[cells.length - 1]);
   const byDay = new Map();
-  items.forEach((item) => {
-    if (!item.starts_at) return;
+  expandItems(items, rangeFrom, rangeTo).forEach((item) => {
     const key = dayKey(item.starts_at);
     if (!byDay.has(key)) byDay.set(key, []);
     byDay.get(key).push(item);
   });
   byDay.forEach((list) => list.sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at)));
-  const cells = view === "dia" ? [cursor] : view === "semana" ? weekCells(cursor) : monthCells(cursor);
   const visible = cells.flatMap((date) => byDay.get(dayKey(date)) || []);
   const legend = legendOf(visible);
   const limit = view === "semana" ? 8 : 3;
@@ -492,7 +497,7 @@ function CalendarBoard({ items }) {
             return (
               <div className={classes.join(" ")} key={key}>
                 <button type="button" className="num" onClick={() => openDay(date)}>{date.getDate()}</button>
-                {shown.map((item) => <Chip item={item} key={item.id} />)}
+                {shown.map((item) => <Chip item={item} key={item.occurrenceKey || item.id} />)}
                 {list.length > shown.length && (
                   <button type="button" className="more" onClick={() => openDay(date)}>+{list.length - shown.length}</button>
                 )}
@@ -509,7 +514,7 @@ function DayColumn({ items }) {
   if (!items.length) return <p className="private">Este día no hay nada con fecha.</p>;
   return (
     <div className="day-list">
-      {items.map((item) => <Chip item={item} wide key={item.id} />)}
+      {items.map((item) => <Chip item={item} wide key={item.occurrenceKey || item.id} />)}
     </div>
   );
 }
@@ -601,7 +606,7 @@ function ItemList({ items, editing, setEditing, saveEdit, askRemove }) {
   return (
     <div className="cards">
       {items.map((item) => (
-        <article className={editing && editing.id === item.id ? "card editor" : "card"} key={item.id}>
+        <article className={editing && editing.id === item.id ? "card editor" : "card"} key={item.occurrenceKey || item.id}>
           {editing && editing.id === item.id ? (
             <>
               <label>
@@ -696,6 +701,93 @@ function useHash() {
   return hash;
 }
 
+function dayStart(value) {
+  const date = new Date(value);
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function endOfDay(value) {
+  const date = dayStart(value);
+  date.setHours(23, 59, 59, 999);
+  return date;
+}
+
+function expandItems(items, from, to) {
+  const out = [];
+  items.forEach((item) => {
+    out.push(...occurrences(item, from, to));
+  });
+  return out;
+}
+
+function occurrences(item, from, to) {
+  if (!item.starts_at) return [];
+  if (!item.repeats) {
+    const at = new Date(item.starts_at);
+    return at >= from && at <= to ? [item] : [];
+  }
+  if (item.repeats === "daily") return dailyOccurrences(item, from, to);
+  if (item.repeats === "weekly") return weeklyOccurrences(item, from, to);
+  if (item.repeats === "monthly") return monthlyOccurrences(item, from, to);
+  return [];
+}
+
+function occurrence(item, at) {
+  return { ...item, starts_at: at.toISOString(), occurrenceKey: `${item.id}-${dayKey(at)}` };
+}
+
+function dailyOccurrences(item, from, to) {
+  const anchor = new Date(item.starts_at);
+  const anchorDay = dayStart(anchor);
+  let d = dayStart(from);
+  if (d < anchorDay) d = new Date(anchorDay);
+  const results = [];
+  while (d <= to) {
+    const at = new Date(d);
+    at.setHours(anchor.getHours(), anchor.getMinutes(), 0, 0);
+    results.push(occurrence(item, at));
+    d.setDate(d.getDate() + 1);
+  }
+  return results;
+}
+
+function weeklyOccurrences(item, from, to) {
+  const anchor = new Date(item.starts_at);
+  const anchorDay = dayStart(anchor);
+  let d = dayStart(from);
+  while (d.getDay() !== anchor.getDay()) d.setDate(d.getDate() + 1);
+  while (d < anchorDay) d.setDate(d.getDate() + 7);
+  const results = [];
+  while (d <= to) {
+    const at = new Date(d);
+    at.setHours(anchor.getHours(), anchor.getMinutes(), 0, 0);
+    results.push(occurrence(item, at));
+    d.setDate(d.getDate() + 7);
+  }
+  return results;
+}
+
+function monthlyOccurrences(item, from, to) {
+  const anchor = new Date(item.starts_at);
+  const anchorDay = dayStart(anchor);
+  const results = [];
+  let year = anchor.getFullYear();
+  let month = anchor.getMonth();
+  const day = anchor.getDate();
+  for (let i = 0; i < 240; i += 1) {
+    const last = new Date(year, month + 1, 0).getDate();
+    const at = new Date(year, month, Math.min(day, last), anchor.getHours(), anchor.getMinutes(), 0, 0);
+    if (at > to) break;
+    if (at >= from && at >= anchorDay) results.push(occurrence(item, at));
+    month += 1;
+    if (month === 12) {
+      month = 0;
+      year += 1;
+    }
+  }
+  return results;
+}
+
 function dayKey(value) {
   const date = new Date(value);
   const pad = (n) => String(n).padStart(2, "0");
@@ -730,7 +822,25 @@ function todayLine() {
   return new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
 }
 
+function repeatLabel(repeats, startsAt) {
+  if (repeats === "daily") return "Cada día";
+  if (repeats === "monthly") return "Cada mes";
+  if (repeats === "weekly") {
+    const raw = new Date(startsAt).toLocaleDateString("es-ES", { weekday: "long" });
+    return `Cada ${raw}`;
+  }
+  return "";
+}
+
 function whenLabel(item) {
+  if (item.repeats && !item.occurrenceKey) {
+    const repeat = repeatLabel(item.repeats, item.starts_at);
+    if (item.time_known) {
+      const time = new Date(item.starts_at).toLocaleTimeString("es-ES", { timeStyle: "short" });
+      return `${repeat}, ${time}`;
+    }
+    return repeat;
+  }
   const date = new Date(item.starts_at);
   if (!item.time_known) return date.toLocaleDateString("es-ES", { dateStyle: "medium" });
   return date.toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" });

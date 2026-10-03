@@ -80,6 +80,7 @@ def classify(text: str) -> dict:
         "title": _title(raw),
         "starts_at": starts,
         "time_known": time_known,
+        "repeats": _repeat(low),
         "source": "rules",
     }
 
@@ -232,6 +233,16 @@ def _is_task(low: str) -> bool:
     if any(word in low for word in words):
         return True
     return bool(re.search(r"\bhacer\b", low)) and not re.search(r"\bqu[eé] hacer\b", low)
+
+
+def _repeat(low: str) -> str | None:
+    if re.search(r"\bcada d[ií]a\b", low) or re.search(r"\btodos los d[ií]as\b", low):
+        return "daily"
+    if re.search(r"\bcada mes\b", low):
+        return "monthly"
+    if re.search(r"\bcada semana\b", low) or re.search(r"\bcada\b", low):
+        return "weekly"
+    return None
 
 
 def _without_morning_phrases(low: str) -> str:
