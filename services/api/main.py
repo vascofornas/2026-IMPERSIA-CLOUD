@@ -216,6 +216,7 @@ class ItemPatch(BaseModel):
     habit_role: str | None = None
     habit_kind: str | None = None
     habit_notes: str | None = None
+    repeats: str | None = None
 
 
 class StatusIn(BaseModel):
@@ -1009,10 +1010,13 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                 cap = cur.fetchone()
                 if cap and cap.get("raw_text"):
                     raw_text = cap["raw_text"]
+            repeats = before["repeats"]
+            if "repeats" in body.model_fields_set:
+                repeats = body.repeats or None
             cur.execute(
                 f"""
                 UPDATE items
-                SET module = %s, axis = %s, kind = %s, title = %s, starts_at = %s, time_known = %s,
+                SET module = %s, axis = %s, kind = %s, title = %s, starts_at = %s, repeats = %s, time_known = %s,
                     alert_minutes_before = %s, agenda_type = %s, medical_for = %s, medical_name = %s,
                     medical_place = %s, medical_notes = %s, family_kind = %s, family_for = %s,
                     family_name = %s, family_place = %s, family_notes = %s, leisure_kind = %s,
@@ -1029,6 +1033,7 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     legacy_kind(body.module),
                     body.title.strip(),
                     _when_saving(body.starts_at, body.time_known),
+                    repeats,
                     body.time_known,
                     body.alert_minutes_before,
                     extra["agenda_type"],

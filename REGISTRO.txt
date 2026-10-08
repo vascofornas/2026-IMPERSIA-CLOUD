@@ -709,3 +709,6 @@ Unificar rutinas en UI: quitada lista duplicada «Tus rutinas»; todas en tarjet
 
 8 de octubre de 2026, 18:10
 Fix seguimiento: rutinas weekly:2,4,6 ya no cuentan los 7 días (bug repeats sin starts_at). Pasos daily = 7 celdas activas; remo solo ma/ju/sá. Despliegue web.
+
+8 de octubre de 2026, 18:25
+Modesto: pasos se veían distinto al remo y no se podían editar hábitos. Causas: rutinas también salían en Hoy «Para hoy» (tarjeta Agenda) y en Hábitos había lista «Tareas de hoy» aparte del Seguimiento; el editor solo existía en ItemList. Solución: panel HabitEditPanel (título, tipo, repetición, notas), PATCH con habit_* y repeats; solo tarjetas Seguimiento; rutinas fuera de Para hoy. Despliegue API+web.

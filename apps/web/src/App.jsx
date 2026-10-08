@@ -19,7 +19,9 @@ import {
   medicalForLabel,
 } from "./agenda.js";
 import { CASA_KIND, casaEventLine, groupCasaItems, isCasaItem, SUPPLY_KIND } from "./casa.js";
+import HabitEditPanel, { editorFromRepeats } from "./HabitEditPanel.jsx";
 import HabitosBoard, { HoyBienestar } from "./HabitosBoard.jsx";
+import { isHabitRoutine } from "./habitos.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
 import { trackScreen } from "./events.js";
 import { repeatLabel } from "./repeats.js";
@@ -270,55 +272,61 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
     }
   }
 
-  async function saveEdit() {
+  async function saveEdit(overrides = {}) {
     setError("");
+    const draft = { ...editing, ...overrides };
     try {
       let item;
-      if (editing.editScope === "one" && editing.occurrenceDay) {
-        item = await call(`/items/${editing.id}/days/${editing.occurrenceDay}`, {
+      if (draft.editScope === "one" && draft.occurrenceDay) {
+        item = await call(`/items/${draft.id}/days/${draft.occurrenceDay}`, {
           method: "PUT",
           body: JSON.stringify({
             kind: "override",
-            module: editing.module,
-            title: editing.title,
-            starts_at: editing.starts_at,
-            time_known: Boolean(editing.time_known),
+            module: draft.module,
+            title: draft.title,
+            starts_at: draft.starts_at,
+            time_known: Boolean(draft.time_known),
           }),
         });
       } else {
-        item = await call(`/items/${editing.id}`, {
+        const patch = {
+          module: draft.module,
+          title: draft.title,
+          starts_at: draft.starts_at,
+          time_known: Boolean(draft.time_known),
+          alert_minutes_before: allowsAlertMinutes(draft) ? draft.alert_minutes_before ?? null : null,
+          agenda_type: draft.module === "agenda" ? draft.agenda_type || null : null,
+          medical_for: draft.agenda_type === "medica" ? draft.medical_for || "self" : null,
+          medical_name: draft.agenda_type === "medica" ? draft.medical_name || null : null,
+          medical_place: draft.agenda_type === "medica" ? draft.medical_place || null : null,
+          medical_notes: draft.agenda_type === "medica" ? draft.medical_notes || null : null,
+          family_kind: draft.agenda_type === "familiar" ? draft.family_kind || "otro" : null,
+          family_for: draft.agenda_type === "familiar" ? draft.family_for || "self" : null,
+          family_name: draft.agenda_type === "familiar" ? draft.family_name || null : null,
+          family_place: draft.agenda_type === "familiar" ? draft.family_place || null : null,
+          family_notes: draft.agenda_type === "familiar" ? draft.family_notes || null : null,
+          leisure_kind: draft.agenda_type === "ocio" ? draft.leisure_kind || "otro" : null,
+          leisure_with: draft.agenda_type === "ocio" ? draft.leisure_with || "solo" : null,
+          leisure_name: draft.agenda_type === "ocio" ? draft.leisure_name || null : null,
+          leisure_place: draft.agenda_type === "ocio" ? draft.leisure_place || null : null,
+          leisure_notes: draft.agenda_type === "ocio" ? draft.leisure_notes || null : null,
+          reminder_kind: draft.agenda_type === "recordatorio" ? draft.reminder_kind || "otro" : null,
+          reminder_place: draft.agenda_type === "recordatorio" ? draft.reminder_place || null : null,
+          reminder_notes: draft.agenda_type === "recordatorio" ? draft.reminder_notes || null : null,
+          casa_kind: draft.module === "casa" ? draft.casa_kind || "otro" : null,
+          casa_place: draft.module === "casa" ? draft.casa_place || null : null,
+          casa_notes: draft.module === "casa" ? draft.casa_notes || null : null,
+          supply_kind: draft.module === "casa" && draft.casa_kind === "suministro" ? draft.supply_kind || "otro" : null,
+        };
+        if (draft.module === "habitos") {
+          patch.habit_role = draft.habit_role || "routine";
+          patch.habit_kind = draft.habit_kind || "ejercicio";
+          patch.habit_notes = draft.habit_notes ?? null;
+          if (overrides.repeats !== undefined) patch.repeats = overrides.repeats;
+        }
+        item = await call(`/items/${draft.id}`, {
           method: "PATCH",
-          body: JSON.stringify({
-            module: editing.module,
-            title: editing.title,
-            starts_at: editing.starts_at,
-            time_known: Boolean(editing.time_known),
-            alert_minutes_before: allowsAlertMinutes(editing)
-              ? editing.alert_minutes_before ?? null
-              : null,
-            agenda_type: editing.module === "agenda" ? editing.agenda_type || null : null,
-            medical_for: editing.agenda_type === "medica" ? editing.medical_for || "self" : null,
-            medical_name: editing.agenda_type === "medica" ? editing.medical_name || null : null,
-            medical_place: editing.agenda_type === "medica" ? editing.medical_place || null : null,
-            medical_notes: editing.agenda_type === "medica" ? editing.medical_notes || null : null,
-            family_kind: editing.agenda_type === "familiar" ? editing.family_kind || "otro" : null,
-            family_for: editing.agenda_type === "familiar" ? editing.family_for || "self" : null,
-            family_name: editing.agenda_type === "familiar" ? editing.family_name || null : null,
-            family_place: editing.agenda_type === "familiar" ? editing.family_place || null : null,
-            family_notes: editing.agenda_type === "familiar" ? editing.family_notes || null : null,
-            leisure_kind: editing.agenda_type === "ocio" ? editing.leisure_kind || "otro" : null,
-            leisure_with: editing.agenda_type === "ocio" ? editing.leisure_with || "solo" : null,
-            leisure_name: editing.agenda_type === "ocio" ? editing.leisure_name || null : null,
-            leisure_place: editing.agenda_type === "ocio" ? editing.leisure_place || null : null,
-            leisure_notes: editing.agenda_type === "ocio" ? editing.leisure_notes || null : null,
-            reminder_kind: editing.agenda_type === "recordatorio" ? editing.reminder_kind || "otro" : null,
-            reminder_place: editing.agenda_type === "recordatorio" ? editing.reminder_place || null : null,
-            reminder_notes: editing.agenda_type === "recordatorio" ? editing.reminder_notes || null : null,
-            casa_kind: editing.module === "casa" ? editing.casa_kind || "otro" : null,
-            casa_place: editing.module === "casa" ? editing.casa_place || null : null,
-            casa_notes: editing.module === "casa" ? editing.casa_notes || null : null,
-            supply_kind: editing.module === "casa" && editing.casa_kind === "suministro" ? editing.supply_kind || "otro" : null,
-          }),
+          body: JSON.stringify(patch),
         });
       }
       setItems(items.map((row) => (row.id === item.id ? item : row)));
@@ -390,7 +398,19 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
       setPendingAction({ item, mode: "edit" });
       return;
     }
-    setEditing({ ...baseItem(item), editScope: "all" });
+    const row = { ...baseItem(item), editScope: "all" };
+    if (isHabitRoutine(row)) {
+      const { mode, weekDays } = editorFromRepeats(row.repeats);
+      row.habitRepeatMode = mode;
+      row.habitWeekDays = weekDays;
+      row.habit_role = row.habit_role || "routine";
+      row.habit_kind = row.habit_kind || "ejercicio";
+    }
+    setEditing(row);
+  }
+
+  async function saveHabitEdit(overrides) {
+    await saveEdit({ ...overrides, title: editing.title });
   }
 
   function beginEditOne(item) {
@@ -464,7 +484,10 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   const googleDated = googleEvents.filter((event) => event.starts_at).map(asGoogle);
   const datedItems = items.filter((item) => item.starts_at);
   const byDate = (a, b) => new Date(a.starts_at) - new Date(b.starts_at);
-  const todayItems = [...expandItems(datedItems, todayStart, endOfDay(todayStart)), ...googleDated.filter((item) => dayKey(item.starts_at) === dayKey(todayStart))].sort(byDate);
+  const todayItems = [
+    ...expandItems(datedItems, todayStart, endOfDay(todayStart)).filter((item) => !isHabitRoutine(item)),
+    ...googleDated.filter((item) => dayKey(item.starts_at) === dayKey(todayStart)),
+  ].sort(byDate);
   const laterItems = [...expandItems(datedItems, tomorrow, horizon), ...googleDated.filter((item) => dayKey(item.starts_at) > dayKey(todayStart))].sort(byDate);
 
   return (
@@ -493,6 +516,14 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
       </aside>
       <main className="content">
       {error && <p className="error">{error}</p>}
+      {editing?.module === "habitos" && editing?.habit_role !== "log" && (
+        <HabitEditPanel
+          editing={editing}
+          setEditing={setEditing}
+          onSave={saveHabitEdit}
+          onCancel={() => setEditing(null)}
+        />
+      )}
       {screen === "entrada" && (
         <>
           <h1>Entrada</h1>
@@ -583,6 +614,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
                 onMarkDone={habitMarkDone}
                 startEdit={startEdit}
                 askRemove={askRemove}
+                editingId={editing?.module === "habitos" ? editing.id : null}
               />
             </div>
           ) : (
@@ -1354,6 +1386,9 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, 
       {items.map((item) => (
         <article className={[isEditingRow(item, editing) ? "card editor" : "card", item.status === "done" ? "done" : ""].filter(Boolean).join(" ")} key={item.occurrenceKey || item.id}>
           {isEditingRow(item, editing) ? (
+            editing.module === "habitos" && editing.habit_role !== "log" ? (
+              <p className="private">Edita el hábito en el panel de arriba.</p>
+            ) : (
             <>
               {editing.editScope === "one" && <p className="private">Solo cambias {dayLabel(editing.starts_at)}.</p>}
               <label>
@@ -1670,10 +1705,11 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, 
                 </>
               )}
               <div className="actions">
-                <button type="button" onClick={saveEdit}>Guardar cambio</button>
+                <button type="button" onClick={() => saveEdit()}>Guardar cambio</button>
                 <button type="button" className="secondary" onClick={() => setEditing(null)}>Cancelar</button>
               </div>
             </>
+            )
           ) : (
             <>
               {item.starts_at && <p className="when">{whenLabel(item)}</p>}

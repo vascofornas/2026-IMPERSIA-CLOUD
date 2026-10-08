@@ -1521,6 +1521,71 @@ a.connect {
   border-top: 1px solid var(--line);
 }
 
+.habitos-track-card.editing {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--habitos) 50%, transparent);
+}
+
+.habitos-track-cell.clickable {
+  cursor: pointer;
+  border: none;
+  font: inherit;
+  padding: 0;
+  width: 100%;
+}
+
+.habitos-track-today-hint {
+  margin: 10px 0 0;
+}
+
+.habitos-edit-panel {
+  margin-bottom: 20px;
+  border-color: color-mix(in srgb, var(--habitos) 35%, var(--line));
+}
+
+.habitos-edit-repeat {
+  border: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.habitos-edit-repeat legend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.habitos-edit-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.92rem;
+}
+
+.habitos-edit-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.habitos-edit-days button {
+  min-width: 2.5rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.habitos-edit-days button.on {
+  background: color-mix(in srgb, var(--habitos) 85%, #fff 15%);
+  border-color: var(--habitos);
+  color: #fff;
+}
+
 .habitos-row-kind {
   margin: 0 0 2px;
   font-size: 0.72rem;

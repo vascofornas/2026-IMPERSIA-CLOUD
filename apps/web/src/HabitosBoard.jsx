@@ -3,7 +3,6 @@ import { repeatLabel } from "./repeats.js";
 import HabitTracker from "./HabitTracker.jsx";
 import {
   dayKeyFromDate,
-  groupRoutinesByFranja,
   habitKindLabel,
   isRoutineDoneToday,
   latestSleepLine,
@@ -106,11 +105,11 @@ export default function HabitosBoard({
   onMarkDone,
   startEdit,
   askRemove,
+  editingId,
 }) {
   const dayKey = dayKeyFromDate(todayStart);
   const routines = routinesForToday(items, todayStart, expandItems, endOfDay);
   const hero = pickHeroRoutine(routines, dayKey);
-  const groups = groupRoutinesByFranja(routines);
   const logs = recentHabitLogs(items);
   const openRoutines = items.filter((item) => item.module === "habitos" && item.habit_role !== "log");
 
@@ -136,35 +135,14 @@ export default function HabitosBoard({
         </section>
       )}
 
-      <section className="habitos-section habitos-section-today">
-        <h2>Tareas de hoy</h2>
-        {!routines.length ? (
-          <p className="private">Hoy no toca ninguna rutina guardada.</p>
-        ) : (
-          groups.map((group) => (
-            <div className="habitos-franja" key={group.id}>
-              <h3>{group.label}</h3>
-              {group.items.map((item) => (
-                <RoutineRow
-                  key={item.id}
-                  item={item}
-                  dayKey={dayKey}
-                  onMarkDone={onMarkDone}
-                  onEdit={startEdit}
-                  onRemove={askRemove}
-                />
-              ))}
-            </div>
-          ))
-        )}
-      </section>
-
       {openRoutines.length > 0 && (
         <section className="habitos-section habitos-section-track">
           <h2>Seguimiento</h2>
           <p className="private habitos-section-lead">Últimos 7 días. Verde = hecho el día que tocaba. Gris = ese día no entraba en tu rutina.</p>
           <div className="habitos-track-grid">
-            {openRoutines.map((item) => (
+            {[...openRoutines]
+              .sort((a, b) => a.title.localeCompare(b.title, "es"))
+              .map((item) => (
               <HabitTracker
                 key={item.id}
                 item={item}
@@ -173,6 +151,8 @@ export default function HabitosBoard({
                 endOfDay={endOfDay}
                 onEdit={startEdit}
                 onRemove={askRemove}
+                onMarkDone={onMarkDone}
+                editingId={editingId}
               />
             ))}
           </div>
