@@ -634,3 +634,6 @@ OpenRouter probado en admin (health_test OK). Fase A v0.1: archive.py en Entrada
 
 8 de octubre de 2026, 12:40
 Modesto: en Entrada, Apuntar no da feedback mientras archiva (IA tarda). Botón «Archivando…», texto de espera, deshabilitar textarea y evitar doble clic. Suben web y dist.
+
+8 de octubre de 2026, 12:45
+Modesto elige afinar Casa (domestica vs mantenimiento). Prompt archive.py más claro y refino por palabras de limpieza vs reparación. Despliegue API.

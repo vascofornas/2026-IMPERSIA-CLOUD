@@ -58,10 +58,54 @@ Responde SOLO JSON válido con estas claves:
 
 Reglas:
 - Fechas y horas las resuelve el servidor; no las copies al title.
-- Comprar productos → casa.compra. Quedan N en casa → casa.inventario. Aspiradora, basura, lavadora → casa.domestica.
+- Comprar productos → casa.compra. Quedan N en casa → casa.inventario.
+- Casa.domestica = tareas del hogar rutinarias: limpiar, fregar, aspirar, cristales, basura, lavadora, platos, orden.
+- Casa.mantenimiento = arreglar averías, reparaciones, fontanero, electricista, cambiar pieza/filtro, pintar, caldera.
+- No uses mantenimiento para limpieza; no uses domestica para averías.
 - Cita con fecha → agenda (ocio/familiar/medica/recordatorio), no diario.
 - Reflexión o ánimo sin tarea → diario.
 - Trabajo/reuniones → reuniones o proyectos según contexto."""
+
+DOMESTICA_HINTS = (
+    "limpiar",
+    "fregar",
+    "aspir",
+    "basura",
+    "lavadora",
+    "platos",
+    "ordenar",
+    "cristal",
+    "polvo",
+    "hacer la cama",
+    "recoger",
+)
+MANTENIMIENTO_HINTS = (
+    "repar",
+    "arregl",
+    "avería",
+    "averia",
+    "fontaner",
+    "electric",
+    "filtro",
+    "caldera",
+    "pintar",
+    "gotera",
+    "fuga",
+    "averi",
+)
+
+
+def _refine_casa_kind(raw: str, kind: str | None) -> str:
+    low = raw.lower()
+    chore = any(h in low for h in DOMESTICA_HINTS)
+    repair = any(h in low for h in MANTENIMIENTO_HINTS)
+    if chore and not repair:
+        return "domestica"
+    if repair and not chore:
+        return "mantenimiento"
+    if kind in CASA_KINDS:
+        return kind
+    return "otro"
 
 
 def _token_set(text: str) -> set[str]:
@@ -115,7 +159,7 @@ def _clear_casa_fields(target: dict) -> None:
         target[key] = None
 
 
-def _apply_llm(baseline: dict, parsed: dict) -> dict:
+def _apply_llm(baseline: dict, parsed: dict, raw: str) -> dict:
     module = parsed.get("module")
     if module not in MODULES:
         raise ValueError("módulo no válido")
@@ -149,7 +193,9 @@ def _apply_llm(baseline: dict, parsed: dict) -> dict:
     elif module == "casa":
         _clear_agenda_fields(out)
         ck = parsed.get("casa_kind")
-        out["casa_kind"] = ck if ck in CASA_KINDS else (baseline.get("casa_kind") or "otro")
+        if ck not in CASA_KINDS:
+            ck = baseline.get("casa_kind")
+        out["casa_kind"] = _refine_casa_kind(raw_hint, ck if ck in CASA_KINDS else None)
         for key in ("casa_place", "casa_notes"):
             val = parsed.get(key)
             if val is not None and str(val).strip():
@@ -218,7 +264,7 @@ def archive(
             response_format={"type": "json_object"},
         )
         parsed = json.loads(content)
-        result = _apply_llm(baseline, parsed)
+        result = _apply_llm(baseline, parsed, raw)
         success = True
     except Exception as exc:
         error = str(exc)[:500]
