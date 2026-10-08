@@ -22,7 +22,11 @@ export default function HabitTracker({ item, todayStart, expandItems, endOfDay, 
         <div>
           <p className="habitos-track-kind">{kind}</p>
           <p className="habitos-track-title">{item.title}</p>
-          {schedule && <p className="habitos-track-schedule">{schedule}</p>}
+          {(schedule || item.habit_notes) && (
+            <p className="habitos-track-schedule">
+              {[schedule, item.habit_notes].filter(Boolean).join(" · ")}
+            </p>
+          )}
         </div>
         <div className="habitos-track-score" aria-label={`${doneCount} de ${dueCount} días cumplidos esta semana`}>
           <span className="habitos-track-score-num">

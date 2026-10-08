@@ -390,10 +390,14 @@ def habit_meta(raw: str, low: str) -> dict:
             "habit_kind": _habit_log_kind(low),
             "habit_notes": notes,
         }
+    notes = None
+    mins = re.search(r"\b(\d{1,3})\s*minutos?\b", low)
+    if mins and not re.search(r"\d+\s*minutos?\s*antes\b", low):
+        notes = f"{mins.group(1)} min"
     return {
         "habit_role": "routine",
         "habit_kind": _habit_routine_kind(low),
-        "habit_notes": None,
+        "habit_notes": notes,
     }
 
 
@@ -626,6 +630,25 @@ def weekday_indices_js(low: str) -> list[int]:
     return sorted(found)
 
 
+def _is_recurring_weekday_phrase(low: str) -> bool:
+    if re.search(r"\bcada\b", low):
+        return True
+    if re.search(rf"\blos?\s+{_DAY_TOKEN}", low):
+        return True
+    if re.search(rf"{_DAY_TOKEN}\s+y\s+{_DAY_TOKEN}", low):
+        return True
+    if re.search(rf"{_DAY_TOKEN}\s*,\s*{_DAY_TOKEN}", low):
+        return True
+    return False
+
+
+def _weekly_repeat_from_weekdays(low: str) -> str | None:
+    js_days = weekday_indices_js(low)
+    if len(js_days) >= 2 and _is_recurring_weekday_phrase(low):
+        return "weekly:" + ",".join(str(d) for d in js_days)
+    return None
+
+
 def _py_weekday_from_js(js: int) -> int:
     return 6 if js == 0 else js - 1
 
@@ -646,6 +669,18 @@ def entry_title(raw: str) -> str:
     text = raw
     text = re.sub(
         rf"\bcada\s+{_DAY_TOKEN}(?:\s*,\s*{_DAY_TOKEN})*(?:\s+y\s+{_DAY_TOKEN})?\b",
+        " ",
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(
+        rf"\blos?\s+{_DAY_TOKEN}(?:\s*,\s*{_DAY_TOKEN})*(?:\s+y\s+{_DAY_TOKEN})?\b",
+        " ",
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(
+        rf"\b{_DAY_TOKEN}\s+y\s+{_DAY_TOKEN}\b",
         " ",
         text,
         flags=re.IGNORECASE,
@@ -715,9 +750,15 @@ def _when(low: str) -> datetime | None:
     elif "hoy" in low:
         day = now.date()
     else:
-        js_days = weekday_indices_js(low) if re.search(r"\bcada\b", low) else []
-        if len(js_days) >= 2:
-            day = _next_day_among(low, now, js_days)
+        recurring_days = _weekly_repeat_from_weekdays(low)
+        if recurring_days:
+            day = None
+        elif re.search(r"\bcada\b", low):
+            js_days = weekday_indices_js(low)
+            if len(js_days) >= 2:
+                day = _next_day_among(low, now, js_days)
+            else:
+                day = None
         else:
             named = _weekday_number(low, now)
             if named is not None:
@@ -846,6 +887,9 @@ def _repeat(low: str) -> str | None:
         return "monthly"
     if re.search(r"\bcada semana\b", low):
         return "weekly"
+    weekly = _weekly_repeat_from_weekdays(low)
+    if weekly:
+        return weekly
     if re.search(r"\bcada\b", low):
         js_days = weekday_indices_js(low)
         if len(js_days) >= 2:
