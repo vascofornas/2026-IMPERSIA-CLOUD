@@ -184,6 +184,22 @@ def classify(text: str) -> dict:
             reminder_fields=rem,
             casa_fields={},
         )
+    if module == "agenda" and not medical and not family and not leisure and _is_personal_agenda_reminder(low):
+        rem = _reminder_meta(raw, low)
+        return _classify_result(
+            module,
+            _title(raw),
+            starts,
+            time_known,
+            repeats,
+            alert,
+            "recordatorio",
+            medical_fields={},
+            family_fields={},
+            leisure_fields={},
+            reminder_fields=rem,
+            casa_fields={},
+        )
     if casa:
         home = _casa_meta(raw, low)
         if home.get("casa_kind") == "suministro" and alert is None:
@@ -834,6 +850,17 @@ def _is_birthday_preparation(low: str) -> bool:
     ):
         return True
     return False
+
+
+def _is_personal_agenda_reminder(low: str) -> bool:
+    """Tarea personal con fecha (mañana, el lunes…), no cita ni celebración."""
+    if _is_birthday_preparation(low):
+        return True
+    if not _is_task(low) or not _has_agenda_when(low):
+        return False
+    if _is_medical(low) or _is_family(low) or _is_leisure(low):
+        return False
+    return True
 
 
 def _is_family(low: str) -> bool:

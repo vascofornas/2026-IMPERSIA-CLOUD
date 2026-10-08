@@ -6,7 +6,15 @@ import json
 import re
 from typing import Any
 
-from classify import MODULES, _is_birthday_preparation, _is_casa_supply, _supply_kind, classify, legacy_kind
+from classify import (
+    MODULES,
+    _is_birthday_preparation,
+    _is_casa_supply,
+    _is_personal_agenda_reminder,
+    _supply_kind,
+    classify,
+    legacy_kind,
+)
 import llm
 
 AGENDA_TYPES = {"medica", "familiar", "ocio", "recordatorio", "general"}
@@ -64,7 +72,8 @@ Reglas:
 - Casa.suministro = facturas y contratos de luz, agua, gas, internet (Iberdrola, Naturgy, Movistar…). Aunque haya fecha de vencimiento, sigue siendo casa.suministro, NO agenda.
 - ITV, seguro, IBI, impuestos, pasaporte → agenda.recordatorio (no suministro).
 - Cumpleaños, aniversario, boda, bautizo, comida familiar → agenda.familiar (no ocio).
-- Pensar/comprar/elegir regalo de cumpleaños con fecha (mañana, el lunes…) → agenda.general: tarea puntual, NO familiar ni «cada año».
+- Pensar/comprar/elegir regalo de cumpleaños con fecha (mañana, el lunes…) → agenda.recordatorio (tarea personal), NO familiar ni «cada año».
+- «Tengo que / hay que …» con mañana o día concreto → agenda.recordatorio, no cita general.
 - Plan con amigos/pareja (cena, concierto, quedar) → agenda.ocio.
 - Cada lunes/día + yoga, gimnasio, meditar, correr → habitos (no ocio).
 - Comida o reunión de empresa/trabajo con fecha → reuniones.
@@ -220,8 +229,10 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
         _clear_casa_fields(result)
         return result
 
-    if _is_birthday_preparation(low) and result.get("module") == "agenda":
-        result["agenda_type"] = "general"
+    if _is_personal_agenda_reminder(low) and result.get("module") == "agenda":
+        result["agenda_type"] = "recordatorio"
+        if not result.get("reminder_kind"):
+            result["reminder_kind"] = "otro"
         for key in (
             "family_kind",
             "family_for",
