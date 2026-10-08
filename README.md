@@ -20,6 +20,7 @@ Flutter no se ejecuta en el VPS. Las apps llaman a la API por HTTPS.
 - [Definición de producto](docs/01-definicion-de-producto.md)
 - [Arquitectura en IONOS](docs/02-arquitectura.md)
 - [Ruta de desarrollo](docs/03-roadmap.md)
+- [Archivo inteligente](docs/04-archivo-inteligente.md) — clasificación con modelo y aprendizaje por correcciones
 
 El PDF `impersia 2026.pdf` es la visión de partida (PRD 1.0). Estos documentos la convierten en un plan construible.
 

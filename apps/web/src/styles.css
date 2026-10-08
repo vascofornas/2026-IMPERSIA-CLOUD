@@ -1254,3 +1254,159 @@ a.connect {
   }
   main.content { padding: 24px 20px 64px; }
 }
+
+.module-habitos {
+  max-width: 44rem;
+}
+
+.module-habitos .lead {
+  max-width: 36rem;
+}
+
+.habitos-board,
+.hoy-bienestar {
+  --habitos: #4d7c0f;
+}
+
+.habitos-board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.habitos-board h2 {
+  margin-top: 24px;
+  color: var(--habitos);
+}
+
+.habitos-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  flex: none;
+}
+
+.habitos-check-static {
+  border-color: transparent;
+  visibility: hidden;
+}
+
+.habitos-hero {
+  margin: 20px 0 28px;
+  padding: 20px 22px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--habitos) 12%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--habitos) 28%, var(--line));
+}
+
+.habitos-hero-compact {
+  margin: 0 0 16px;
+  padding: 16px 18px;
+}
+
+.habitos-hero-kicker {
+  margin: 0 0 6px;
+  font-size: 0.85rem;
+  color: var(--habitos);
+  font-weight: 600;
+}
+
+.habitos-hero-title {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+  font-weight: 650;
+}
+
+.habitos-hero button {
+  margin-top: 12px;
+  background: var(--habitos);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.habitos-franja h3 {
+  margin: 16px 0 8px;
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+.habitos-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.habitos-row.done .title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.habitos-check {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 2px solid var(--habitos);
+  background: transparent;
+  color: var(--habitos);
+  font-weight: 700;
+  cursor: pointer;
+  flex: none;
+}
+
+.habitos-row.done .habitos-check {
+  background: var(--habitos);
+  color: #fff;
+}
+
+.habitos-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.habitos-track-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.habitos-dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.habitos-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+.habitos-dots span.on {
+  background: var(--habitos);
+}
+
+.habitos-logs {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.habitos-logs li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.habitos-sleep-line {
+  margin: 8px 0 0;
+}
+
+.habitos-all {
+  margin-top: 32px;
+}

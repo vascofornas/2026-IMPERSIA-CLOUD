@@ -679,3 +679,18 @@ Correo de aviso: typo «Vieres» → «Viernes» en alerts.py. Despliegue API.
 
 8 de octubre de 2026, 15:15
 Modesto confirma que va mucho mejor. Cierre acordado del bloque eje A / Agenda (citas, recordatorios, familiar, ocio, avisos) y eje A / Casa (compra, inventario, domestica, mantenimiento, suministro). docs/06 actualizado. No congelar Fase 1 entera (archivado sigue aprendiendo); sí congelar ronda de pruebas A en estos dos módulos.
+
+8 de octubre de 2026, 15:45
+Siguiente bloque Hábitos. Modesto: pantalla con aspecto propio, no clonar Agenda/Casa. docs/07-habitos.md (metáfora ritmo vs calendario vs hogar, HabitosBoard, bloque Hoy, checks del día).
+
+8 de octubre de 2026, 16:00
+Alineación PDF: Hábitos = rutinas diarias + seguimiento + registro salud/sueño (no solo checks). docs/07, 01, 04 y structure.js. habit_role routine|log; Diario vs registro sueño.
+
+8 de octubre de 2026, 16:15
+Modesto pasa referencia UI bienestar (hero rutina, tareas hoy, sueño/pasos). docs/07: mapa qué adoptamos (franjas mañana/tarde/noche, hero, checklist) vs Impersia (Entrada sin onboarding, sin tab Salud aparte, Hoy compartido).
+
+8 de octubre de 2026, 17:00
+Hábitos v1 en código (sin desplegar aún): migración 013 (habit_role, habit_kind, habit_notes), API insert/patch/excepción «done» por día, archivado rutina vs registro sueño/salud, HabitosBoard + bloque Bienestar en Hoy, build web. Pendiente: commit, push, migración en VPS y pull.
+
+8 de octubre de 2026, 17:25
+Prueba Modesto: «cada martes, jueves y viernes… remo en casa» → título roto y módulo Casa. Causas: entry_title quitaba días uno a uno; «en casa» ganaba a Hábitos. Corrección: lista de días en bloque, repeats weekly:2,4,5, prioridad cada→habitos, título limpio.

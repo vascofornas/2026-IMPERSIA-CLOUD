@@ -22,7 +22,7 @@ from admin_events import router as admin_events_router
 from admin_llm import router as admin_llm_router
 import archive
 import dedup
-from classify import MODULES, classify, compra_store_name, legacy_kind, split_compra_titles
+from classify import HABIT_KINDS, HABIT_ROLES, MODULES, classify, compra_store_name, legacy_kind, split_compra_titles
 import events
 import llm
 
@@ -58,7 +58,9 @@ ITEM_SELECT = """
     family_kind, family_for, family_name, family_place, family_notes,
     leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
     reminder_kind, reminder_place, reminder_notes,
-    casa_kind, casa_place, casa_notes, supply_kind, shopping_list_id, status, privacy, created_at
+    casa_kind, casa_place, casa_notes, supply_kind,
+    habit_role, habit_kind, habit_notes,
+    shopping_list_id, status, privacy, created_at
 """
 
 
@@ -201,6 +203,9 @@ class ItemPatch(BaseModel):
     casa_place: str | None = None
     casa_notes: str | None = None
     supply_kind: str | None = None
+    habit_role: str | None = None
+    habit_kind: str | None = None
+    habit_notes: str | None = None
 
 
 class StatusIn(BaseModel):
@@ -617,8 +622,10 @@ def _insert_item(cur, user_id: str, capture_id: str, suggestion: dict, *, title:
              family_kind, family_for, family_name, family_place, family_notes,
              leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
              reminder_kind, reminder_place, reminder_notes,
-             casa_kind, casa_place, casa_notes, supply_kind, shopping_list_id, privacy, archived_source)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private', %s)
+             casa_kind, casa_place, casa_notes, supply_kind,
+             habit_role, habit_kind, habit_notes,
+             shopping_list_id, privacy, archived_source)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private', %s)
         RETURNING {ITEM_SELECT}
         """,
         (
@@ -654,6 +661,9 @@ def _insert_item(cur, user_id: str, capture_id: str, suggestion: dict, *, title:
             casa_place if casa_place is not None else suggestion.get("casa_place"),
             suggestion.get("casa_notes"),
             suggestion.get("supply_kind"),
+            suggestion.get("habit_role"),
+            suggestion.get("habit_kind"),
+            suggestion.get("habit_notes"),
             shopping_list_id,
             suggestion.get("source"),
         ),
@@ -930,6 +940,19 @@ def _agenda_fields(body: ItemPatch) -> dict:
     return empty
 
 
+def _habit_fields(body: ItemPatch) -> dict:
+    empty = {"habit_role": None, "habit_kind": None, "habit_notes": None}
+    if body.module != "habitos":
+        return empty
+    role = body.habit_role if body.habit_role in HABIT_ROLES else "routine"
+    kind = body.habit_kind if body.habit_kind in HABIT_KINDS else "otro"
+    return {
+        "habit_role": role,
+        "habit_kind": kind,
+        "habit_notes": (body.habit_notes or "").strip() or None,
+    }
+
+
 def _casa_fields(body: ItemPatch) -> dict:
     empty = {"casa_kind": None, "casa_place": None, "casa_notes": None, "supply_kind": None}
     if body.module != "casa":
@@ -953,6 +976,7 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
         raise HTTPException(status_code=422, detail="Ese módulo no existe")
     extra = _agenda_fields(body)
     casa = _casa_fields(body)
+    habit = _habit_fields(body)
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -984,7 +1008,8 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     family_name = %s, family_place = %s, family_notes = %s, leisure_kind = %s,
                     leisure_with = %s, leisure_name = %s, leisure_place = %s, leisure_notes = %s,
                     reminder_kind = %s, reminder_place = %s, reminder_notes = %s,
-                    casa_kind = %s, casa_place = %s, casa_notes = %s, supply_kind = %s
+                    casa_kind = %s, casa_place = %s, casa_notes = %s, supply_kind = %s,
+                    habit_role = %s, habit_kind = %s, habit_notes = %s
                 WHERE id = %s AND user_id = %s
                 RETURNING {ITEM_SELECT}
                 """,
@@ -1018,6 +1043,9 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     casa["casa_place"],
                     casa["casa_notes"],
                     casa["supply_kind"],
+                    habit["habit_role"],
+                    habit["habit_kind"],
+                    habit["habit_notes"],
                     item_id,
                     user_id,
                 ),
@@ -1073,8 +1101,8 @@ def patch_item_status(item_id: str, body: StatusIn, request: Request):
 @app.put("/items/{item_id}/days/{day}")
 def put_item_day(item_id: str, day: str, body: ExceptionIn, request: Request):
     user_id = current_user(request)
-    if body.kind not in {"skip", "override"}:
-        raise HTTPException(status_code=422, detail="La excepción tiene que ser omitir o cambiar")
+    if body.kind not in {"skip", "override", "done"}:
+        raise HTTPException(status_code=422, detail="La excepción tiene que ser omitir, cambiar o hecho")
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
         raise HTTPException(status_code=422, detail="El día no es válido")
     with db() as conn:
@@ -1094,6 +1122,17 @@ def put_item_day(item_id: str, day: str, body: ExceptionIn, request: Request):
                     INSERT INTO item_exceptions (item_id, user_id, day, kind)
                     VALUES (%s, %s, %s, 'skip')
                     ON CONFLICT (item_id, day) DO UPDATE SET kind = 'skip',
+                        title = NULL, module = NULL, axis = NULL, item_kind = NULL,
+                        starts_at = NULL, time_known = NULL
+                    """,
+                    (item_id, user_id, day),
+                )
+            elif body.kind == "done":
+                cur.execute(
+                    """
+                    INSERT INTO item_exceptions (item_id, user_id, day, kind)
+                    VALUES (%s, %s, %s, 'done')
+                    ON CONFLICT (item_id, day) DO UPDATE SET kind = 'done',
                         title = NULL, module = NULL, axis = NULL, item_kind = NULL,
                         starts_at = NULL, time_known = NULL
                     """,
@@ -1128,6 +1167,27 @@ def put_item_day(item_id: str, day: str, body: ExceptionIn, request: Request):
                         bool(body.time_known),
                     ),
                 )
+            item = _fetch_item(cur, item_id, user_id)
+        conn.commit()
+    if not item:
+        raise HTTPException(status_code=404, detail="No está en tu cuenta")
+    return item
+
+
+@app.delete("/items/{item_id}/days/{day}")
+def delete_item_day(item_id: str, day: str, request: Request):
+    user_id = current_user(request)
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
+        raise HTTPException(status_code=422, detail="El día no es válido")
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                DELETE FROM item_exceptions
+                WHERE item_id = %s AND user_id = %s AND day = %s
+                """,
+                (item_id, user_id, day),
+            )
             item = _fetch_item(cur, item_id, user_id)
         conn.commit()
     if not item:
@@ -1288,6 +1348,9 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         "casa_place": row.get("casa_place"),
         "casa_notes": row.get("casa_notes"),
         "supply_kind": row.get("supply_kind"),
+        "habit_role": row.get("habit_role"),
+        "habit_kind": row.get("habit_kind"),
+        "habit_notes": row.get("habit_notes"),
         "shopping_list_id": str(row["shopping_list_id"]) if row.get("shopping_list_id") else None,
         "status": row.get("status") or "open",
         "privacy": row["privacy"],

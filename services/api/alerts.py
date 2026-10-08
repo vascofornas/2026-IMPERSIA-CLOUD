@@ -144,7 +144,7 @@ def expand_item(item: dict, exceptions: list, from_dt: datetime, to_dt: datetime
         return [occ] if occ else []
     if item["repeats"] == "daily":
         return _daily(item, exceptions, from_dt, to_dt)
-    if item["repeats"] == "weekly":
+    if item["repeats"] == "weekly" or (item["repeats"] or "").startswith("weekly:"):
         return _weekly(item, exceptions, from_dt, to_dt)
     if item["repeats"] == "monthly":
         return _monthly(item, exceptions, from_dt, to_dt)

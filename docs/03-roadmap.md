@@ -44,6 +44,8 @@ Duración orientativa: 2 semanas.
 
 **Listo cuando:** diez frases de prueba quedan archivadas solas en su módulo, y una clasificación mala se cambia después sin volver a escribir la frase.
 
+**Nota (oct 2026):** esta fase no se considera cerrada mientras el archivado dependa solo de reglas en `classify.py`. El siguiente hito es [Archivo inteligente](04-archivo-inteligente.md) (modelo + correcciones). Las pantallas de Agenda y Casa siguen valiendo; no se añaden más parches de palabras.
+
 ## Fase 2 — Hoy en la web app
 
 Duración orientativa: 2 o 3 semanas.

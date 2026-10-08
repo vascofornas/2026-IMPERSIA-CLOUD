@@ -8,6 +8,8 @@ from typing import Any
 
 from classify import (
     LITERAL_DATE,
+    HABIT_KINDS,
+    HABIT_ROLES,
     MODULES,
     _is_birthday_preparation,
     _is_casa_supply,
@@ -15,7 +17,9 @@ from classify import (
     _supply_kind,
     classify,
     entry_title,
+    habit_meta,
     legacy_kind,
+    looks_like_habit_log,
     split_compra_titles,
 )
 import llm
@@ -56,6 +60,7 @@ AGENDA_FIELD_KEYS = (
 )
 
 CASA_FIELD_KEYS = ("casa_kind", "casa_place", "casa_notes", "supply_kind")
+HABIT_FIELD_KEYS = ("habit_role", "habit_kind", "habit_notes")
 
 SYSTEM_PROMPT = """Eres el archivador de Impersia OS. Clasifica la frase del usuario en español.
 
@@ -79,6 +84,8 @@ Reglas:
 - «Tengo que / hay que …» con mañana o día concreto → agenda.recordatorio, no cita general.
 - Plan con amigos/pareja (cena, concierto, quedar) → agenda.ocio.
 - Cada lunes/día + yoga, gimnasio, meditar, correr → habitos (no ocio).
+- habit_role: routine (repetición) | log (sueño, peso, tensión puntual). habit_kind: rutina|ejercicio|meditacion|lectura|sueno|salud|otro.
+- «Anoche dormí N horas», peso, tensión → habitos log (no diario si es dato).
 - Comida o reunión de empresa/trabajo con fecha → reuniones.
 - Cita médica → agenda.medica.
 - Reflexión o ánimo sin tarea → diario.
@@ -229,11 +236,26 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
             result["alert_minutes_before"] = 10080
         return result
 
+    if looks_like_habit_log(low):
+        result["module"] = "habitos"
+        _sync_module_fields(result)
+        _clear_agenda_fields(result)
+        _clear_casa_fields(result)
+        _apply_habit_fields(result, raw)
+        return result
+
     if _looks_like_habit(low):
         result["module"] = "habitos"
         _sync_module_fields(result)
         _clear_agenda_fields(result)
         _clear_casa_fields(result)
+        _apply_habit_fields(result, raw)
+        return result
+
+    if result.get("module") == "habitos":
+        _clear_agenda_fields(result)
+        _clear_casa_fields(result)
+        _apply_habit_fields(result, raw)
         return result
 
     if _is_personal_agenda_reminder(low) and result.get("module") == "agenda":
@@ -355,6 +377,22 @@ def _clear_casa_fields(target: dict) -> None:
         target[key] = None
 
 
+def _clear_habit_fields(target: dict) -> None:
+    for key in HABIT_FIELD_KEYS:
+        target[key] = None
+
+
+def _apply_habit_fields(result: dict, raw: str) -> None:
+    meta = habit_meta(raw, raw.lower())
+    role = meta.get("habit_role")
+    kind = meta.get("habit_kind")
+    result["habit_role"] = role if role in HABIT_ROLES else "routine"
+    result["habit_kind"] = kind if kind in HABIT_KINDS else "otro"
+    result["habit_notes"] = meta.get("habit_notes")
+    if result["habit_role"] == "log":
+        result["repeats"] = None
+
+
 def _birthday_context_note(raw: str) -> str | None:
     match = re.search(r",?\s*que cumple[^.]+", raw, flags=re.IGNORECASE)
     if match:
@@ -451,6 +489,7 @@ def _apply_llm_spec(baseline: dict, parsed: dict, title_raw: str) -> dict:
 
     if module == "agenda":
         _clear_casa_fields(out)
+        _clear_habit_fields(out)
         at = parsed.get("agenda_type")
         out["agenda_type"] = at if at in AGENDA_TYPES else (baseline.get("agenda_type") or "general")
         for key in AGENDA_FIELD_KEYS:
@@ -467,6 +506,7 @@ def _apply_llm_spec(baseline: dict, parsed: dict, title_raw: str) -> dict:
             out["reminder_kind"] = parsed["reminder_kind"]
     elif module == "casa":
         _clear_agenda_fields(out)
+        _clear_habit_fields(out)
         ck = parsed.get("casa_kind")
         if ck not in CASA_KINDS:
             ck = baseline.get("casa_kind")
@@ -477,9 +517,25 @@ def _apply_llm_spec(baseline: dict, parsed: dict, title_raw: str) -> dict:
                 out[key] = str(val).strip()[:200]
         if parsed.get("supply_kind") in SUPPLY_KIND:
             out["supply_kind"] = parsed["supply_kind"]
+    elif module == "habitos":
+        _clear_agenda_fields(out)
+        _clear_casa_fields(out)
+        out["agenda_type"] = None
+        role = parsed.get("habit_role")
+        kind = parsed.get("habit_kind")
+        if role in HABIT_ROLES:
+            out["habit_role"] = role
+        if kind in HABIT_KINDS:
+            out["habit_kind"] = kind
+        val = parsed.get("habit_notes")
+        if val is not None and str(val).strip():
+            out["habit_notes"] = str(val).strip()[:200]
+        if not out.get("habit_role"):
+            _apply_habit_fields(out, title_raw)
     else:
         _clear_agenda_fields(out)
         _clear_casa_fields(out)
+        _clear_habit_fields(out)
         out["agenda_type"] = None
 
     return out

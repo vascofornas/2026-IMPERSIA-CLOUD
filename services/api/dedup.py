@@ -14,6 +14,7 @@ NOTE_FIELDS = (
     "leisure_notes",
     "reminder_notes",
     "casa_notes",
+    "habit_notes",
 )
 
 
@@ -159,7 +160,9 @@ def find_duplicate(cur, user_id: str, suggestion: dict, *, title: str) -> dict |
                family_kind, family_for, family_name, family_place, family_notes,
                leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
                reminder_kind, reminder_place, reminder_notes,
-               casa_kind, casa_place, casa_notes, supply_kind, shopping_list_id, status, privacy, created_at
+               casa_kind, casa_place, casa_notes, supply_kind,
+               habit_role, habit_kind, habit_notes,
+               shopping_list_id, status, privacy, created_at
         FROM items
         WHERE user_id = %s AND module = %s AND status = 'open'
         ORDER BY created_at DESC
@@ -215,7 +218,9 @@ def merge_existing(
                   family_kind, family_for, family_name, family_place, family_notes,
                   leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
                   reminder_kind, reminder_place, reminder_notes,
-                  casa_kind, casa_place, casa_notes, supply_kind, shopping_list_id, status, privacy, created_at
+                  casa_kind, casa_place, casa_notes, supply_kind,
+                  habit_role, habit_kind, habit_notes,
+                  shopping_list_id, status, privacy, created_at
         """,
         params,
     )

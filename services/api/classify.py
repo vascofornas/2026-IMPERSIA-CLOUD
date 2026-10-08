@@ -56,6 +56,31 @@ WEEKDAYS = {
     "domingo": 6,
 }
 
+# Índices como Date.getDay() en JS (0=domingo, 1=lunes…)
+WEEKDAY_JS = {
+    "lunes": 1,
+    "martes": 2,
+    "miércoles": 3,
+    "miercoles": 3,
+    "jueves": 4,
+    "viernes": 5,
+    "sábado": 6,
+    "sabado": 6,
+    "domingo": 0,
+}
+
+WEEKDAY_NAME = (
+    "domingo",
+    "lunes",
+    "martes",
+    "miércoles",
+    "jueves",
+    "viernes",
+    "sábado",
+)
+
+_DAY_TOKEN = r"(?:lunes|martes|mi[eé]rcoles|miercoles|jueves|viernes|s[aá]bado|sabado|domingo)"
+
 MONTHS = {
     "enero": 1,
     "febrero": 2,
@@ -221,6 +246,9 @@ def classify(text: str) -> dict:
             reminder_fields={},
             casa_fields=home,
         )
+    habit_fields = habit_meta(raw, low) if module == "habitos" else {}
+    if module == "habitos" and habit_fields.get("habit_role") == "log":
+        repeats = None
     return _classify_result(
         module,
         entry_title(raw),
@@ -234,6 +262,7 @@ def classify(text: str) -> dict:
         leisure_fields={},
         reminder_fields={},
         casa_fields={},
+        habit_fields=habit_fields,
     )
 
 
@@ -250,7 +279,9 @@ def _classify_result(
     leisure_fields: dict,
     reminder_fields: dict,
     casa_fields: dict,
+    habit_fields: dict | None = None,
 ) -> dict:
+    habit = habit_fields or {}
     return {
         "axis": MODULES[module],
         "module": module,
@@ -282,6 +313,9 @@ def _classify_result(
         "casa_place": casa_fields.get("casa_place"),
         "casa_notes": casa_fields.get("casa_notes"),
         "supply_kind": casa_fields.get("supply_kind"),
+        "habit_role": habit.get("habit_role"),
+        "habit_kind": habit.get("habit_kind"),
+        "habit_notes": habit.get("habit_notes"),
         "source": "rules",
     }
 
@@ -292,6 +326,72 @@ def legacy_kind(module: str) -> str:
     if module in {"proyectos", "casa", "habitos"}:
         return "task"
     return "note"
+
+
+HABIT_ROLES = {"routine", "log"}
+HABIT_KINDS = {"rutina", "ejercicio", "meditacion", "lectura", "sueno", "salud", "otro"}
+
+
+def looks_like_habit_log(low: str) -> bool:
+    if re.search(r"\banoche\b", low) and re.search(r"dorm", low):
+        return True
+    if re.search(r"dorm[ií]", low) and re.search(r"\d+\s*h", low):
+        return True
+    if re.search(r"\bpeso\b", low) and re.search(r"\d", low):
+        return True
+    if "tensión" in low or "tension" in low:
+        return True
+    return False
+
+
+def _habit_routine_kind(low: str) -> str:
+    if any(w in low for w in ("meditar", "meditación", "meditacion", "respiración", "respiracion")):
+        return "meditacion"
+    if any(
+        w in low
+        for w in (
+            "correr",
+            "gym",
+            "gimnasio",
+            "yoga",
+            "caminar",
+            "ejercicio",
+            "entrenar",
+            "remo",
+            "máquina",
+            "maquina",
+        )
+    ):
+        return "ejercicio"
+    if any(w in low for w in ("leer", "lectura", "libro")):
+        return "lectura"
+    return "rutina"
+
+
+def _habit_log_kind(low: str) -> str:
+    if re.search(r"dorm", low):
+        return "sueno"
+    if re.search(r"\bpeso\b", low) or "tensión" in low or "tension" in low:
+        return "salud"
+    return "otro"
+
+
+def habit_meta(raw: str, low: str) -> dict:
+    if looks_like_habit_log(low):
+        notes = None
+        m = re.search(r"(\d+(?:[.,]\d+)?)\s*h(?:oras)?", low)
+        if m and "dorm" in low:
+            notes = f"{m.group(1).replace(',', '.')} h"
+        return {
+            "habit_role": "log",
+            "habit_kind": _habit_log_kind(low),
+            "habit_notes": notes,
+        }
+    return {
+        "habit_role": "routine",
+        "habit_kind": _habit_routine_kind(low),
+        "habit_notes": None,
+    }
 
 
 CASA_KINDS = {
@@ -414,6 +514,8 @@ def _is_stock_count(low: str) -> bool:
 
 
 def _is_casa(low: str) -> bool:
+    if re.search(r"\bcada\b", low):
+        return False
     if re.search(r"\b(?:mi|el|en el|en la|a toda la|por toda la|toda la)\s+casa\b|\ben casa\b", low):
         return True
     if _is_stock_count(low):
@@ -463,10 +565,10 @@ def _module(low: str) -> str:
         return "viajes"
     if re.search(r"\bagenda\b", low):
         return "agenda"
-    if _is_casa(low):
-        return "casa"
     if re.search(r"\bcada\b", low):
         return "habitos"
+    if _is_casa(low):
+        return "casa"
     if any(word in low for word in ("hábito", "habito", "ejercicio", "meditación", "meditacion", "rutina")):
         return "habitos"
     if _is_leisure(low) and _has_agenda_when(low):
@@ -500,6 +602,8 @@ def _module(low: str) -> str:
         )
     ):
         return "agenda"
+    if looks_like_habit_log(low):
+        return "habitos"
     if any(word in low for word in ("he dormido", "me siento", "diario", "ánimo", "animo")):
         return "diario"
     if re.search(r"\ba las \d", low) or _explicit_day(low):
@@ -509,9 +613,44 @@ def _module(low: str) -> str:
     return "diario"
 
 
+def weekday_indices_js(low: str) -> list[int]:
+    found: list[int] = []
+    for name, index in WEEKDAY_JS.items():
+        if re.search(rf"\b{name}\b", low) and index not in found:
+            found.append(index)
+    return sorted(found)
+
+
+def _py_weekday_from_js(js: int) -> int:
+    return 6 if js == 0 else js - 1
+
+
+def _next_day_among(low: str, now: datetime, js_days: list[int]):
+    if not js_days:
+        return None
+    allowed = {_py_weekday_from_js(d) for d in js_days}
+    for offset in range(8):
+        candidate = now.date() + timedelta(days=offset)
+        if candidate.weekday() in allowed:
+            return candidate
+    return None
+
+
 def entry_title(raw: str) -> str:
     """Título de entrada: texto original quitando solo cuándo/cada (fechas literales se conservan)."""
     text = raw
+    text = re.sub(
+        rf"\bcada\s+{_DAY_TOKEN}(?:\s*,\s*{_DAY_TOKEN})*(?:\s+y\s+{_DAY_TOKEN})?\b",
+        " ",
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(
+        rf"^(?:{_DAY_TOKEN}\s*(?:,\s*(?:y\s+)?)?)+",
+        " ",
+        text,
+        flags=re.IGNORECASE,
+    )
     cuts = (
         r"\bpasado mañana\b",
         r"\bpasado manana\b",
@@ -521,7 +660,8 @@ def entry_title(raw: str) -> str:
         r"\bpor la manana\b",
         r"\bde la mañana\b",
         r"\bde la manana\b",
-        r"\bcada\s+(?:d[ií]a|semana|mes|a[nñ]o|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\b",
+        r"\bcada\s+(?:d[ií]a|semana|mes|a[nñ]o)\b",
+        rf"\b{_DAY_TOKEN}\b",
         r"\btodos los d[ií]as\b",
         r"\btodos los a[nñ]os\b",
         r"\bpor la tarde\b",
@@ -534,7 +674,7 @@ def entry_title(raw: str) -> str:
         r"\b\d{1,2}\s+de la (?:tarde|noche|mañana|manana)\b",
         r"\ba las \d{1,2}(?::\d{2})?\b",
         r"\b\d{1,2}:\d{2}\b",
-        r"\b(?:el |la )?(?:lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo)(?: \d{1,2})?\b",
+        rf"\b(?:el |la )?{_DAY_TOKEN}(?: \d{{1,2}})?\b",
         r"\bmañana\b",
         r"\bmanana\b",
         r"\bhoy\b",
@@ -545,7 +685,8 @@ def entry_title(raw: str) -> str:
     for pattern in cuts:
         text = re.sub(pattern, " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\s+,", ",", text)
-    text = " ".join(text.split()).strip(" .;:-")
+    text = re.sub(r"^y\s+", "", text, flags=re.IGNORECASE)
+    text = " ".join(text.split()).strip(" .;:-,")
     if not text:
         text = raw.strip()
     if not text:
@@ -569,19 +710,23 @@ def _when(low: str) -> datetime | None:
     elif "hoy" in low:
         day = now.date()
     else:
-        named = _weekday_number(low, now)
-        if named is not None:
-            day = named
+        js_days = weekday_indices_js(low) if re.search(r"\bcada\b", low) else []
+        if len(js_days) >= 2:
+            day = _next_day_among(low, now, js_days)
         else:
-            for name, index in WEEKDAYS.items():
-                if re.search(rf"\b{name}\b", low):
-                    ahead = (index - now.weekday()) % 7
-                    if ahead == 0:
-                        ahead = 7
-                    day = (now + timedelta(days=ahead)).date()
-                    break
-            if day is None:
-                day = _literal_day(low, now)
+            named = _weekday_number(low, now)
+            if named is not None:
+                day = named
+            else:
+                for name, index in WEEKDAYS.items():
+                    if re.search(rf"\b{name}\b", low):
+                        ahead = (index - now.weekday()) % 7
+                        if ahead == 0:
+                            ahead = 7
+                        day = (now + timedelta(days=ahead)).date()
+                        break
+                if day is None:
+                    day = _literal_day(low, now)
     hour, minute = _clock(low)
     time_known = hour is not None
     if time_known:
@@ -660,12 +805,20 @@ def _is_task(low: str) -> bool:
 def _repeat(low: str) -> str | None:
     if re.search(r"\bcada d[ií]a\b", low) or re.search(r"\btodos los d[ií]as\b", low):
         return "daily"
+    if re.search(r"\bcada ma[nñ]ana\b", low) or re.search(r"\bcada noche\b", low) or re.search(r"\bcada tarde\b", low):
+        return "daily"
     if re.search(r"\bcada a[nñ]o\b", low) or re.search(r"\btodos los a[nñ]os\b", low):
         return "yearly"
     if re.search(r"\bcada mes\b", low):
         return "monthly"
-    if re.search(r"\bcada semana\b", low) or re.search(r"\bcada\b", low):
+    if re.search(r"\bcada semana\b", low):
         return "weekly"
+    if re.search(r"\bcada\b", low):
+        js_days = weekday_indices_js(low)
+        if len(js_days) >= 2:
+            return "weekly:" + ",".join(str(d) for d in js_days)
+        if len(js_days) == 1:
+            return "weekly"
     return None
 
 

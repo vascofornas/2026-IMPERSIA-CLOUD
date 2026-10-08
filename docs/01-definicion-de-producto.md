@@ -7,7 +7,7 @@ El problema que resuelve es la fragmentación: notas, agenda, tareas, diario, li
 ## Cómo se usa
 
 1. La persona escribe, y más adelante dicta o adjunta una imagen, en un único campo.
-2. La IA, en el servidor, archiva esa entrada en el eje y el módulo que le corresponden, en privado.
+2. La IA, en el servidor, archiva esa entrada en el eje y el módulo que le corresponden, en privado. El motor es híbrido: reglas solo para fechas y repeticiones; el modelo para módulo, subtipo y campos; las correcciones de la persona enseñan al sistema (véase [Archivo inteligente](04-archivo-inteligente.md)).
 3. Aparece ya guardada en su sitio.
 4. Más tarde la persona puede editar lo que haga falta: el módulo, el título, la fecha o la privacidad. También puede borrar una entrada, con confirmación.
 
@@ -34,6 +34,8 @@ La **lista de la compra** es una lista activa por cuenta: «comprar leche y pan�
 El **inventario personal** es lo contrario: lo que ya hay en casa (despensa, congelador, repuestos). «Quedan 2 cartuchos en la despensa» guarda producto, cantidad y dónde. No es lo que falta comprar; eso sigue yendo a la lista de la compra. Más adelante, un aviso de stock bajo podrá pasar a la lista con un clic.
 
 Las **tareas del hogar** (basuras, lavadora, limpieza…) se ven en checklist: marcar hecho, horario o repetición visible si la frase lo trae, hechas colapsadas como en la compra.
+
+Dentro de **Bienestar y Hábitos** (PDF; módulo `habitos`), tres piezas: **rutinas diarias** (ejercicio, meditación, lectura… con repetición y check del día), **seguimiento** (cómo vas cumpliendo en los últimos días) y **registro de salud/sueño** (anotaciones puntuales: horas dormidas, peso, tensión…). La pantalla no copia Agenda ni Casa: prioriza frecuencia, checks y un registro reciente. Reflexión de ánimo sin dato («he dormido mal») sigue yendo al **Diario**, no aquí. Detalle en [07-habitos.md](07-habitos.md).
 
 Agenda puede mostrar, además, un calendario que la persona ya tenga. El primero es Google Calendar, y solo si ella lo conecta. Impersia lo lee y lo junta en Agenda y en Hoy con lo que entró por Entrada. Lo de Google se distingue. Lo escrito en Impersia no se copia a Google en esta versión.
 

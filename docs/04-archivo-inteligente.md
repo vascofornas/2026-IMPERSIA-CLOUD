@@ -104,7 +104,7 @@ Referencia para el prompt del modelo y para validación. **Subtipo** = variant p
 | --- | --- | --- | --- |
 | **agenda** | medica, familiar, ocio, recordatorio, general | persona, lugar, notas, tipo festivo/ocio… | calendario + ficha (hecho) |
 | **casa** | compra, inventario, domestica, mantenimiento, suministro | cantidad, dónde, supply_kind, shopping_list… | checklist / lista / secciones (hecho) |
-| **habitos** | rutina, ejercicio, sueno, lectura, otro | objetivo, frecuencia, recordatorio | checklist + racha (futuro) |
+| **habitos** | rutina, ejercicio, meditacion, lectura, sueno, salud, otro | habit_role: routine \| log; frecuencia; seguimiento por día; notas/meta | HabitosBoard: rutinas + seguimiento + registro (PDF) |
 | **viajes** | plan, reserva, equipaje, nota | fechas viaje, destino, container_id | dentro de contenedor viaje |
 | **diario** | entrada, animo, reflexion | mood, tags | línea temporal, sin checklist |
 | **deseos** | lugar, cosa, experiencia, otro | sin fecha obligatoria | lista suelta, enlazable desde ocio |

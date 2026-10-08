@@ -19,8 +19,10 @@ import {
   medicalForLabel,
 } from "./agenda.js";
 import { CASA_KIND, casaEventLine, groupCasaItems, isCasaItem, SUPPLY_KIND } from "./casa.js";
+import HabitosBoard, { HoyBienestar } from "./HabitosBoard.jsx";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
 import { trackScreen } from "./events.js";
+import { repeatLabel } from "./repeats.js";
 import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
@@ -340,6 +342,36 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
     }
   }
 
+  async function habitMarkDone(item, dayKey, currentlyDone) {
+    setError("");
+    try {
+      let updated;
+      if (currentlyDone) {
+        if (item.repeats) {
+          updated = await call(`/items/${item.id}/days/${dayKey}`, { method: "DELETE" });
+        } else {
+          updated = await call(`/items/${item.id}/status`, {
+            method: "PATCH",
+            body: JSON.stringify({ status: "open" }),
+          });
+        }
+      } else if (item.repeats) {
+        updated = await call(`/items/${item.id}/days/${dayKey}`, {
+          method: "PUT",
+          body: JSON.stringify({ kind: "done" }),
+        });
+      } else {
+        updated = await call(`/items/${item.id}/status`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: "done" }),
+        });
+      }
+      setItems(items.map((row) => (row.id === updated.id ? updated : row)));
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   async function clearCasaDone(doneItems) {
     if (!doneItems.length) return;
     setError("");
@@ -486,8 +518,16 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
       {screen === "hoy" && (
         <>
           <h1>{todayLine()}</h1>
-          <div className="panes">
+          <div className="panes hoy-panes">
             <section>
+              <HoyBienestar
+                items={items}
+                todayStart={todayStart}
+                expandItems={expandItems}
+                endOfDay={endOfDay}
+                onMarkDone={habitMarkDone}
+                onEdit={startEdit}
+              />
               <h2>Para hoy</h2>
               {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} /> : <p className="private">Hoy no hay nada con fecha.</p>}
             </section>
@@ -533,6 +573,18 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
               askRemove={askRemove}
               onToggleStatus={toggleStatus}
             />
+          ) : current.id === "habitos" ? (
+            <div className="module-habitos">
+              <HabitosBoard
+                items={items}
+                todayStart={todayStart}
+                expandItems={expandItems}
+                endOfDay={endOfDay}
+                onMarkDone={habitMarkDone}
+                startEdit={startEdit}
+                askRemove={askRemove}
+              />
+            </div>
           ) : (
             <div className="panes">
               <section>
@@ -1219,7 +1271,9 @@ function taskScheduleLabel(item) {
   if (!item.starts_at && !item.repeats) return null;
   const bits = [];
   if (item.repeats === "daily") bits.push("Cada día");
-  else if (item.repeats === "weekly") bits.push("Cada semana");
+  else if (item.repeats === "weekly" || item.repeats?.startsWith("weekly:")) {
+    bits.push(repeatLabel(item.repeats, item.starts_at) || "Cada semana");
+  }
   else if (item.repeats === "monthly") bits.push("Cada mes");
   else if (item.repeats === "yearly") bits.push("Cada año");
   if (item.time_known && item.starts_at) bits.push(clockOf(item.starts_at));
@@ -1744,12 +1798,23 @@ function expandItems(items, from, to) {
   return out;
 }
 
+function parseWeeklyDays(repeats) {
+  if (!repeats?.startsWith("weekly:")) return null;
+  return repeats
+    .slice(7)
+    .split(",")
+    .map((part) => Number(part.trim()))
+    .filter((n) => !Number.isNaN(n));
+}
+
 function occurrences(item, from, to) {
   if (!item.starts_at) return [];
   if (!item.repeats) {
     const at = new Date(item.starts_at);
     return at >= from && at <= to ? [item] : [];
   }
+  const weekDays = parseWeeklyDays(item.repeats);
+  if (weekDays?.length) return multiWeeklyOccurrences(item, from, to, weekDays);
   if (item.repeats === "daily") return dailyOccurrences(item, from, to);
   if (item.repeats === "weekly") return weeklyOccurrences(item, from, to);
   if (item.repeats === "monthly") return monthlyOccurrences(item, from, to);
@@ -1831,6 +1896,22 @@ function weeklyOccurrences(item, from, to) {
     at.setHours(anchor.getHours(), anchor.getMinutes(), 0, 0);
     pushOccurrence(results, item, at);
     d.setDate(d.getDate() + 7);
+  }
+  return results;
+}
+
+function multiWeeklyOccurrences(item, from, to, days) {
+  const anchor = new Date(item.starts_at);
+  const anchorDay = dayStart(anchor);
+  const results = [];
+  let d = dayStart(from);
+  while (d <= to) {
+    if (days.includes(d.getDay())) {
+      const at = new Date(d);
+      at.setHours(anchor.getHours(), anchor.getMinutes(), 0, 0);
+      if (at >= anchorDay) pushOccurrence(results, item, at);
+    }
+    d.setDate(d.getDate() + 1);
   }
   return results;
 }
@@ -2121,17 +2202,6 @@ function AlertPermission({ alertEmail, onAlertEmail, setError }) {
 
 function todayLine() {
   return new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
-}
-
-function repeatLabel(repeats, startsAt) {
-  if (repeats === "daily") return "Cada día";
-  if (repeats === "monthly") return "Cada mes";
-  if (repeats === "yearly") return "Cada año";
-  if (repeats === "weekly") {
-    const raw = new Date(startsAt).toLocaleDateString("es-ES", { weekday: "long" });
-    return `Cada ${raw}`;
-  }
-  return "";
 }
 
 function whenLabel(item) {
