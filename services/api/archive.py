@@ -6,7 +6,7 @@ import json
 import re
 from typing import Any
 
-from classify import MODULES, classify, legacy_kind
+from classify import MODULES, _is_casa_supply, _supply_kind, classify, legacy_kind
 import llm
 
 AGENDA_TYPES = {"medica", "familiar", "ocio", "recordatorio", "general"}
@@ -61,10 +61,14 @@ Reglas:
 - Comprar productos → casa.compra. Quedan N en casa → casa.inventario.
 - Casa.domestica = tareas del hogar rutinarias: limpiar, fregar, aspirar, cristales, basura, lavadora, platos, orden.
 - Casa.mantenimiento = arreglar averías, reparaciones, fontanero, electricista, cambiar pieza/filtro, pintar, caldera.
-- No uses mantenimiento para limpieza; no uses domestica para averías.
-- Cita con fecha → agenda (ocio/familiar/medica/recordatorio), no diario.
-- Reflexión o ánimo sin tarea → diario.
-- Trabajo/reuniones → reuniones o proyectos según contexto."""
+- Casa.suministro = facturas y contratos de luz, agua, gas, internet (Iberdrola, Naturgy, Movistar…). Aunque haya fecha de vencimiento, sigue siendo casa.suministro, NO agenda.
+- ITV, seguro, IBI, impuestos, pasaporte → agenda.recordatorio (no suministro).
+- Cumpleaños, aniversario, boda, bautizo, comida familiar → agenda.familiar (no ocio).
+- Plan con amigos/pareja (cena, concierto, quedar) → agenda.ocio.
+- Cada lunes/día + yoga, gimnasio, meditar, correr → habitos (no ocio).
+- Comida o reunión de empresa/trabajo con fecha → reuniones.
+- Cita médica → agenda.medica.
+- Reflexión o ánimo sin tarea → diario."""
 
 DOMESTICA_HINTS = (
     "limpiar",
@@ -93,6 +97,156 @@ MANTENIMIENTO_HINTS = (
     "fuga",
     "averi",
 )
+
+UTILITY_SUPPLY_HINTS = (
+    "factura de la luz",
+    "factura del gas",
+    "factura del agua",
+    "factura de la",
+    "recibo de la luz",
+    "recibo del gas",
+    "recibo del agua",
+    "recibo del internet",
+    "contrato internet",
+    "contrato de internet",
+    "iberdrola",
+    "naturgy",
+    "endesa",
+    "movistar",
+    "vodafone",
+    "orange",
+    "fibra",
+    "wifi",
+)
+
+RECORDATORIO_HINTS = (
+    "itv",
+    "seguro del hogar",
+    "seguro de hogar",
+    "seguro del coche",
+    "ibi",
+    "impuesto",
+    "pasaporte",
+    "documento",
+    "hacienda",
+)
+
+FAMILY_HINTS = (
+    "cumpleaños",
+    "cumpleanos",
+    "aniversario",
+    "boda",
+    "bautizo",
+    "comunión",
+    "comunion",
+    "comida familiar",
+)
+
+HABIT_ACTIVITY_HINTS = (
+    "yoga",
+    "meditar",
+    "meditación",
+    "meditacion",
+    "correr",
+    "gimnasio",
+    "gym",
+    "lectura",
+    "deporte",
+    "pilates",
+)
+
+
+def _looks_like_utility_bill(low: str) -> bool:
+    if any(h in low for h in RECORDATORIO_HINTS):
+        if not any(
+            h in low
+            for h in ("luz", "gas", "agua", "internet", "iberdrola", "naturgy", "movistar", "factura", "recibo")
+        ):
+            return False
+    if _is_casa_supply(low):
+        return True
+    if any(h in low for h in UTILITY_SUPPLY_HINTS):
+        return True
+    if ("vence" in low or "renovar" in low or "recibo" in low or "factura" in low) and any(
+        w in low for w in ("luz", "gas", "agua", "internet", "iberdrola", "naturgy", "movistar", "vodafone")
+    ):
+        return True
+    return False
+
+
+def _looks_like_habit(low: str) -> bool:
+    if not re.search(r"\bcada\b", low):
+        return False
+    return any(h in low for h in HABIT_ACTIVITY_HINTS)
+
+
+def _looks_like_family_event(low: str) -> bool:
+    return any(h in low for h in FAMILY_HINTS)
+
+
+def _sync_module_fields(out: dict) -> None:
+    module = out.get("module")
+    if module not in MODULES:
+        return
+    out["axis"] = MODULES[module]
+    out["kind"] = legacy_kind(module)
+
+
+def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
+    """Capa determinista tras reglas o IA: corrige casos frecuentes del eje A."""
+    low = raw.lower()
+    result = dict(out)
+    for key in TEMPORAL_KEYS:
+        if baseline.get(key) is not None or key not in result:
+            result[key] = baseline.get(key)
+
+    if _looks_like_utility_bill(low):
+        result["module"] = "casa"
+        _sync_module_fields(result)
+        _clear_agenda_fields(result)
+        result["casa_kind"] = "suministro"
+        result["supply_kind"] = _supply_kind(low)
+        if result.get("starts_at") and result.get("alert_minutes_before") is None:
+            result["alert_minutes_before"] = 10080
+        return result
+
+    if _looks_like_habit(low):
+        result["module"] = "habitos"
+        _sync_module_fields(result)
+        _clear_agenda_fields(result)
+        _clear_casa_fields(result)
+        return result
+
+    if _looks_like_family_event(low) and result.get("module") == "agenda":
+        result["agenda_type"] = "familiar"
+        if "aniversario" in low:
+            result["family_kind"] = "aniversario"
+        elif "cumple" in low:
+            result["family_kind"] = "cumpleanos"
+        elif "boda" in low:
+            result["family_kind"] = "boda"
+        elif "bautizo" in low:
+            result["family_kind"] = "bautizo"
+        elif "comunion" in low or "comunión" in low:
+            result["family_kind"] = "comunion"
+        elif "comida familiar" in low:
+            result["family_kind"] = "comida"
+        return result
+
+    if result.get("module") == "casa":
+        ck = result.get("casa_kind")
+        result["casa_kind"] = _refine_casa_kind(raw, ck if ck in CASA_KINDS else None)
+        if result["casa_kind"] == "suministro" and not result.get("supply_kind"):
+            result["supply_kind"] = _supply_kind(low)
+
+    if "comida de empresa" in low or "comida empresa" in low or "evento de empresa" in low:
+        if result.get("module") in {"agenda", "proyectos", "ideas"}:
+            result["module"] = "reuniones"
+            _sync_module_fields(result)
+            _clear_agenda_fields(result)
+            _clear_casa_fields(result)
+
+    return result
 
 
 def _refine_casa_kind(raw: str, kind: str | None) -> str:
@@ -195,7 +349,7 @@ def _apply_llm(baseline: dict, parsed: dict, raw: str) -> dict:
         ck = parsed.get("casa_kind")
         if ck not in CASA_KINDS:
             ck = baseline.get("casa_kind")
-        out["casa_kind"] = _refine_casa_kind(raw_hint, ck if ck in CASA_KINDS else None)
+        out["casa_kind"] = _refine_casa_kind(raw, ck if ck in CASA_KINDS else None)
         for key in ("casa_place", "casa_notes"):
             val = parsed.get(key)
             if val is not None and str(val).strip():
@@ -240,7 +394,7 @@ def archive(
     available, reason, settings = llm.can_use_llm(cur)
     if not available:
         baseline["source"] = baseline.get("source") or "rules"
-        return baseline
+        return _post_refine(baseline, raw, baseline)
 
     examples = fetch_examples(cur, user_id, raw)
     user_parts = [f'Frase: "{raw}"', f"Temporal (reglas, no cambies): {_temporal_hint(baseline)}"]
@@ -271,6 +425,8 @@ def archive(
         result = dict(baseline)
         result["source"] = "rules"
 
+    result = _post_refine(result, raw, baseline)
+
     cost = llm.compute_cost(input_tokens, output_tokens, settings)
     llm.log_usage(
         cur,
@@ -300,9 +456,13 @@ def maybe_learn_from_patch(
     before: dict,
     after: dict,
 ) -> None:
-    if before.get("module") == after.get("module") and before.get("agenda_type") == after.get("agenda_type"):
-        if before.get("casa_kind") == after.get("casa_kind"):
-            return
+    if (
+        before.get("module") == after.get("module")
+        and before.get("agenda_type") == after.get("agenda_type")
+        and before.get("casa_kind") == after.get("casa_kind")
+        and before.get("supply_kind") == after.get("supply_kind")
+    ):
+        return
     label = _label_from_suggestion(after)
     label["corrected_from"] = {
         "module": before.get("module"),

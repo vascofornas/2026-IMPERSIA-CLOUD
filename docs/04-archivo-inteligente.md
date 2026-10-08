@@ -167,6 +167,8 @@ Cada módulo nuevo = **entrada en el catálogo** + **pantalla** que consume `ite
 - [x] Servicio `archive.py`: híbrido reglas + OpenRouter + fallback `classify.py`
 - [x] Registrar corrección al PATCH de módulo/subtipo (v0.1)
 - [x] `classify.py` como fallback si IA apagada, sin key o error
+- [x] Capa `_post_refine` tras IA: suministros, familiar, hábitos, casa domestica/mantenimiento
+- [x] Ejemplos `seed` en cuenta admin (`scripts/seed_archive_hints.py`)
 - [ ] Métricas: % acierto, correcciones por semana
 
 **Listo cuando:** 20 frases de prueba (incluidas las que hoy fallan) archivan bien sin añadir reglas, y una corrección tuya mejora la siguiente frase similar.

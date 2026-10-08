@@ -643,3 +643,6 @@ Modesto pausa ronda de pruebas (opción 3). Fase A v0.1 validada en producción:
 
 8 de octubre de 2026, 13:00
 Modesto pide 20 entradas Agenda + 20 Casa con IA. Script seed_axis_a_entries.py y docs/06-pruebas-eje-a.md. Ejecutado en VPS: 40 capturas en cuenta ADMIN_EMAIL. Revisar fallos: aniversario→ocio, yoga→ocio, comida Navidad→reuniones; suministros luz/gas→agenda recordatorio, internet→proyectos.
+
+8 de octubre de 2026, 13:20
+Modesto pide afinar futuras entradas eje A. archive.py: prompt ampliado, _post_refine (suministros, familiar, hábitos, empresa→reuniones), fix raw en casa_kind, ejemplos seed. Despliegue API + seed_archive_hints en VPS.
