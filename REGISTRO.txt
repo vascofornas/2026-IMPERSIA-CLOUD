@@ -640,3 +640,6 @@ Modesto elige afinar Casa (domestica vs mantenimiento). Prompt archive.py más c
 
 8 de octubre de 2026, 12:50
 Modesto pausa ronda de pruebas (opción 3). Fase A v0.1 validada en producción: IA encendida, OpenRouter OK, Entrada con feedback, pruebas personal/profesional/Casa OK. Siguiente bloque de producto: pendiente elección (Hábitos, Viajes, cerrar Fase 1 en docs, u otro módulo del PDF).
+
+8 de octubre de 2026, 13:00
+Modesto pide 20 entradas Agenda + 20 Casa con IA. Script seed_axis_a_entries.py y docs/06-pruebas-eje-a.md. Ejecutado en VPS: 40 capturas en cuenta ADMIN_EMAIL. Revisar fallos: aniversario→ocio, yoga→ocio, comida Navidad→reuniones; suministros luz/gas→agenda recordatorio, internet→proyectos.
