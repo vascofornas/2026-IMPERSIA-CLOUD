@@ -637,3 +637,6 @@ Modesto: en Entrada, Apuntar no da feedback mientras archiva (IA tarda). Botón 
 
 8 de octubre de 2026, 12:45
 Modesto elige afinar Casa (domestica vs mantenimiento). Prompt archive.py más claro y refino por palabras de limpieza vs reparación. Despliegue API.
+
+8 de octubre de 2026, 12:50
+Modesto pausa ronda de pruebas (opción 3). Fase A v0.1 validada en producción: IA encendida, OpenRouter OK, Entrada con feedback, pruebas personal/profesional/Casa OK. Siguiente bloque de producto: pendiente elección (Hábitos, Viajes, cerrar Fase 1 en docs, u otro módulo del PDF).
