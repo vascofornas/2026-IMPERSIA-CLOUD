@@ -6,7 +6,7 @@ import json
 import re
 from typing import Any
 
-from classify import MODULES, _is_casa_supply, _supply_kind, classify, legacy_kind
+from classify import MODULES, _is_birthday_preparation, _is_casa_supply, _supply_kind, classify, legacy_kind
 import llm
 
 AGENDA_TYPES = {"medica", "familiar", "ocio", "recordatorio", "general"}
@@ -64,6 +64,7 @@ Reglas:
 - Casa.suministro = facturas y contratos de luz, agua, gas, internet (Iberdrola, Naturgy, Movistar…). Aunque haya fecha de vencimiento, sigue siendo casa.suministro, NO agenda.
 - ITV, seguro, IBI, impuestos, pasaporte → agenda.recordatorio (no suministro).
 - Cumpleaños, aniversario, boda, bautizo, comida familiar → agenda.familiar (no ocio).
+- Pensar/comprar/elegir regalo de cumpleaños con fecha (mañana, el lunes…) → agenda.general: tarea puntual, NO familiar ni «cada año».
 - Plan con amigos/pareja (cena, concierto, quedar) → agenda.ocio.
 - Cada lunes/día + yoga, gimnasio, meditar, correr → habitos (no ocio).
 - Comida o reunión de empresa/trabajo con fecha → reuniones.
@@ -181,6 +182,8 @@ def _looks_like_habit(low: str) -> bool:
 
 
 def _looks_like_family_event(low: str) -> bool:
+    if _is_birthday_preparation(low):
+        return False
     return any(h in low for h in FAMILY_HINTS)
 
 
@@ -215,6 +218,24 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
         _sync_module_fields(result)
         _clear_agenda_fields(result)
         _clear_casa_fields(result)
+        return result
+
+    if _is_birthday_preparation(low) and result.get("module") == "agenda":
+        result["agenda_type"] = "general"
+        for key in (
+            "family_kind",
+            "family_for",
+            "family_name",
+            "family_place",
+            "family_notes",
+        ):
+            result[key] = None
+        if not re.search(r"\bcada a[nñ]o\b|\btodos los a[nñ]os\b", low):
+            result["repeats"] = None
+        if result.get("alert_minutes_before") == 1440 and not re.search(
+            r"\b\d+\s*d[ií]as?\s*antes\b", low
+        ):
+            result["alert_minutes_before"] = baseline.get("alert_minutes_before")
         return result
 
     if _looks_like_family_event(low) and result.get("module") == "agenda":

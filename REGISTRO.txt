@@ -649,3 +649,6 @@ Modesto pide afinar futuras entradas eje A. archive.py: prompt ampliado, _post_r
 
 8 de octubre de 2026, 13:25
 Modesto pide borrar todas las entradas de prueba. En VPS: eliminados 68 ítems, 87 capturas y 1 lista de compra de modestovasco@gmail.com. Se conservan cuenta, ejemplos seed/corrección y registro de actividad.
+
+8 de octubre de 2026, 13:35
+Prueba Entrada: «mañana… regalo de cumpleaños para Eva» se archivó como Celebración anual (error: cumpleaños≠fecha de nacimiento; mañana era plazo de la tarea). classify/archive: _is_birthday_preparation para regalo/pensar; despliegue API.

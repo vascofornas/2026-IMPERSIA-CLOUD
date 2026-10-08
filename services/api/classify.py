@@ -821,7 +821,24 @@ FAMILY_KINDS = {
 }
 
 
+def _is_birthday_preparation(low: str) -> bool:
+    """Tarea sobre el regalo/preparación, no el cumpleaños como evento anual."""
+    if not re.search(r"\bcumple", low):
+        return False
+    if re.search(r"\bregalo\b", low):
+        return True
+    if re.search(r"\bpensar\b", low):
+        return True
+    if re.search(r"\b(?:comprar|elegir|buscar|preparar|encargar)\b", low) and re.search(
+        r"\b(?:regalo|detalle|sorpresa)\b", low
+    ):
+        return True
+    return False
+
+
 def _is_family(low: str) -> bool:
+    if _is_birthday_preparation(low):
+        return False
     for words in FAMILY_KINDS.values():
         if any(word in low for word in words):
             return True
