@@ -658,3 +658,9 @@ Misma frase quedó como Cita general (agenda_type vacío). Regla _is_personal_ag
 
 8 de octubre de 2026, 13:50
 Correo de aviso no salía: recordatorio sin hora quedaba sin alert_minutes_before (requisito del timer). Por defecto 1 día antes; web permite aviso con solo fecha en Agenda. Despliegue API + web.
+
+8 de octubre de 2026, 14:00
+Modesto: títulos más fieles al texto, una Entrada puede crear varios ítems, IA/servidor debe evitar duplicados. Queda en docs/04-archivo-inteligente.md (Principios de Entrada); implementación pendiente.
+
+8 de octubre de 2026, 14:10
+Paso A títulos: entry_title en classify (sin títulos inventados por tipo), archive no aplica title del LLM. Despliegue API.

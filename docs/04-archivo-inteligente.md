@@ -43,7 +43,7 @@ Todo lo que entra por Entrada devuelve el mismo esqueleto. Los módulos no son t
 | `axis` | modelo | personal, professional, social |
 | `module` | modelo | uno de los 14 |
 | `kind` | derivado | note, task, event (legacy; el modelo no elige libremente) |
-| `title` | modelo | limpio, sin fecha ni módulo en el texto |
+| `title` | modelo + reglas mínimas | núcleo literal de la frase; sin fechas/horas en el título (véase principios arriba) |
 | `starts_at`, `repeats`, `time_known`, `alert_minutes_before` | reglas (+ modelo si ambiguo) | |
 | `subtype` | modelo | ver catálogo abajo |
 | `meta` | modelo | JSON validado por subtipo |
@@ -155,7 +155,36 @@ Referencia para el prompt del modelo y para validación. **Subtipo** = variant p
 | Contenedores | Una tabla `containers` + `container_id` en items |
 | Privacidad | Tres niveles ya en esquema; el modelo propone, default private |
 
-Cada módulo nuevo = **entrada en el catálogo** + **pantalla** que consume `items` filtrados; no un nuevo `if "aspiradora" in low`.
+Cada módulo nuevo = **entrada en el catálogo** + **pantalla** que consume `items` filtrados; no un nuevo `if "aspiradora" in low".
+
+---
+
+## Principios de Entrada (decisión de producto)
+
+Tres reglas que el archivado debe cumplir; hoy solo la compra cumple parte del punto 2.
+
+### 1. Título fiel al texto
+
+- El **título** guardado debe ser la **frase útil de la persona**, no un resumen inventado por reglas o por el modelo.
+- Las reglas **solo quitan** ruido temporal («mañana», «a las 18», «cada lunes») y espacios; **no reescriben** («Cumpleaños de Eva», «Recordatorio · …») salvo que el usuario lo haya dicho casi igual.
+- Lo demás (edad, fecha del cumple real, sitio) va a **notas / meta**, no al título.
+- El prompt del modelo debe pedir **copiar el núcleo literal**, no «titular de prensa».
+
+### 2. Una Entrada → varios registros
+
+- Una sola captura puede crear **varios `items`**, todos con el mismo `capture_id`.
+- Ejemplo: *«Mañana recuérdame pensar el regalo de Eva; cumple 54 el 9 de noviembre»* puede ser:
+  - **Recordatorio** (9 oct): pensar el regalo, con notas «Cumple 54 el 9 nov».
+  - Opcional **Celebración** (9 nov, anual): cumpleaños de Eva — **solo si** la frase pide guardar el cumple, no por mencionar la fecha en contexto.
+- Hoy: varios ítems solo en **lista de la compra** (`split_compra_titles`). Falta generalizar el contrato del modelo a **lista de acciones** en JSON.
+
+### 3. Sin duplicados
+
+- Antes de insertar, el servidor (con ayuda del modelo o búsqueda en BD) **comprueba** si ya existe algo equivalente para esa cuenta: mismo asunto + misma fecha / misma persona / mismo suministro.
+- Si hay duplicado: **no crear otro**; enlazar a la captura actual, actualizar notas o avisar en UI. Si la persona repite a propósito, debe quedar claro (p. ej. segundo ítem con fecha distinta).
+- Las correcciones en `classification_examples` enseñan clasificación; la **deduplicación** es otra capa (consulta + criterio), no sustituir una por otra.
+
+**Estado actual (oct 2026):** 1 captura → 1 ítem salvo compras; **títulos literales** vía `entry_title()` (oct 2026, paso A); sin multi-ítem general ni deduplicación.
 
 ---
 
@@ -163,6 +192,7 @@ Cada módulo nuevo = **entrada en el catálogo** + **pantalla** que consume `ite
 
 ### Paso A — Archivado v2 (prioridad)
 
+- [x] Títulos fieles: `entry_title()` + servidor ignora title del modelo (oct 2026)
 - [x] Columna `items.meta` JSONB + tabla `classification_examples` (v0.1)
 - [x] Servicio `archive.py`: híbrido reglas + OpenRouter + fallback `classify.py`
 - [x] Registrar corrección al PATCH de módulo/subtipo (v0.1)

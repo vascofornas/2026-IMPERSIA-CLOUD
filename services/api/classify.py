@@ -122,7 +122,7 @@ def classify(text: str) -> dict:
             alert = 1440
         return _classify_result(
             module,
-            _family_title(raw, low, fam.get("family_kind")),
+            entry_title(raw),
             starts,
             time_known,
             repeats,
@@ -138,7 +138,7 @@ def classify(text: str) -> dict:
         meta = _medical_meta(raw, low)
         return _classify_result(
             module,
-            _medical_title(raw, low),
+            entry_title(raw),
             starts,
             time_known,
             repeats,
@@ -154,7 +154,7 @@ def classify(text: str) -> dict:
         plan = _leisure_meta(raw, low)
         return _classify_result(
             module,
-            _leisure_title(raw, low, plan.get("leisure_kind")),
+            entry_title(raw),
             starts,
             time_known,
             repeats,
@@ -172,7 +172,7 @@ def classify(text: str) -> dict:
             alert = 10080
         return _classify_result(
             module,
-            _reminder_title(raw, low, rem.get("reminder_kind")),
+            entry_title(raw),
             starts,
             time_known,
             repeats,
@@ -190,7 +190,7 @@ def classify(text: str) -> dict:
             alert = 15 if time_known else 1440
         return _classify_result(
             module,
-            _title(raw),
+            entry_title(raw),
             starts,
             time_known,
             repeats,
@@ -209,7 +209,7 @@ def classify(text: str) -> dict:
         inv_title = home.pop("inventario_title", None)
         return _classify_result(
             module,
-            inv_title or _casa_title(raw, low, home.get("casa_kind")),
+            inv_title or entry_title(raw),
             starts,
             time_known,
             repeats,
@@ -223,7 +223,7 @@ def classify(text: str) -> dict:
         )
     return _classify_result(
         module,
-        _title(raw),
+        entry_title(raw),
         starts,
         time_known,
         repeats,
@@ -509,7 +509,8 @@ def _module(low: str) -> str:
     return "diario"
 
 
-def _title(raw: str) -> str:
+def entry_title(raw: str) -> str:
+    """Título de entrada: texto original quitando solo cuándo/cada (fechas literales se conservan)."""
     text = raw
     cuts = (
         r"\bpasado mañana\b",
@@ -520,14 +521,15 @@ def _title(raw: str) -> str:
         r"\bpor la manana\b",
         r"\bde la mañana\b",
         r"\bde la manana\b",
-        r"\bcada\b",
+        r"\bcada\s+(?:d[ií]a|semana|mes|a[nñ]o|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\b",
+        r"\btodos los d[ií]as\b",
+        r"\btodos los a[nñ]os\b",
         r"\bpor la tarde\b",
         r"\bpor la noche\b",
         r"\bde la tarde\b",
         r"\bde la noche\b",
         r"\bal mediodía\b",
         r"\bal mediodia\b",
-        r"\btodos los d[ií]as\b",
         r"\ba las \d{1,2}(?::\d{2})?\s*(?:de la )?(?:tarde|noche|mañana|manana)?\b",
         r"\b\d{1,2}\s+de la (?:tarde|noche|mañana|manana)\b",
         r"\ba las \d{1,2}(?::\d{2})?\b",
@@ -537,17 +539,22 @@ def _title(raw: str) -> str:
         r"\bmanana\b",
         r"\bhoy\b",
         r"\bsin (?:aviso|recordatorio|alerta)\b",
-        r"\b(?:av[ií]same|recu[eé]rdame|con recordatorio|con aviso)\b",
         r"\b(?:a la hora|en el momento)\b",
         r"\b\d+\s*(?:minutos?|horas?|d[ií]as?)\s*antes\b",
-        LITERAL_DATE,
     )
     for pattern in cuts:
         text = re.sub(pattern, " ", text, flags=re.IGNORECASE)
-    text = " ".join(text.replace(",", " ").split()).strip(" .;:-")
+    text = re.sub(r"\s+,", ",", text)
+    text = " ".join(text.split()).strip(" .;:-")
     if not text:
-        text = raw
-    return (text[0].upper() + text[1:])[:140]
+        text = raw.strip()
+    if not text:
+        return ""
+    return (text[0].upper() + text[1:])[:200]
+
+
+def _title(raw: str) -> str:
+    return entry_title(raw)
 
 
 def _when(low: str) -> datetime | None:

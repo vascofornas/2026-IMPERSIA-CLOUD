@@ -13,6 +13,7 @@ from classify import (
     _is_personal_agenda_reminder,
     _supply_kind,
     classify,
+    entry_title,
     legacy_kind,
 )
 import llm
@@ -58,14 +59,14 @@ SYSTEM_PROMPT = """Eres el archivador de Impersia OS. Clasifica la frase del usu
 
 Responde SOLO JSON válido con estas claves:
 - module: uno de agenda, casa, habitos, viajes, diario, deseos, proyectos, reuniones, memoria, ideas, muro, listas, circulos, espacios
-- title: título limpio, sin fechas ni horas
+- title: ignorado por el servidor (no lo uses para reescribir; el título lo fijan las reglas desde la frase)
 - agenda_type: medica|familiar|ocio|recordatorio|general|null (solo si module=agenda)
 - casa_kind: compra|inventario|domestica|mantenimiento|suministro|otro|null (solo si module=casa)
 - family_kind, leisure_kind, reminder_kind, supply_kind cuando aplique
 - medical_for, medical_place, family_for, family_place, leisure_with, leisure_place, casa_place, casa_notes: texto o null
 
 Reglas:
-- Fechas y horas las resuelve el servidor; no las copies al title.
+- Fechas y horas de la cita las resuelve el servidor en campos temporales, no en title.
 - Comprar productos → casa.compra. Quedan N en casa → casa.inventario.
 - Casa.domestica = tareas del hogar rutinarias: limpiar, fregar, aspirar, cristales, basura, lavadora, platos, orden.
 - Casa.mantenimiento = arreglar averías, reparaciones, fontanero, electricista, cambiar pieza/filtro, pintar, caldera.
@@ -208,6 +209,7 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
     """Capa determinista tras reglas o IA: corrige casos frecuentes del eje A."""
     low = raw.lower()
     result = dict(out)
+    result["title"] = entry_title(raw)
     for key in TEMPORAL_KEYS:
         if baseline.get(key) is not None or key not in result:
             result[key] = baseline.get(key)
@@ -355,9 +357,7 @@ def _apply_llm(baseline: dict, parsed: dict, raw: str) -> dict:
     out["module"] = module
     out["axis"] = MODULES[module]
     out["kind"] = legacy_kind(module)
-    title = (parsed.get("title") or "").strip()
-    if title:
-        out["title"] = title[:200]
+    out["title"] = entry_title(raw)
     out["source"] = "llm"
 
     if module == "agenda":
