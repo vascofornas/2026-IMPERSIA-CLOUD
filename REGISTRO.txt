@@ -670,3 +670,6 @@ Paso B multi-ítem: archive_items (LLM items[], segmentos ;/y también, compra e
 
 8 de octubre de 2026, 14:30
 Paso C dedup: dedup.py (coincidencia título/fecha/persona/compra/suministro), fusiona notas y enlaza capture_id; aviso en web si merged. Despliegue API + web.
+
+8 de octubre de 2026, 14:45
+Modesto: al repetir Entrada no veía aviso de duplicado. POST /captures devuelve {items, deduped}; aviso verde bajo Apuntar en Entrada. Despliegue API + web.

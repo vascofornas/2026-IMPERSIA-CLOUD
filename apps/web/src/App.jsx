@@ -58,6 +58,20 @@ function applyLook(look) {
   }
 }
 
+function normalizeCaptureResult(result) {
+  if (result && Array.isArray(result.items)) {
+    return { items: result.items, deduped: Number(result.deduped) || 0 };
+  }
+  if (Array.isArray(result)) {
+    return { items: result, deduped: 0 };
+  }
+  if (result && result.id) {
+    const deduped = result.dedupe_action === "merged" ? 1 : 0;
+    return { items: [result], deduped };
+  }
+  return { items: [], deduped: 0 };
+}
+
 async function call(path, options = {}) {
   const response = await fetch(API + path, {
     credentials: "include",
@@ -174,6 +188,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   const [deleting, setDeleting] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [shoppingList, setShoppingList] = useState(null);
   const screen = useHash();
 
@@ -225,13 +240,14 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   async function archive() {
     if (archiving || !text.trim()) return;
     setError("");
+    setNotice("");
     setArchiving(true);
     try {
       const result = await call("/captures", {
         method: "POST",
         body: JSON.stringify({ text }),
       });
-      const fresh = Array.isArray(result) ? result : [result];
+      const { items: fresh, deduped } = normalizeCaptureResult(result);
       let next = [...items];
       for (const item of fresh) {
         const idx = next.findIndex((row) => row.id === item.id);
@@ -240,8 +256,9 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
       }
       setItems(next);
       setText("");
-      if (fresh.some((item) => item.dedupe_action === "merged")) {
-        setError("Ya lo tenías guardado; se han unido notas nuevas si las había.");
+      const merged = deduped > 0 || fresh.some((item) => item.dedupe_action === "merged");
+      if (merged) {
+        setNotice("Ya lo tenías guardado. No se ha creado un duplicado en Agenda ni en el calendario.");
       }
       checkAlerts(next);
     } catch (err) {
@@ -461,6 +478,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
             </button>
             {archiving && <p className="private entrada-status">Impersia está archivando. Puede tardar unos segundos con IA.</p>}
           </div>
+          {notice && <p className="notice entrada-notice" role="status">{notice}</p>}
           <h2>Archivado</h2>
           <ItemList items={items} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
         </>

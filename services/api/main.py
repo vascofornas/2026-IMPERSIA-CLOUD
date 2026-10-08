@@ -814,9 +814,7 @@ def create_capture(body: CaptureIn, request: Request):
             "source": primary.get("source"),
         },
     )
-    if len(created) == 1:
-        return created[0]
-    return created
+    return {"items": created, "deduped": deduped}
 
 
 @app.post("/captures/{capture_id}/confirm", status_code=201)

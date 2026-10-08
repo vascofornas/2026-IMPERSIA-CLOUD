@@ -684,6 +684,26 @@ a.connect {
 [data-look="noche"] .error,
 [data-look="grafito"] .error { color: #fca5a5; }
 
+.notice {
+  color: #0f766e;
+  background: #ecfdf5;
+  border: 1px solid #99f6e4;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 12px 0 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.entrada-notice { margin-top: 14px; }
+
+[data-look="noche"] .notice,
+[data-look="grafito"] .notice {
+  color: #99f6e4;
+  background: #134e4a;
+  border-color: #0f766e;
+}
+
 .looks {
   display: grid;
   grid-template-columns: 1fr 1fr;
