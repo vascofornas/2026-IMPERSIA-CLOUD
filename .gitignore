@@ -3,4 +3,5 @@
 __pycache__/
 .env
 smtp-password.txt
+infra/vps-openrouter-key.env
 node_modules/

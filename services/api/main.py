@@ -20,6 +20,7 @@ from psycopg.rows import dict_row
 
 from admin_events import router as admin_events_router
 from admin_llm import router as admin_llm_router
+import archive
 from classify import MODULES, classify, compra_store_name, legacy_kind, split_compra_titles
 import events
 import llm
@@ -615,8 +616,8 @@ def _insert_item(cur, user_id: str, capture_id: str, suggestion: dict, *, title:
              family_kind, family_for, family_name, family_place, family_notes,
              leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
              reminder_kind, reminder_place, reminder_notes,
-             casa_kind, casa_place, casa_notes, supply_kind, shopping_list_id, privacy)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private')
+             casa_kind, casa_place, casa_notes, supply_kind, shopping_list_id, privacy, archived_source)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private', %s)
         RETURNING {ITEM_SELECT}
         """,
         (
@@ -653,6 +654,7 @@ def _insert_item(cur, user_id: str, capture_id: str, suggestion: dict, *, title:
             suggestion.get("casa_notes"),
             suggestion.get("supply_kind"),
             shopping_list_id,
+            suggestion.get("source"),
         ),
     )
     return cur.fetchone()
@@ -692,10 +694,10 @@ def patch_active_shopping_list(body: ShoppingListPatch, request: Request):
 @app.post("/captures", status_code=201)
 def create_capture(body: CaptureIn, request: Request):
     user_id = current_user(request)
-    suggestion = classify(body.text)
     raw = body.text.strip()
     with db() as conn:
         with conn.cursor() as cur:
+            suggestion = archive.archive(cur, user_id, raw)
             cur.execute(
                 """
                 INSERT INTO captures
@@ -902,6 +904,26 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
         with conn.cursor() as cur:
             cur.execute(
                 f"""
+                SELECT capture_id, {ITEM_SELECT}
+                FROM items
+                WHERE id = %s AND user_id = %s
+                """,
+                (item_id, user_id),
+            )
+            before = cur.fetchone()
+            if not before:
+                raise HTTPException(status_code=404, detail="No está en tu cuenta")
+            raw_text = before["title"]
+            if before.get("capture_id"):
+                cur.execute(
+                    "SELECT raw_text FROM captures WHERE id = %s AND user_id = %s",
+                    (before["capture_id"], user_id),
+                )
+                cap = cur.fetchone()
+                if cap and cap.get("raw_text"):
+                    raw_text = cap["raw_text"]
+            cur.execute(
+                f"""
                 UPDATE items
                 SET module = %s, axis = %s, kind = %s, title = %s, starts_at = %s, time_known = %s,
                     alert_minutes_before = %s, agenda_type = %s, medical_for = %s, medical_name = %s,
@@ -951,6 +973,7 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
             if item:
                 cur.execute("DELETE FROM item_exceptions WHERE item_id = %s", (item_id,))
                 item = _fetch_item(cur, item_id, user_id)
+                archive.maybe_learn_from_patch(cur, user_id, raw_text=raw_text, before=before, after=item)
         conn.commit()
     if not item:
         raise HTTPException(status_code=404, detail="No está en tu cuenta")

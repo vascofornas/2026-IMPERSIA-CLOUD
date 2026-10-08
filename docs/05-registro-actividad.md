@@ -14,6 +14,7 @@ Sistema vivo de auditoría y uso del producto. Crece con cada fase; no bloquea e
 | `item.update` / `item.delete` / `item.status` | API | api |
 | `profile.update` | API | api |
 | `admin.llm.settings` / `admin.llm.test` | API | admin |
+| `capture.create` con `source: llm` o `rules` | API | api |
 
 ## Cómo ampliarlo
 

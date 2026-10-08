@@ -628,3 +628,6 @@ Modesto crea DNS A admin → 217.76.158.141 en IONOS. En VPS: nginx activado, ce
 
 4 de octubre de 2026, 00:50
 Inicio del registro de actividad (v0.1): tabla events, API /events y /admin/events, auth/capturas/ítems/perfil/admin LLM, pantallas web_app y admin. Pestaña Actividad en admin. Doc docs/05-registro-actividad.md. Crece con el proyecto, sin bloquear Fase A.
+
+8 de octubre de 2026, 12:15
+OpenRouter probado en admin (health_test OK). Fase A v0.1: archive.py en Entrada, migración 012 (classification_examples, items.meta), aprendizaje al corregir módulo. IA sigue apagada por defecto hasta prueba en web app. Despliegue VPS.
