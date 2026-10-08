@@ -646,3 +646,6 @@ Modesto pide 20 entradas Agenda + 20 Casa con IA. Script seed_axis_a_entries.py 
 
 8 de octubre de 2026, 13:20
 Modesto pide afinar futuras entradas eje A. archive.py: prompt ampliado, _post_refine (suministros, familiar, hábitos, empresa→reuniones), fix raw en casa_kind, ejemplos seed. Despliegue API + seed_archive_hints en VPS.
+
+8 de octubre de 2026, 13:25
+Modesto pide borrar todas las entradas de prueba. En VPS: eliminados 68 ítems, 87 capturas y 1 lista de compra de modestovasco@gmail.com. Se conservan cuenta, ejemplos seed/corrección y registro de actividad.
