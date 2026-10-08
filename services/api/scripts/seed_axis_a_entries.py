@@ -87,7 +87,8 @@ def admin_user_id(cur) -> str:
 
 
 def file_one(cur, user_id: str, raw: str) -> dict:
-    suggestion = archive.archive(cur, user_id, raw)
+    suggestions = archive.archive_items(cur, user_id, raw)
+    primary = suggestions[0]
     cur.execute(
         """
         INSERT INTO captures
@@ -98,37 +99,39 @@ def file_one(cur, user_id: str, raw: str) -> dict:
         (
             user_id,
             raw,
-            suggestion["kind"],
-            suggestion["title"],
-            suggestion["starts_at"],
-            suggestion.get("source", "rules"),
+            primary["kind"],
+            primary["title"],
+            primary["starts_at"],
+            primary.get("source", "rules"),
         ),
     )
     capture_id = str(cur.fetchone()["id"])
+    list_row = None
     count = 0
-    if suggestion.get("module") == "casa" and suggestion.get("casa_kind") == "compra":
-        list_row = _ensure_active_shopping_list(cur, user_id)
-        store = compra_store_name(raw) or suggestion.get("casa_place")
-        if store and not list_row.get("store_name"):
-            cur.execute(
-                "UPDATE shopping_lists SET store_name = %s WHERE id = %s",
-                (store, list_row["id"]),
-            )
-        titles = split_compra_titles(raw)
-        for title in titles:
-            _insert_item(
-                cur,
-                user_id,
-                capture_id,
-                suggestion,
-                title=title,
-                shopping_list_id=str(list_row["id"]),
-                casa_place=None,
-            )
-            count += 1
-    else:
-        _insert_item(cur, user_id, capture_id, suggestion)
-        count = 1
+    for suggestion in suggestions:
+        shopping_list_id = None
+        title_override = None
+        if suggestion.get("module") == "casa" and suggestion.get("casa_kind") == "compra":
+            if list_row is None:
+                list_row = _ensure_active_shopping_list(cur, user_id)
+                store = compra_store_name(raw) or suggestion.get("casa_place")
+                if store and not list_row.get("store_name"):
+                    cur.execute(
+                        "UPDATE shopping_lists SET store_name = %s WHERE id = %s",
+                        (store, list_row["id"]),
+                    )
+            shopping_list_id = str(list_row["id"])
+            title_override = suggestion.get("title")
+        _insert_item(
+            cur,
+            user_id,
+            capture_id,
+            suggestion,
+            title=title_override,
+            shopping_list_id=shopping_list_id,
+            casa_place=None,
+        )
+        count += 1
     return {
         "raw": raw,
         "module": suggestion.get("module"),

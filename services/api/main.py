@@ -697,7 +697,8 @@ def create_capture(body: CaptureIn, request: Request):
     raw = body.text.strip()
     with db() as conn:
         with conn.cursor() as cur:
-            suggestion = archive.archive(cur, user_id, raw)
+            suggestions = archive.archive_items(cur, user_id, raw)
+            primary = suggestions[0]
             cur.execute(
                 """
                 INSERT INTO captures
@@ -708,42 +709,47 @@ def create_capture(body: CaptureIn, request: Request):
                 (
                     user_id,
                     raw,
-                    suggestion["kind"],
-                    suggestion["title"],
-                    suggestion["starts_at"],
-                    suggestion["source"],
+                    primary["kind"],
+                    primary["title"],
+                    primary["starts_at"],
+                    primary["source"],
                 ),
             )
             capture_id = str(cur.fetchone()["id"])
-            if suggestion.get("module") == "casa" and suggestion.get("casa_kind") == "compra":
-                list_row = _ensure_active_shopping_list(cur, user_id)
-                store = compra_store_name(raw) or suggestion.get("casa_place")
-                if store and not list_row.get("store_name"):
-                    cur.execute(
-                        """
-                        UPDATE shopping_lists
-                        SET store_name = %s
-                        WHERE id = %s
-                        RETURNING id, store_name, store_lat, store_lng, status
-                        """,
-                        (store, list_row["id"]),
-                    )
-                    list_row = cur.fetchone()
-                titles = split_compra_titles(raw)
-                created = [
+            list_row = None
+            created = []
+            for suggestion in suggestions:
+                shopping_list_id = None
+                casa_place = None
+                title_override = None
+                if suggestion.get("module") == "casa" and suggestion.get("casa_kind") == "compra":
+                    if list_row is None:
+                        list_row = _ensure_active_shopping_list(cur, user_id)
+                        store = compra_store_name(raw) or suggestion.get("casa_place")
+                        if store and not list_row.get("store_name"):
+                            cur.execute(
+                                """
+                                UPDATE shopping_lists
+                                SET store_name = %s
+                                WHERE id = %s
+                                RETURNING id, store_name, store_lat, store_lng, status
+                                """,
+                                (store, list_row["id"]),
+                            )
+                            list_row = cur.fetchone()
+                    shopping_list_id = str(list_row["id"])
+                    title_override = suggestion.get("title")
+                created.append(
                     _insert_item(
                         cur,
                         user_id,
                         capture_id,
                         suggestion,
-                        title=title,
-                        shopping_list_id=str(list_row["id"]),
-                        casa_place=None,
+                        title=title_override,
+                        shopping_list_id=shopping_list_id,
+                        casa_place=casa_place,
                     )
-                    for title in titles
-                ]
-            else:
-                created = [_insert_item(cur, user_id, capture_id, suggestion)]
+                )
         conn.commit()
     email = read_user_email(user_id)
     events.log_from_request(
@@ -753,10 +759,10 @@ def create_capture(body: CaptureIn, request: Request):
         email=email,
         meta={
             "capture_id": capture_id,
-            "module": suggestion.get("module"),
-            "kind": suggestion.get("kind"),
+            "module": primary.get("module"),
+            "kind": primary.get("kind"),
             "items": len(created),
-            "source": suggestion.get("source"),
+            "source": primary.get("source"),
         },
     )
     if len(created) == 1:

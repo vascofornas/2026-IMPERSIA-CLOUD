@@ -184,7 +184,7 @@ Tres reglas que el archivado debe cumplir; hoy solo la compra cumple parte del p
 - Si hay duplicado: **no crear otro**; enlazar a la captura actual, actualizar notas o avisar en UI. Si la persona repite a propósito, debe quedar claro (p. ej. segundo ítem con fecha distinta).
 - Las correcciones en `classification_examples` enseñan clasificación; la **deduplicación** es otra capa (consulta + criterio), no sustituir una por otra.
 
-**Estado actual (oct 2026):** 1 captura → 1 ítem salvo compras; **títulos literales** vía `entry_title()` (oct 2026, paso A); sin multi-ítem general ni deduplicación.
+**Estado actual (oct 2026):** **varios ítems** por captura vía `archive_items()` (LLM `items[]`, segmentos `;`/«y también», compra expandida); **títulos literales** (`entry_title`); deduplicación pendiente (paso C).
 
 ---
 
@@ -193,6 +193,7 @@ Tres reglas que el archivado debe cumplir; hoy solo la compra cumple parte del p
 ### Paso A — Archivado v2 (prioridad)
 
 - [x] Títulos fieles: `entry_title()` + servidor ignora title del modelo (oct 2026)
+- [x] Multi-ítem: `archive_items()`, prompt `items[]`, split por segmentos (oct 2026)
 - [x] Columna `items.meta` JSONB + tabla `classification_examples` (v0.1)
 - [x] Servicio `archive.py`: híbrido reglas + OpenRouter + fallback `classify.py`
 - [x] Registrar corrección al PATCH de módulo/subtipo (v0.1)

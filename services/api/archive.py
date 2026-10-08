@@ -7,6 +7,7 @@ import re
 from typing import Any
 
 from classify import (
+    LITERAL_DATE,
     MODULES,
     _is_birthday_preparation,
     _is_casa_supply,
@@ -15,6 +16,7 @@ from classify import (
     classify,
     entry_title,
     legacy_kind,
+    split_compra_titles,
 )
 import llm
 
@@ -57,13 +59,13 @@ CASA_FIELD_KEYS = ("casa_kind", "casa_place", "casa_notes", "supply_kind")
 
 SYSTEM_PROMPT = """Eres el archivador de Impersia OS. Clasifica la frase del usuario en español.
 
-Responde SOLO JSON válido con estas claves:
+Responde SOLO JSON válido con una clave "items": lista de 1 a 4 objetos. Cada objeto puede incluir:
 - module: uno de agenda, casa, habitos, viajes, diario, deseos, proyectos, reuniones, memoria, ideas, muro, listas, circulos, espacios
-- title: ignorado por el servidor (no lo uses para reescribir; el título lo fijan las reglas desde la frase)
 - agenda_type: medica|familiar|ocio|recordatorio|general|null (solo si module=agenda)
 - casa_kind: compra|inventario|domestica|mantenimiento|suministro|otro|null (solo si module=casa)
 - family_kind, leisure_kind, reminder_kind, supply_kind cuando aplique
-- medical_for, medical_place, family_for, family_place, leisure_with, leisure_place, casa_place, casa_notes: texto o null
+- medical_for, medical_place, family_for, family_name, family_place, leisure_with, leisure_place, casa_place, casa_notes, reminder_notes, family_notes: texto o null
+- role (opcional): "task" | "birthday_event" — task = aviso/tarea con la fecha principal de la frase; birthday_event = cumpleaños anual en la fecha literal mencionada (9 nov…)
 
 Reglas:
 - Fechas y horas de la cita las resuelve el servidor en campos temporales, no en title.
@@ -79,7 +81,10 @@ Reglas:
 - Cada lunes/día + yoga, gimnasio, meditar, correr → habitos (no ocio).
 - Comida o reunión de empresa/trabajo con fecha → reuniones.
 - Cita médica → agenda.medica.
-- Reflexión o ánimo sin tarea → diario."""
+- Reflexión o ánimo sin tarea → diario.
+- Varios hechos distintos (p. ej. separados por «;», «y también», dos fechas con dos acciones) → varios objetos en items.
+- «Mañana pensar regalo… cumple 54 el 9 de noviembre» → UN item recordatorio (role task); fecha de noviembre en reminder_notes, NO segundo item salvo que pidan guardar el cumple anual.
+- Si piden explícitamente recordar el cumple cada año el 9 nov → segundo item familiar cumpleanos (role birthday_event)."""
 
 DOMESTICA_HINTS = (
     "limpiar",
@@ -249,6 +254,9 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
             result["alert_minutes_before"] = baseline.get("alert_minutes_before")
         if result.get("alert_minutes_before") is None and result.get("starts_at"):
             result["alert_minutes_before"] = 1440 if not baseline.get("time_known") else 15
+        note = _birthday_context_note(raw)
+        if note and not result.get("reminder_notes"):
+            result["reminder_notes"] = note
         return result
 
     if _looks_like_family_event(low) and result.get("module") == "agenda":
@@ -347,7 +355,88 @@ def _clear_casa_fields(target: dict) -> None:
         target[key] = None
 
 
-def _apply_llm(baseline: dict, parsed: dict, raw: str) -> dict:
+def _birthday_context_note(raw: str) -> str | None:
+    match = re.search(r",?\s*que cumple[^.]+", raw, flags=re.IGNORECASE)
+    if match:
+        return match.group(0).lstrip(", ").strip()[:200]
+    match = re.search(rf"cumple\s+\d+\s+el\s+{LITERAL_DATE}", raw, flags=re.IGNORECASE)
+    if match:
+        return match.group(0).strip()[:200]
+    return None
+
+
+def _split_segments(raw: str) -> list[str]:
+    parts = re.split(r"\s*;\s*|\s+\.\s+", raw)
+    if len(parts) <= 1:
+        parts = re.split(r"\s+y también\s+|\s+además\s+", raw, flags=re.IGNORECASE)
+    cleaned = [p.strip() for p in parts if len(p.strip()) >= 10]
+    if len(cleaned) <= 1:
+        return [raw]
+    return cleaned
+
+
+def _normalize_llm_specs(parsed: dict) -> list[dict]:
+    items = parsed.get("items")
+    if isinstance(items, list) and items:
+        specs = [spec for spec in items if isinstance(spec, dict) and spec.get("module") in MODULES]
+        if specs:
+            return specs
+    if parsed.get("module") in MODULES:
+        return [parsed]
+    return []
+
+
+def _birthday_event_phrase(full_raw: str, spec: dict) -> str | None:
+    match = re.search(LITERAL_DATE, full_raw, flags=re.IGNORECASE)
+    if not match:
+        return None
+    date_part = f"{match.group(1)} de {match.group(2)}"
+    name = (spec.get("family_name") or "").strip()
+    if not name:
+        name_match = re.search(
+            r"(?:cumpleaños|regalo)[^,.]*?(?:de|para)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)",
+            full_raw,
+            flags=re.IGNORECASE,
+        )
+        if name_match:
+            name = name_match.group(1)
+    if name:
+        return f"Cumpleaños de {name} el {date_part}"
+    return f"Cumpleaños el {date_part}"
+
+
+def _baseline_for_spec(full_raw: str, spec: dict, primary_baseline: dict, index: int) -> dict:
+    role = (spec.get("role") or "").strip().lower()
+    if index == 0 and role != "birthday_event":
+        return primary_baseline
+    if role == "birthday_event" or (
+        index > 0
+        and spec.get("agenda_type") == "familiar"
+        and spec.get("family_kind") in {"cumpleanos", "aniversario"}
+    ):
+        phrase = _birthday_event_phrase(full_raw, spec)
+        if phrase:
+            return classify(phrase)
+    segment = (spec.get("segment") or spec.get("source_text") or "").strip()
+    if segment and segment != full_raw:
+        return classify(segment)
+    return primary_baseline
+
+
+def _title_for_spec(full_raw: str, spec: dict, index: int, segment: str | None) -> str:
+    if segment and segment != full_raw:
+        return entry_title(segment)
+    if index == 0:
+        return entry_title(full_raw)
+    role = (spec.get("role") or "").strip().lower()
+    if role == "birthday_event":
+        phrase = _birthday_event_phrase(full_raw, spec)
+        if phrase:
+            return entry_title(phrase)
+    return entry_title(full_raw)
+
+
+def _apply_llm_spec(baseline: dict, parsed: dict, title_raw: str) -> dict:
     module = parsed.get("module")
     if module not in MODULES:
         raise ValueError("módulo no válido")
@@ -357,7 +446,7 @@ def _apply_llm(baseline: dict, parsed: dict, raw: str) -> dict:
     out["module"] = module
     out["axis"] = MODULES[module]
     out["kind"] = legacy_kind(module)
-    out["title"] = entry_title(raw)
+    out["title"] = entry_title(title_raw)
     out["source"] = "llm"
 
     if module == "agenda":
@@ -381,7 +470,7 @@ def _apply_llm(baseline: dict, parsed: dict, raw: str) -> dict:
         ck = parsed.get("casa_kind")
         if ck not in CASA_KINDS:
             ck = baseline.get("casa_kind")
-        out["casa_kind"] = _refine_casa_kind(raw, ck if ck in CASA_KINDS else None)
+        out["casa_kind"] = _refine_casa_kind(title_raw, ck if ck in CASA_KINDS else None)
         for key in ("casa_place", "casa_notes"):
             val = parsed.get(key)
             if val is not None and str(val).strip():
@@ -394,6 +483,49 @@ def _apply_llm(baseline: dict, parsed: dict, raw: str) -> dict:
         out["agenda_type"] = None
 
     return out
+
+
+def _archive_rules_only(raw: str) -> dict:
+    baseline = classify(raw)
+    baseline["source"] = "rules"
+    return _post_refine(baseline, raw, baseline)
+
+
+def _expand_compra(raw: str, items: list[dict]) -> list[dict]:
+    expanded: list[dict] = []
+    for item in items:
+        if item.get("module") == "casa" and item.get("casa_kind") == "compra":
+            for title in split_compra_titles(raw):
+                copy = dict(item)
+                copy["title"] = title
+                expanded.append(copy)
+        else:
+            expanded.append(item)
+    return expanded or items
+
+
+def _build_items_from_llm(parsed: dict, full_raw: str, primary_baseline: dict) -> list[dict]:
+    specs = _normalize_llm_specs(parsed)
+    if not specs:
+        fallback = dict(primary_baseline)
+        fallback["source"] = "rules"
+        return [_post_refine(fallback, full_raw, primary_baseline)]
+    built: list[dict] = []
+    for index, spec in enumerate(specs):
+        segment = (spec.get("segment") or spec.get("source_text") or "").strip() or None
+        title_raw = segment if segment else full_raw
+        role = (spec.get("role") or "").strip().lower()
+        baseline = _baseline_for_spec(full_raw, spec, primary_baseline, index)
+        merged = _apply_llm_spec(baseline, spec, title_raw)
+        refine_raw = full_raw
+        if segment:
+            refine_raw = segment
+        elif role == "birthday_event":
+            refine_raw = _birthday_event_phrase(full_raw, spec) or full_raw
+        merged["title"] = _title_for_spec(full_raw, spec, index, segment)
+        refined = _post_refine(merged, refine_raw, baseline)
+        built.append(refined)
+    return built
 
 
 def _temporal_hint(baseline: dict) -> str:
@@ -414,19 +546,25 @@ def _label_from_suggestion(suggestion: dict) -> dict:
     return {key: suggestion.get(key) for key in keys if suggestion.get(key) is not None}
 
 
-def archive(
+def archive_items(
     cur,
     user_id: str,
     text: str,
     *,
     capture_id: str | None = None,
-) -> dict:
+) -> list[dict]:
     raw = " ".join(text.strip().split())
+    segments = _split_segments(raw)
+    if len(segments) > 1:
+        items = [_archive_rules_only(segment) for segment in segments]
+        return _expand_compra(raw, items)
+
     baseline = classify(raw)
-    available, reason, settings = llm.can_use_llm(cur)
+    available, _, settings = llm.can_use_llm(cur)
     if not available:
         baseline["source"] = baseline.get("source") or "rules"
-        return _post_refine(baseline, raw, baseline)
+        single = _post_refine(baseline, raw, baseline)
+        return _expand_compra(raw, [single])
 
     examples = fetch_examples(cur, user_id, raw)
     user_parts = [f'Frase: "{raw}"', f"Temporal (reglas, no cambies): {_temporal_hint(baseline)}"]
@@ -443,6 +581,7 @@ def archive(
     error = None
     input_tokens = output_tokens = latency_ms = 0
     parsed: dict = {}
+    items: list[dict] = []
     try:
         content, input_tokens, output_tokens, latency_ms = llm.openrouter_chat(
             model=settings["model"],
@@ -450,14 +589,17 @@ def archive(
             response_format={"type": "json_object"},
         )
         parsed = json.loads(content)
-        result = _apply_llm(baseline, parsed, raw)
+        items = _build_items_from_llm(parsed, raw, baseline)
         success = True
     except Exception as exc:
         error = str(exc)[:500]
-        result = dict(baseline)
-        result["source"] = "rules"
+        fallback = dict(baseline)
+        fallback["source"] = "rules"
+        items = [_post_refine(fallback, raw, baseline)]
 
-    result = _post_refine(result, raw, baseline)
+    if success:
+        for item in items:
+            item["source"] = "llm"
 
     cost = llm.compute_cost(input_tokens, output_tokens, settings)
     llm.log_usage(
@@ -475,9 +617,18 @@ def archive(
         error_message=error,
         fallback_used=not success,
     )
-    if success:
-        result["source"] = "llm"
-    return result
+    return _expand_compra(raw, items)
+
+
+def archive(
+    cur,
+    user_id: str,
+    text: str,
+    *,
+    capture_id: str | None = None,
+) -> dict:
+    items = archive_items(cur, user_id, text, capture_id=capture_id)
+    return items[0]
 
 
 def maybe_learn_from_patch(

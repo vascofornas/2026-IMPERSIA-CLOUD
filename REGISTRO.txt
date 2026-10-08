@@ -664,3 +664,6 @@ Modesto: títulos más fieles al texto, una Entrada puede crear varios ítems, I
 
 8 de octubre de 2026, 14:10
 Paso A títulos: entry_title en classify (sin títulos inventados por tipo), archive no aplica title del LLM. Despliegue API.
+
+8 de octubre de 2026, 14:20
+Paso B multi-ítem: archive_items (LLM items[], segmentos ;/y también, compra expandida), POST /captures inserta N ítems con mismo capture_id. Notas cumple en reminder_notes. Despliegue API.
