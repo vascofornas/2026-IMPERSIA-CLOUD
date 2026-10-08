@@ -483,7 +483,7 @@ def _when_label(occ: dict) -> str:
 
 
 def _format_date_es(value: datetime) -> str:
-    weekdays = ("lunes", "martes", "miércoles", "jueves", "vieres", "sábado", "domingo")
+    weekdays = ("lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo")
     months = (
         "enero",
         "febrero",

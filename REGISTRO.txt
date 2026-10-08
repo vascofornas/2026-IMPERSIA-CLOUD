@@ -673,3 +673,6 @@ Paso C dedup: dedup.py (coincidencia título/fecha/persona/compra/suministro), f
 
 8 de octubre de 2026, 14:45
 Modesto: al repetir Entrada no veía aviso de duplicado. POST /captures devuelve {items, deduped}; aviso verde bajo Apuntar en Entrada. Despliegue API + web.
+
+8 de octubre de 2026, 14:50
+Correo de aviso: typo «Vieres» → «Viernes» en alerts.py. Despliegue API.
