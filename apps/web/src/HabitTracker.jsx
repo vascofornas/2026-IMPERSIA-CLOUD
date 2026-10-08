@@ -1,3 +1,4 @@
+import { Icon } from "./icons.jsx";
 import { habitKindLabel, trackingWeek } from "./habitos.js";
 import { repeatLabel } from "./repeats.js";
 
@@ -8,7 +9,7 @@ function cellState(day) {
   return "miss";
 }
 
-export default function HabitTracker({ item, todayStart, expandItems, endOfDay }) {
+export default function HabitTracker({ item, todayStart, expandItems, endOfDay, onEdit, onRemove }) {
   const { days, dueCount, doneCount } = trackingWeek(item, todayStart, expandItems, endOfDay);
   const schedule = repeatLabel(item.repeats, item.starts_at);
   const kind = habitKindLabel(item.habit_kind);
@@ -54,6 +55,20 @@ export default function HabitTracker({ item, todayStart, expandItems, endOfDay }
           ))}
         </div>
       </div>
+      {(onEdit || onRemove) && (
+        <footer className="habitos-track-foot">
+          {onEdit && (
+            <button type="button" className="link" onClick={() => onEdit(item)}>
+              <Icon name="editar" /> Cambiar
+            </button>
+          )}
+          {onRemove && (
+            <button type="button" className="link danger" onClick={() => onRemove(item)}>
+              <Icon name="borrar" /> Borrar
+            </button>
+          )}
+        </footer>
+      )}
     </article>
   );
 }

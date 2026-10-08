@@ -11,6 +11,7 @@ from classify import (
     HABIT_KINDS,
     HABIT_ROLES,
     MODULES,
+    _looks_like_habit_goal,
     _is_birthday_preparation,
     _is_casa_supply,
     _is_personal_agenda_reminder,
@@ -234,6 +235,14 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
         result["supply_kind"] = _supply_kind(low)
         if result.get("starts_at") and result.get("alert_minutes_before") is None:
             result["alert_minutes_before"] = 10080
+        return result
+
+    if _looks_like_habit_goal(low):
+        result["module"] = "habitos"
+        _sync_module_fields(result)
+        _clear_agenda_fields(result)
+        _clear_casa_fields(result)
+        _apply_habit_fields(result, raw)
         return result
 
     if looks_like_habit_log(low):

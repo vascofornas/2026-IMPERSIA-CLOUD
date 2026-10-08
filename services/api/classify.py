@@ -249,6 +249,8 @@ def classify(text: str) -> dict:
     habit_fields = habit_meta(raw, low) if module == "habitos" else {}
     if module == "habitos" and habit_fields.get("habit_role") == "log":
         repeats = None
+    elif module == "habitos" and not repeats and _looks_like_habit_goal(low):
+        repeats = "daily"
     return _classify_result(
         module,
         entry_title(raw),
@@ -355,6 +357,7 @@ def _habit_routine_kind(low: str) -> str:
             "gimnasio",
             "yoga",
             "caminar",
+            "pasos",
             "ejercicio",
             "entrenar",
             "remo",
@@ -608,6 +611,8 @@ def _module(low: str) -> str:
         return "diario"
     if re.search(r"\ba las \d", low) or _explicit_day(low):
         return "agenda"
+    if _looks_like_habit_goal(low):
+        return "habitos"
     if _is_task(low):
         return "proyectos"
     return "diario"
@@ -793,6 +798,34 @@ def _weekday_number(low: str, now: datetime):
             month = 1
             year += 1
     return None
+
+
+HABIT_GOAL_HINTS = (
+    "pasos",
+    "caminar",
+    "correr",
+    "remo",
+    "gimnasio",
+    "ejercicio",
+    "meditar",
+    "meditación",
+    "meditacion",
+    "yoga",
+    "leer",
+    "agua",
+)
+
+
+def _looks_like_habit_goal(low: str) -> bool:
+    if re.search(r"\bcada\b", low):
+        return True
+    if "al menos" in low and any(h in low for h in HABIT_GOAL_HINTS):
+        return True
+    if "tengo que" in low or "hay que" in low:
+        return any(h in low for h in HABIT_GOAL_HINTS)
+    if re.search(r"\d+\s*minutos", low) and any(h in low for h in ("ejercicio", "remo", "yoga", "correr", "caminar")):
+        return True
+    return False
 
 
 def _is_task(low: str) -> bool:

@@ -1508,6 +1508,24 @@ a.connect {
   font-size: 1.1rem;
 }
 
+.habitos-track-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.habitos-row-kind {
+  margin: 0 0 2px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--habitos);
+}
+
 .habitos-logs {
   list-style: none;
   padding: 0;

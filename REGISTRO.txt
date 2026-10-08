@@ -703,3 +703,6 @@ Modesto: no preguntar cada vez por subida/despliegue. Regla en .cursor/rules/com
 
 8 de octubre de 2026, 17:50
 UI Hábitos: seguimiento rediseñado (tarjeta por rutina, rejilla 7 días Lu–Sá, hecho/pendiente/no tocaba, puntuación semana). HabitTracker.jsx + estilos. Despliegue web.
+
+8 de octubre de 2026, 18:00
+Unificar rutinas en UI: quitada lista duplicada «Tus rutinas»; todas en tarjeta Seguimiento con Cambiar/Borrar. Archivado: metas tipo pasos/ejercicio → habitos/ejercicio (no Proyectos); API rellena habit_kind si faltaba. Despliegue API+web.

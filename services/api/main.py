@@ -22,7 +22,17 @@ from admin_events import router as admin_events_router
 from admin_llm import router as admin_llm_router
 import archive
 import dedup
-from classify import HABIT_KINDS, HABIT_ROLES, MODULES, classify, compra_store_name, legacy_kind, split_compra_titles
+from classify import (
+    HABIT_KINDS,
+    HABIT_ROLES,
+    MODULES,
+    classify,
+    compra_store_name,
+    habit_meta,
+    legacy_kind,
+    looks_like_habit_log,
+    split_compra_titles,
+)
 import events
 import llm
 
@@ -1314,7 +1324,21 @@ def _public_exception(row: dict) -> dict:
     return out
 
 
+def _normalize_habit_fields(row: dict) -> None:
+    if row.get("module") != "habitos":
+        return
+    title = row.get("title") or ""
+    low = title.lower()
+    if row.get("habit_role") not in HABIT_ROLES:
+        row["habit_role"] = "log" if looks_like_habit_log(low) else "routine"
+    if row.get("habit_kind") not in HABIT_KINDS:
+        meta = habit_meta(title, low)
+        row["habit_kind"] = meta.get("habit_kind") or "otro"
+
+
 def _public_item(row: dict, exceptions: list | None = None) -> dict:
+    row = dict(row)
+    _normalize_habit_fields(row)
     starts = row["starts_at"]
     return {
         "id": str(row["id"]),

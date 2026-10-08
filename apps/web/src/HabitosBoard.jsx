@@ -30,6 +30,9 @@ function RoutineRow({ item, dayKey, onMarkDone, onEdit, onRemove, compact, showS
         <span className="habitos-check habitos-check-static" aria-hidden />
       )}
       <div className="habitos-row-body">
+        {item.module === "habitos" && (
+          <p className="habitos-row-kind">{habitKindLabel(item.habit_kind)}</p>
+        )}
         <p className="title">{item.title}</p>
         {schedule && <p className="when">{schedule}</p>}
         {!compact && item.time_known && item.starts_at && (
@@ -168,27 +171,13 @@ export default function HabitosBoard({
                 todayStart={todayStart}
                 expandItems={expandItems}
                 endOfDay={endOfDay}
+                onEdit={startEdit}
+                onRemove={askRemove}
               />
             ))}
           </div>
         </section>
       )}
-
-      <section className="habitos-rutinas-all">
-        <h2>Tus rutinas</h2>
-        <p className="private">Todo lo que archivaste como hábito repetido. No es la lista de Casa ni el calendario.</p>
-        {openRoutines.map((item) => (
-          <RoutineRow
-            key={`all-${item.id}`}
-            item={item}
-            dayKey={null}
-            onMarkDone={onMarkDone}
-            onEdit={startEdit}
-            onRemove={askRemove}
-            showSchedule
-          />
-        ))}
-      </section>
 
       <section>
         <h2>Registro</h2>
