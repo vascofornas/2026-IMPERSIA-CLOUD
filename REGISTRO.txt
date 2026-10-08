@@ -694,3 +694,9 @@ Hábitos v1 en código (sin desplegar aún): migración 013 (habit_role, habit_k
 
 8 de octubre de 2026, 17:25
 Prueba Modesto: «cada martes, jueves y viernes… remo en casa» → título roto y módulo Casa. Causas: entry_title quitaba días uno a uno; «en casa» ganaba a Hábitos. Corrección: lista de días en bloque, repeats weekly:2,4,5, prioridad cada→habitos, título limpio.
+
+8 de octubre de 2026, 17:35
+Desplegado commit e959c37 en VPS: migración 013, API reiniciada, web dist con HabitosBoard (hero, tareas hoy, seguimiento, registro; sin columnas Tuyo/Ejemplos). Recarga forzada en el navegador si sigue la vista antigua.
+
+8 de octubre de 2026, 17:40
+Modesto: no preguntar cada vez por subida/despliegue. Regla en .cursor/rules/como-trabajar.mdc — al cerrar cambios de API/web, commit, push y VPS sin pedir permiso en el chat.
