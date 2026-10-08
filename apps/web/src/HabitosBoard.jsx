@@ -1,5 +1,6 @@
 import { Icon } from "./icons.jsx";
 import { repeatLabel } from "./repeats.js";
+import HabitTracker from "./HabitTracker.jsx";
 import {
   dayKeyFromDate,
   groupRoutinesByFranja,
@@ -9,7 +10,6 @@ import {
   pickHeroRoutine,
   recentHabitLogs,
   routinesForToday,
-  streakDots,
 } from "./habitos.js";
 
 function RoutineRow({ item, dayKey, onMarkDone, onEdit, onRemove, compact, showSchedule }) {
@@ -133,7 +133,7 @@ export default function HabitosBoard({
         </section>
       )}
 
-      <section>
+      <section className="habitos-section habitos-section-today">
         <h2>Tareas de hoy</h2>
         {!routines.length ? (
           <p className="private">Hoy no toca ninguna rutina guardada.</p>
@@ -157,18 +157,18 @@ export default function HabitosBoard({
       </section>
 
       {openRoutines.length > 0 && (
-        <section>
-          <h2>Seguimiento (7 días)</h2>
+        <section className="habitos-section habitos-section-track">
+          <h2>Seguimiento</h2>
+          <p className="private habitos-section-lead">Últimos 7 días. Verde = hecho el día que tocaba. Gris = ese día no entraba en tu rutina.</p>
           <div className="habitos-track-grid">
-            {openRoutines.slice(0, 6).map((item) => (
-              <div className="habitos-track" key={item.id}>
-                <p className="title">{item.title}</p>
-                <div className="habitos-dots" aria-hidden>
-                  {streakDots(item, todayStart).map((dot) => (
-                    <span key={dot.key} className={dot.done ? "on" : ""} title={dot.key} />
-                  ))}
-                </div>
-              </div>
+            {openRoutines.map((item) => (
+              <HabitTracker
+                key={item.id}
+                item={item}
+                todayStart={todayStart}
+                expandItems={expandItems}
+                endOfDay={endOfDay}
+              />
             ))}
           </div>
         </section>

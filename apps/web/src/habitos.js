@@ -132,15 +132,32 @@ export function recentHabitLogs(items, limit = 8) {
     .slice(0, limit);
 }
 
-export function streakDots(item, todayStart, days = 7) {
+const WEEKDAY_SHORT = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sá"];
+
+export function trackingWeek(item, todayStart, expandItems, endOfDay, days = 7) {
   const out = [];
+  let dueCount = 0;
+  let doneCount = 0;
   for (let i = days - 1; i >= 0; i -= 1) {
     const d = new Date(todayStart);
     d.setDate(d.getDate() - i);
     const key = dayKeyFromDate(d);
-    out.push({ key, done: isRoutineDoneToday(item, key) });
+    const due = routineDueToday(item, d, expandItems, endOfDay);
+    const done = isRoutineDoneToday(item, key);
+    if (due) {
+      dueCount += 1;
+      if (done) doneCount += 1;
+    }
+    out.push({
+      key,
+      label: WEEKDAY_SHORT[d.getDay()],
+      dayNum: d.getDate(),
+      due,
+      done,
+      isToday: i === 0,
+    });
   }
-  return out;
+  return { days: out, dueCount, doneCount };
 }
 
 export function hasHabitContent(items, todayStart, expandItems, endOfDay) {
