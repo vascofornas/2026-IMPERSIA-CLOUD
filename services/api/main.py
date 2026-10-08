@@ -21,6 +21,7 @@ from psycopg.rows import dict_row
 from admin_events import router as admin_events_router
 from admin_llm import router as admin_llm_router
 import archive
+import dedup
 from classify import MODULES, classify, compra_store_name, legacy_kind, split_compra_titles
 import events
 import llm
@@ -660,6 +661,46 @@ def _insert_item(cur, user_id: str, capture_id: str, suggestion: dict, *, title:
     return cur.fetchone()
 
 
+def _file_suggestion(
+    cur,
+    user_id: str,
+    capture_id: str,
+    suggestion: dict,
+    *,
+    title: str | None = None,
+    shopping_list_id: str | None = None,
+    casa_place: str | None = None,
+    batch_seen: set[tuple] | None = None,
+) -> tuple[dict | None, bool]:
+    title_val = (title or suggestion.get("title") or "").strip()
+    probe = dict(suggestion)
+    if shopping_list_id:
+        probe["shopping_list_id"] = shopping_list_id
+    fp = dedup.fingerprint(probe, title=title_val)
+    if batch_seen is not None:
+        if fp in batch_seen:
+            return None, True
+        batch_seen.add(fp)
+
+    existing = dedup.find_duplicate(cur, user_id, probe, title=title_val)
+    if existing:
+        row = dedup.merge_existing(cur, user_id, capture_id, suggestion, existing)
+        item = _public_item(row)
+        item["dedupe_action"] = "merged"
+        return item, True
+
+    row = _insert_item(
+        cur,
+        user_id,
+        capture_id,
+        suggestion,
+        title=title,
+        shopping_list_id=shopping_list_id,
+        casa_place=casa_place,
+    )
+    return _public_item(row), False
+
+
 @app.get("/shopping-lists/active")
 def get_active_shopping_list(request: Request):
     user_id = current_user(request)
@@ -718,6 +759,8 @@ def create_capture(body: CaptureIn, request: Request):
             capture_id = str(cur.fetchone()["id"])
             list_row = None
             created = []
+            batch_seen: set[tuple] = set()
+            deduped = 0
             for suggestion in suggestions:
                 shopping_list_id = None
                 casa_place = None
@@ -739,17 +782,22 @@ def create_capture(body: CaptureIn, request: Request):
                             list_row = cur.fetchone()
                     shopping_list_id = str(list_row["id"])
                     title_override = suggestion.get("title")
-                created.append(
-                    _insert_item(
-                        cur,
-                        user_id,
-                        capture_id,
-                        suggestion,
-                        title=title_override,
-                        shopping_list_id=shopping_list_id,
-                        casa_place=casa_place,
-                    )
+                item, was_deduped = _file_suggestion(
+                    cur,
+                    user_id,
+                    capture_id,
+                    suggestion,
+                    title=title_override,
+                    shopping_list_id=shopping_list_id,
+                    casa_place=casa_place,
+                    batch_seen=batch_seen,
                 )
+                if item is None:
+                    deduped += 1
+                    continue
+                if was_deduped:
+                    deduped += 1
+                created.append(item)
         conn.commit()
     email = read_user_email(user_id)
     events.log_from_request(
@@ -762,12 +810,13 @@ def create_capture(body: CaptureIn, request: Request):
             "module": primary.get("module"),
             "kind": primary.get("kind"),
             "items": len(created),
+            "deduped": deduped,
             "source": primary.get("source"),
         },
     )
     if len(created) == 1:
-        return _public_item(created[0])
-    return [_public_item(row) for row in created]
+        return created[0]
+    return created
 
 
 @app.post("/captures/{capture_id}/confirm", status_code=201)

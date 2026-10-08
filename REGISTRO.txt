@@ -667,3 +667,6 @@ Paso A títulos: entry_title en classify (sin títulos inventados por tipo), arc
 
 8 de octubre de 2026, 14:20
 Paso B multi-ítem: archive_items (LLM items[], segmentos ;/y también, compra expandida), POST /captures inserta N ítems con mismo capture_id. Notas cumple en reminder_notes. Despliegue API.
+
+8 de octubre de 2026, 14:30
+Paso C dedup: dedup.py (coincidencia título/fecha/persona/compra/suministro), fusiona notas y enlaza capture_id; aviso en web si merged. Despliegue API + web.

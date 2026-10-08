@@ -232,9 +232,17 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
         body: JSON.stringify({ text }),
       });
       const fresh = Array.isArray(result) ? result : [result];
-      const next = [...fresh, ...items];
+      let next = [...items];
+      for (const item of fresh) {
+        const idx = next.findIndex((row) => row.id === item.id);
+        if (idx >= 0) next[idx] = item;
+        else next = [item, ...next];
+      }
       setItems(next);
       setText("");
+      if (fresh.some((item) => item.dedupe_action === "merged")) {
+        setError("Ya lo tenías guardado; se han unido notas nuevas si las había.");
+      }
       checkAlerts(next);
     } catch (err) {
       setError(err.message);
