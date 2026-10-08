@@ -676,3 +676,6 @@ Modesto: al repetir Entrada no veía aviso de duplicado. POST /captures devuelve
 
 8 de octubre de 2026, 14:50
 Correo de aviso: typo «Vieres» → «Viernes» en alerts.py. Despliegue API.
+
+8 de octubre de 2026, 15:15
+Modesto confirma que va mucho mejor. Cierre acordado del bloque eje A / Agenda (citas, recordatorios, familiar, ocio, avisos) y eje A / Casa (compra, inventario, domestica, mantenimiento, suministro). docs/06 actualizado. No congelar Fase 1 entera (archivado sigue aprendiendo); sí congelar ronda de pruebas A en estos dos módulos.

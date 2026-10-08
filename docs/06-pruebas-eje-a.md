@@ -1,5 +1,7 @@
 # Pruebas eje A — Agenda y Casa
 
+**Estado (8 oct 2026):** bloque **cerrado para uso diario**. Entrada + archivado IA + pantallas Agenda/Casa/Hoy validados por Modesto. Siguiente trabajo de producto: otro módulo del eje A (p. ej. Hábitos) o Fase 2 del roadmap; aquí solo **bugs** de pantalla o archivado grave, no nueva ronda de parches de palabras.
+
 Frases cargadas con `services/api/scripts/seed_axis_a_entries.py` (archivado real con IA si está activa).
 
 ## Agenda y citas (20)
