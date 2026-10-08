@@ -1484,8 +1484,12 @@ a.connect {
 }
 
 .habitos-track-cell.off {
-  opacity: 0.35;
-  background: color-mix(in srgb, var(--line) 40%, transparent);
+  opacity: 0.2;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--line) 50%, transparent);
+  min-height: 12px;
+  margin-top: 12px;
+  margin-bottom: 12px;
 }
 
 .habitos-track-cell.done {

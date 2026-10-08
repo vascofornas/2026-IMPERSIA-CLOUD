@@ -1,3 +1,5 @@
+import { parseWeeklyDays } from "./repeats.js";
+
 const FRANJA_LABEL = {
   manana: "Mañana",
   tarde: "Tarde",
@@ -59,20 +61,32 @@ export function isRoutineDoneToday(item, dayKey) {
   return false;
 }
 
-export function routineDueToday(item, todayStart, expandItems, endOfDay) {
+/** ¿Esta rutina toca en la fecha concreta (no solo «hoy»)? */
+export function routineDueOnDay(item, dayDate, expandItems, endOfDay) {
   if (!isHabitRoutine(item)) return false;
-  const key = dayKeyFromDate(todayStart);
+  const key = dayKeyFromDate(dayDate);
   if (exceptionFor(item, key)?.kind === "skip") return false;
-  if (item.repeats && item.starts_at) {
-    return expandItems([item], todayStart, endOfDay(todayStart)).length > 0;
+
+  const weekDays = parseWeeklyDays(item.repeats);
+  if (weekDays?.length) {
+    return weekDays.includes(dayDate.getDay());
   }
   if (item.repeats === "daily") return true;
+  if (item.repeats === "weekly" || item.repeats === "monthly" || item.repeats === "yearly") {
+    if (!item.starts_at) return false;
+    const dayStart = new Date(dayDate);
+    dayStart.setHours(0, 0, 0, 0);
+    return expandItems([item], dayStart, endOfDay(dayStart)).length > 0;
+  }
   if (!item.repeats) {
-    if (!item.starts_at) return true;
+    if (!item.starts_at) return false;
     return dayKeyFromDate(new Date(item.starts_at)) === key;
   }
-  if (item.repeats && !item.starts_at) return true;
   return false;
+}
+
+export function routineDueToday(item, todayStart, expandItems, endOfDay) {
+  return routineDueOnDay(item, todayStart, expandItems, endOfDay);
 }
 
 export function routinesForToday(items, todayStart, expandItems, endOfDay) {
@@ -142,7 +156,7 @@ export function trackingWeek(item, todayStart, expandItems, endOfDay, days = 7) 
     const d = new Date(todayStart);
     d.setDate(d.getDate() - i);
     const key = dayKeyFromDate(d);
-    const due = routineDueToday(item, d, expandItems, endOfDay);
+    const due = routineDueOnDay(item, d, expandItems, endOfDay);
     const done = isRoutineDoneToday(item, key);
     if (due) {
       dueCount += 1;

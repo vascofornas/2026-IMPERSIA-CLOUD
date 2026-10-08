@@ -706,3 +706,6 @@ UI Hábitos: seguimiento rediseñado (tarjeta por rutina, rejilla 7 días Lu–S
 
 8 de octubre de 2026, 18:00
 Unificar rutinas en UI: quitada lista duplicada «Tus rutinas»; todas en tarjeta Seguimiento con Cambiar/Borrar. Archivado: metas tipo pasos/ejercicio → habitos/ejercicio (no Proyectos); API rellena habit_kind si faltaba. Despliegue API+web.
+
+8 de octubre de 2026, 18:10
+Fix seguimiento: rutinas weekly:2,4,6 ya no cuentan los 7 días (bug repeats sin starts_at). Pasos daily = 7 celdas activas; remo solo ma/ju/sá. Despliegue web.

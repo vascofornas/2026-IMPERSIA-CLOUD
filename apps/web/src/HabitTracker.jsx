@@ -49,8 +49,9 @@ export default function HabitTracker({ item, todayStart, expandItems, endOfDay, 
                     ? `${day.key}: hecho`
                     : `${day.key}: pendiente`
               }
+              aria-hidden={!day.due}
             >
-              {day.done ? "✓" : day.due && day.isToday ? "·" : ""}
+              {!day.due ? "" : day.done ? "✓" : day.isToday ? "·" : ""}
             </span>
           ))}
         </div>
