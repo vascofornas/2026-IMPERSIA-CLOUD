@@ -9,7 +9,17 @@ function cellState(day) {
   return "miss";
 }
 
-export default function HabitTracker({ item, todayStart, expandItems, endOfDay, onEdit, onRemove, onMarkDone, editingId }) {
+export default function HabitTracker({
+  item,
+  todayStart,
+  expandItems,
+  endOfDay,
+  onEdit,
+  onRemove,
+  onMarkDone,
+  editingId,
+  compact,
+}) {
   const { days, dueCount, doneCount } = trackingWeek(item, todayStart, expandItems, endOfDay);
   const schedule = repeatLabel(item.repeats, item.starts_at);
   const kind = habitKindLabel(item.habit_kind);
@@ -17,7 +27,11 @@ export default function HabitTracker({ item, todayStart, expandItems, endOfDay, 
   const today = days.find((d) => d.isToday);
 
   return (
-    <article className={["habitos-track-card", editingId === item.id ? "editing" : ""].filter(Boolean).join(" ")}>
+    <article
+      className={["habitos-track-card", compact ? "compact" : "", editingId === item.id ? "editing" : ""]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <header className="habitos-track-head">
         <div>
           <p className="habitos-track-kind">{kind}</p>

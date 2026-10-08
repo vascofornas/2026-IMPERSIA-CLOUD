@@ -558,6 +558,8 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
                 endOfDay={endOfDay}
                 onMarkDone={habitMarkDone}
                 onEdit={startEdit}
+                askRemove={askRemove}
+                editingId={editing?.module === "habitos" ? editing.id : null}
               />
               <h2>Para hoy</h2>
               {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} /> : <p className="private">Hoy no hay nada con fecha.</p>}

@@ -715,3 +715,6 @@ Modesto: pasos se veían distinto al remo y no se podían editar hábitos. Causa
 
 8 de octubre de 2026, 18:40
 Título remo «los y, 20 minutos»: entry_title quitaba martes/jueves uno a uno; repeats caía en daily sin «cada». classify.py: quitar bloques «los martes y jueves», weekly:2,4 sin cada, sin fecha fantasma; minutos → habit_notes. Seguimiento muestra notas bajo el horario. Despliegue API+web. Entrada antigua del remo: borrar y volver a apuntar o Cambiar título/repetición.
+
+8 de octubre de 2026, 19:00
+Modesto: tras recrear, aún distinto caminar vs remo. Causa: en Hoy solo salía el diario (hero/lista checkbox); remo a veces ni aparecía. Ahora Hoy y Hábitos usan la misma tarjeta HabitTracker; quitado hero «Siguiente hoy»; título sin «Tengo que»; pasos → habit_notes. Despliegue API+web. Re-crear pasos para notas o Cambiar notas a mano.

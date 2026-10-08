@@ -394,6 +394,12 @@ def habit_meta(raw: str, low: str) -> dict:
     mins = re.search(r"\b(\d{1,3})\s*minutos?\b", low)
     if mins and not re.search(r"\d+\s*minutos?\s*antes\b", low):
         notes = f"{mins.group(1)} min"
+    if not notes:
+        steps = re.search(r"\b([\d.\s]{3,9})\s*pasos\b", low)
+        if steps:
+            num = "".join(steps.group(1).split()).replace(".", "")
+            if num.isdigit():
+                notes = f"{int(num):,}".replace(",", ".") + " pasos"
     return {
         "habit_role": "routine",
         "habit_kind": _habit_routine_kind(low),
@@ -727,6 +733,7 @@ def entry_title(raw: str) -> str:
     text = re.sub(r"\s+,", ",", text)
     text = re.sub(r"^y\s+", "", text, flags=re.IGNORECASE)
     text = " ".join(text.split()).strip(" .;:-,")
+    text = re.sub(r"^(?:tengo que|hay que|tengo|necesito)\s+", "", text, flags=re.IGNORECASE)
     if not text:
         text = raw.strip()
     if not text:

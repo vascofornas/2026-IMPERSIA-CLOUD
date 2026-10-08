@@ -1525,6 +1525,15 @@ a.connect {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--habitos) 50%, transparent);
 }
 
+.habitos-track-card.compact {
+  padding: 12px 14px;
+}
+
+.habitos-track-grid-compact {
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
 .habitos-track-cell.clickable {
   cursor: pointer;
   border: none;
