@@ -243,10 +243,10 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
             result[key] = None
         if not re.search(r"\bcada a[nñ]o\b|\btodos los a[nñ]os\b", low):
             result["repeats"] = None
-        if result.get("alert_minutes_before") == 1440 and not re.search(
-            r"\b\d+\s*d[ií]as?\s*antes\b", low
-        ):
+        if result.get("alert_minutes_before") is None:
             result["alert_minutes_before"] = baseline.get("alert_minutes_before")
+        if result.get("alert_minutes_before") is None and result.get("starts_at"):
+            result["alert_minutes_before"] = 1440 if not baseline.get("time_known") else 15
         return result
 
     if _looks_like_family_event(low) and result.get("module") == "agenda":

@@ -655,3 +655,6 @@ Prueba Entrada: «mañana… regalo de cumpleaños para Eva» se archivó como C
 
 8 de octubre de 2026, 13:40
 Misma frase quedó como Cita general (agenda_type vacío). Regla _is_personal_agenda_reminder → agenda.recordatorio (tengo que + mañana, regalo cumpleaños). Despliegue API.
+
+8 de octubre de 2026, 13:50
+Correo de aviso no salía: recordatorio sin hora quedaba sin alert_minutes_before (requisito del timer). Por defecto 1 día antes; web permite aviso con solo fecha en Agenda. Despliegue API + web.

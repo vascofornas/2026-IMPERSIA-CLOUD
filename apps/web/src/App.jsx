@@ -266,7 +266,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
             title: editing.title,
             starts_at: editing.starts_at,
             time_known: Boolean(editing.time_known),
-            alert_minutes_before: (editing.time_known || (editing.module === "casa" && editing.starts_at))
+            alert_minutes_before: allowsAlertMinutes(editing)
               ? editing.alert_minutes_before ?? null
               : null,
             agenda_type: editing.module === "agenda" ? editing.agenda_type || null : null,
@@ -1309,7 +1309,7 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, 
                   onChange={(e) => setEditing(withWhen(editing, datePart(editing.starts_at), e.target.value))}
                 />
               </label>
-              {(editing.time_known || (editing.module === "casa" && editing.starts_at)) && editing.editScope !== "one" && (
+              {allowsAlertMinutes(editing) && editing.editScope !== "one" && (
                 <label>
                   Aviso
                   <select
@@ -1881,10 +1881,28 @@ function timePart(proposal) {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function allowsAlertMinutes(editing) {
+  if (!editing?.starts_at) return false;
+  if (editing.time_known) return true;
+  if (editing.module === "casa") return true;
+  if (editing.module === "agenda") return true;
+  return false;
+}
+
 function withWhen(proposal, day, time) {
   if (!day) return { ...proposal, starts_at: null, time_known: false, alert_minutes_before: null };
-  if (!time) return { ...proposal, starts_at: day, time_known: false, alert_minutes_before: null };
-  return { ...proposal, starts_at: `${day}T${time}`, time_known: true };
+  if (!time) {
+    const alert =
+      proposal.alert_minutes_before ??
+      (proposal.module === "agenda" && proposal.agenda_type === "recordatorio" ? 1440 : null);
+    return { ...proposal, starts_at: day, time_known: false, alert_minutes_before: alert };
+  }
+  return {
+    ...proposal,
+    starts_at: `${day}T${time}`,
+    time_known: true,
+    alert_minutes_before: proposal.alert_minutes_before ?? 15,
+  };
 }
 
 function alertValue(item) {

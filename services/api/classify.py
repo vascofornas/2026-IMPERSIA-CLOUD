@@ -186,6 +186,8 @@ def classify(text: str) -> dict:
         )
     if module == "agenda" and not medical and not family and not leisure and _is_personal_agenda_reminder(low):
         rem = _reminder_meta(raw, low)
+        if alert is None:
+            alert = 15 if time_known else 1440
         return _classify_result(
             module,
             _title(raw),
