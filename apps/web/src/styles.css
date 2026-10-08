@@ -572,6 +572,30 @@ button.text {
   color: var(--muted);
 }
 
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.entrada-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.entrada-actions button {
+  margin-top: 0;
+}
+
+.entrada-actions button.busy {
+  min-width: 9.5rem;
+}
+
+.entrada-status {
+  margin: 0;
+}
 
 a.connect {
   display: inline-block;

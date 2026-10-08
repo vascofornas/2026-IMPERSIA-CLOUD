@@ -631,3 +631,6 @@ Inicio del registro de actividad (v0.1): tabla events, API /events y /admin/even
 
 8 de octubre de 2026, 12:15
 OpenRouter probado en admin (health_test OK). Fase A v0.1: archive.py en Entrada, migración 012 (classification_examples, items.meta), aprendizaje al corregir módulo. IA sigue apagada por defecto hasta prueba en web app. Despliegue VPS.
+
+8 de octubre de 2026, 12:40
+Modesto: en Entrada, Apuntar no da feedback mientras archiva (IA tarda). Botón «Archivando…», texto de espera, deshabilitar textarea y evitar doble clic. Suben web y dist.

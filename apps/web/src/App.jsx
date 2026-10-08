@@ -172,6 +172,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   const [pendingDelete, setPendingDelete] = useState(null);
   const [pendingAction, setPendingAction] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   const [error, setError] = useState("");
   const [shoppingList, setShoppingList] = useState(null);
   const screen = useHash();
@@ -222,7 +223,9 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   }, [googleEmail]);
 
   async function archive() {
+    if (archiving || !text.trim()) return;
     setError("");
+    setArchiving(true);
     try {
       const result = await call("/captures", {
         method: "POST",
@@ -235,6 +238,8 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
       checkAlerts(next);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setArchiving(false);
     }
   }
 
@@ -435,8 +440,19 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
         <>
           <h1>Entrada</h1>
           <p className="lead">Escribe lo que tengas en la cabeza. Impersia lo archiva en su eje. Si no es el sitio, lo cambias.</p>
-          <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Llamar al taller el viernes" />
-          <button type="button" onClick={archive} disabled={!text.trim()}>Apuntar</button>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Llamar al taller el viernes"
+            disabled={archiving}
+            aria-busy={archiving}
+          />
+          <div className="entrada-actions">
+            <button type="button" className={archiving ? "busy" : ""} onClick={archive} disabled={!text.trim() || archiving} aria-busy={archiving}>
+              {archiving ? "Archivando…" : "Apuntar"}
+            </button>
+            {archiving && <p className="private entrada-status">Impersia está archivando. Puede tardar unos segundos con IA.</p>}
+          </div>
           <h2>Archivado</h2>
           <ItemList items={items} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
         </>
