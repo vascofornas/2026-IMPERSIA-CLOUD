@@ -24,7 +24,14 @@ import HabitosBoard, { HoyBienestar } from "./HabitosBoard.jsx";
 import { hasHoyBienestarContent, isHabitRoutine } from "./habitos.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
 import { trackScreen } from "./events.js";
-import { collapseRepeatingSeries, nextOccurrenceWhenLabel, repeatLabel } from "./repeats.js";
+import RepeatEditFields from "./RepeatEditFields.jsx";
+import {
+  collapseRepeatingSeries,
+  nextOccurrenceWhenLabel,
+  repeatLabel,
+  taskRepeatEditorState,
+  taskRepeatsFromEditor,
+} from "./repeats.js";
 import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
@@ -336,6 +343,10 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
           patch.habit_kind = draft.habit_kind || "ejercicio";
           patch.habit_notes = draft.habit_notes ?? null;
           if (overrides.repeats !== undefined) patch.repeats = overrides.repeats;
+        } else if (draft.editScope !== "one") {
+          const preset = draft.repeatPreset ?? taskRepeatEditorState(draft.repeats).preset;
+          const weekDays = draft.repeatWeekDays ?? taskRepeatEditorState(draft.repeats).weekDays;
+          patch.repeats = taskRepeatsFromEditor(preset, weekDays);
         }
         item = await call(`/items/${draft.id}`, {
           method: "PATCH",
@@ -418,13 +429,23 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
     };
   }
 
+  function withTaskRepeatFields(row) {
+    if (isHabitRoutine(row)) return row;
+    const { preset, weekDays } = taskRepeatEditorState(row.repeats);
+    return { ...row, repeatPreset: preset, repeatWeekDays: weekDays };
+  }
+
+  function prepareEditRow(base, extra) {
+    return withTaskRepeatFields(withHabitEditFields({ ...base, ...extra }));
+  }
+
   function startEdit(item) {
     if (item.repeats && item.occurrenceKey) {
       setPendingAction({ item, mode: "edit" });
       return;
     }
     const base = items.find((entry) => entry.id === item.id) || baseItem(item);
-    setEditing(withHabitEditFields({ ...base, editScope: "all" }));
+    setEditing(prepareEditRow(base, { editScope: "all" }));
   }
 
   async function saveHabitEdit(overrides) {
@@ -435,8 +456,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
     setPendingAction(null);
     const base = items.find((entry) => entry.id === item.id) || baseItem(item);
     setEditing(
-      withHabitEditFields({
-        ...base,
+      prepareEditRow(base, {
         starts_at: item.starts_at,
         time_known: item.time_known,
         occurrenceDay: dayKey(item.starts_at),
@@ -449,8 +469,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
     setPendingAction(null);
     const base = items.find((entry) => entry.id === item.id) || baseItem(item);
     setEditing(
-      withHabitEditFields({
-        ...base,
+      prepareEditRow(base, {
         editScope: "all",
         anchorOccurrenceKey: item.occurrenceKey || null,
       }),
@@ -1497,6 +1516,14 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, 
                   onChange={(e) => setEditing(withWhen(editing, datePart(editing.starts_at), e.target.value))}
                 />
               </label>
+              {editing.editScope !== "one" && !isHabitRoutine(editing) && (
+                  <RepeatEditFields
+                    preset={editing.repeatPreset ?? taskRepeatEditorState(editing.repeats).preset}
+                    weekDays={editing.repeatWeekDays ?? taskRepeatEditorState(editing.repeats).weekDays}
+                    onPresetChange={(repeatPreset) => setEditing({ ...editing, repeatPreset })}
+                    onWeekDaysChange={(repeatWeekDays) => setEditing({ ...editing, repeatWeekDays, repeatPreset: "weekly_days" })}
+                  />
+                )}
               {allowsAlertMinutes(editing) && editing.editScope !== "one" && (
                 <label>
                   Aviso

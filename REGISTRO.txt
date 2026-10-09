@@ -745,3 +745,6 @@ Modesto: botón Cambiar no funcionaba en varios sitios. Causas: registros sueño
 
 9 de octubre de 2026, 14:20
 Panel Cambiar hábito: radios de Repetición desalineados (input width 100% global). styles.css: excepción radio/checkbox, tarjeta .editor legible en todos los temas. Despliegue web.
+
+9 de octubre de 2026, 14:30
+Modesto: tareas «cada día» al Cambiar no permitían cambiar periodicidad. El editor no mostraba repetición ni enviaba repeats en PATCH (solo hábitos). RepeatEditFields.jsx + taskRepeatEditorState en repeats.js; saveEdit envía repeats al editar toda la serie. Despliegue web.

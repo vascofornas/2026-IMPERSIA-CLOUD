@@ -1860,11 +1860,16 @@ button.link.danger:hover {
   max-width: 36rem;
 }
 
-.habitos-edit-repeat {
+.habitos-edit-repeat,
+.item-edit-repeat {
   border: none;
   margin: 12px 0;
   padding: 0;
   min-width: 0;
+}
+
+.item-edit-repeat-select {
+  margin: 0 0 8px;
 }
 
 .habitos-edit-repeat legend {

@@ -52,6 +52,32 @@ export function collapseRepeatingSeries(sortedItems) {
   return out;
 }
 
+/** Estado del editor de repetición (tareas con fecha, no rutinas de hábitos). */
+export function taskRepeatEditorState(repeats) {
+  if (!repeats) return { preset: "none", weekDays: [] };
+  if (repeats === "daily") return { preset: "daily", weekDays: [] };
+  if (repeats === "weekly") return { preset: "weekly", weekDays: [] };
+  if (repeats === "monthly") return { preset: "monthly", weekDays: [] };
+  if (repeats === "yearly") return { preset: "yearly", weekDays: [] };
+  const parsed = parseWeeklyDays(repeats);
+  if (parsed?.length) return { preset: "weekly_days", weekDays: parsed };
+  return { preset: "none", weekDays: [] };
+}
+
+export function taskRepeatsFromEditor(preset, weekDays = []) {
+  if (preset === "none" || !preset) return null;
+  if (preset === "daily") return "daily";
+  if (preset === "weekly") return "weekly";
+  if (preset === "monthly") return "monthly";
+  if (preset === "yearly") return "yearly";
+  if (preset === "weekly_days") {
+    const days = [...weekDays].sort((a, b) => a - b);
+    if (!days.length) return "weekly";
+    return `weekly:${days.join(",")}`;
+  }
+  return null;
+}
+
 export function nextOccurrenceWhenLabel(item) {
   if (!item?.starts_at) return repeatLabel(item.repeats, item.starts_at);
   const date = new Date(item.starts_at);
