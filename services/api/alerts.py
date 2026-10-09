@@ -11,7 +11,7 @@ MADRID = ZoneInfo("Europe/Madrid")
 MODULE_LABELS = {
     "agenda": "Agenda",
     "casa": "Casa",
-    "habitos": "Hábitos",
+    "habitos": "Bienestar y hábitos",
     "viajes": "Viajes",
     "diario": "Diario",
     "deseos": "Deseos",

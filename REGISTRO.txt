@@ -724,3 +724,6 @@ Registro sueño: texto pegado «SueñoHe dormido…» y horas duplicadas. HabitR
 
 9 de octubre de 2026, 12:45
 Modesto: no veía bloque Salud. Producto (07-habitos): sueño y salud dentro de Hábitos → Registro, sin pestaña Salud. Salud solo aparecía si había datos; ahora Sueño y Salud siempre visibles con texto vacío. Despliegue web.
+
+9 de octubre de 2026, 12:50
+Nombre visible del módulo habitos → «Bienestar y hábitos» (PDF / 07-habitos). structure.js, avisos API, roadmap; id interno habitos sin cambio. Despliegue web + API.

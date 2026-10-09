@@ -10,7 +10,7 @@ Entrada es siempre el inicio. Abrir un eje o un módulo sirve para ver y corregi
 
 El esqueleto de las pantallas ya está, con ejemplos. A partir de aquí se perfecciona eje por eje. Dentro de cada eje, cada grupo recibe lo que le es propio.
 
-1. **Vida personal.** Agenda, Casa, Hábitos, Viajes, Diario, Deseos.
+1. **Vida personal.** Agenda, Casa, Bienestar y hábitos, Viajes, Diario, Deseos.
 2. **Profesional.** Proyectos, Reuniones, Segunda memoria, Ideas.
 3. **Social.** Muro, Listas y rutas, Círculos, Espacios.
 

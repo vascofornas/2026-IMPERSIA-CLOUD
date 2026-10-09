@@ -24,8 +24,8 @@ export const AXES = [
       },
       {
         id: "habitos",
-        label: "Hábitos",
-        blurb: "Rutinas diarias, seguimiento y registro de salud y sueño. Pantalla propia, distinta de Agenda y Casa.",
+        label: "Bienestar y hábitos",
+        blurb: "Rutinas diarias, seguimiento y registro de sueño y salud. Pantalla propia, alineada con el PDF (eje Vida personal).",
         examples: [
           ["Meditar 10 minutos", "cada mañana"],
           ["Anoche dormí 7 horas", "registro"],
