@@ -805,7 +805,14 @@ def _module(low: str) -> str:
         return "deseos"
     if _is_reminder(low) and _has_agenda_when(low):
         return "agenda"
-    if any(word in low for word in ("deseo", "quiero ir")) and not _has_agenda_when(low):
+    if (
+        any(word in low for word in ("deseo", "quiero ir", "algún día", "algun dia"))
+        or re.search(
+            r"\b(?:quiero|me gustaría|me gustaria)\s+"
+            r"(?:ir|viajar|visitar|conocer|leer|ver|probar|tener|hacer)\b",
+            low,
+        )
+    ) and not _has_agenda_when(low):
         return "deseos"
     if any(word in low for word in ("película", "pelicula", "restaurante")) and not _has_agenda_when(low):
         return "deseos"

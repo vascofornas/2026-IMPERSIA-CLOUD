@@ -26,6 +26,7 @@ import dedup
 import health_controls
 import journal
 import travel
+import wishes
 from classify import (
     HABIT_KINDS,
     HABIT_ROLES,
@@ -254,6 +255,36 @@ class JournalEntryPatch(BaseModel):
     guided_grateful: str | None = Field(default=None, max_length=10_000)
     guided_need: str | None = Field(default=None, max_length=10_000)
     tags: list[str] | None = Field(default=None, max_length=12)
+
+
+class WishDetailFields(BaseModel):
+    list_id: str | None = None
+    wish_kind: str | None = None
+    reason: str | None = Field(default=None, max_length=2000)
+    place: str | None = Field(default=None, max_length=300)
+    url: str | None = Field(default=None, max_length=1000)
+    estimated_price: Decimal | None = Field(default=None, ge=0)
+    currency: str | None = Field(default=None, max_length=3)
+    priority: str | None = None
+    notes: str | None = Field(default=None, max_length=5000)
+
+
+class WishItemIn(WishDetailFields):
+    title: str = Field(min_length=1, max_length=200)
+
+
+class WishItemPatch(WishDetailFields):
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+
+
+class WishListIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    description: str | None = Field(default=None, max_length=1000)
+
+
+class WishListPatch(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    description: str | None = Field(default=None, max_length=1000)
 
 
 class ItemPatch(TravelDetailFields):
@@ -869,6 +900,7 @@ def _file_suggestion(
     *,
     title: str | None = None,
     shopping_list_id: str | None = None,
+    wish_list_id: str | None = None,
     casa_place: str | None = None,
     raw_text: str | None = None,
     batch_seen: set[tuple] | None = None,
@@ -887,7 +919,11 @@ def _file_suggestion(
     existing = None if is_journal else dedup.find_duplicate(cur, user_id, probe, title=title_val)
     if existing:
         row = dedup.merge_existing(cur, user_id, capture_id, suggestion, existing)
-        item = _public_item(row)
+        item = (
+            _fetch_item(cur, str(row["id"]), user_id)
+            if suggestion.get("module") == "deseos"
+            else _public_item(row)
+        )
         item["dedupe_action"] = "merged"
         return item, True
 
@@ -912,6 +948,24 @@ def _file_suggestion(
             }
         )
         journal.upsert_details(cur, str(row["id"]), payload)
+        item = _fetch_item(cur, str(row["id"]), user_id)
+        return item, False
+    if suggestion.get("module") == "deseos":
+        fallback = wishes.meta_from_text(raw_text or title_val)
+        payload = wishes.normalize_payload(
+            {
+                "list_id": wish_list_id or str(wishes.ensure_default_list(cur, user_id)["id"]),
+                "wish_kind": suggestion.get("wish_kind") or fallback["wish_kind"],
+                "reason": suggestion.get("wish_reason") or fallback["reason"],
+                "place": suggestion.get("wish_place"),
+                "url": suggestion.get("wish_url"),
+                "estimated_price": suggestion.get("wish_estimated_price"),
+                "currency": suggestion.get("wish_currency"),
+                "priority": suggestion.get("wish_priority") or fallback["priority"],
+                "notes": suggestion.get("wish_notes"),
+            }
+        )
+        wishes.upsert_details(cur, str(row["id"]), payload)
         item = _fetch_item(cur, str(row["id"]), user_id)
         return item, False
     return _public_item(row), False
@@ -948,6 +1002,200 @@ def patch_active_shopping_list(body: ShoppingListPatch, request: Request):
     return _public_shopping_list(row)
 
 
+def _wish_payload(
+    cur,
+    user_id: str,
+    body: WishItemIn | WishItemPatch,
+    *,
+    existing: dict | None = None,
+    partial: bool = False,
+) -> dict:
+    data = body.model_dump()
+    fields_set = set(body.model_fields_set) if partial else None
+    if partial and "list_id" not in fields_set:
+        list_id = str(existing["list_id"]) if existing and existing.get("list_id") else None
+    else:
+        list_id = data.get("list_id")
+    if not list_id:
+        list_id = str(wishes.ensure_default_list(cur, user_id)["id"])
+    if not wishes.fetch_list(cur, user_id, list_id):
+        raise HTTPException(status_code=422, detail="Esa lista de deseos no existe")
+    data["list_id"] = list_id
+    if fields_set is not None:
+        fields_set.add("list_id")
+    try:
+        return wishes.normalize_payload(data, existing=existing, fields_set=fields_set)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/wish-lists")
+def get_wish_lists(request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            result = wishes.list_private_lists(cur, user_id)
+        conn.commit()
+    return {"items": result}
+
+
+@app.post("/wish-lists", status_code=201)
+def create_wish_list(body: WishListIn, request: Request):
+    user_id = current_user(request)
+    name = " ".join(body.name.strip().split())
+    if not name:
+        raise HTTPException(status_code=422, detail="Escribe un nombre para la lista")
+    description = (body.description or "").strip() or None
+    try:
+        with db() as conn:
+            with conn.cursor() as cur:
+                wishes.ensure_default_list(cur, user_id)
+                cur.execute("SELECT COALESCE(max(sort_order), 0) + 1 AS next FROM wish_lists WHERE user_id = %s", (user_id,))
+                sort_order = cur.fetchone()["next"]
+                cur.execute(
+                    """
+                    INSERT INTO wish_lists (user_id, name, description, sort_order)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING id, name, description, sort_order, is_default
+                    """,
+                    (user_id, name, description, sort_order),
+                )
+                row = cur.fetchone()
+            conn.commit()
+    except psycopg.errors.UniqueViolation as exc:
+        raise HTTPException(status_code=409, detail="Ya tienes una lista con ese nombre") from exc
+    return wishes.public_list(row)
+
+
+@app.patch("/wish-lists/{list_id}")
+def patch_wish_list(list_id: str, body: WishListPatch, request: Request):
+    user_id = current_user(request)
+    updates = []
+    params = []
+    if "name" in body.model_fields_set:
+        name = " ".join((body.name or "").strip().split())
+        if not name:
+            raise HTTPException(status_code=422, detail="Escribe un nombre para la lista")
+        updates.append("name = %s")
+        params.append(name)
+    if "description" in body.model_fields_set:
+        updates.append("description = %s")
+        params.append((body.description or "").strip() or None)
+    if not updates:
+        raise HTTPException(status_code=422, detail="No hay cambios")
+    params.extend([list_id, user_id])
+    try:
+        with db() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    f"""
+                    UPDATE wish_lists SET {", ".join(updates)}, updated_at = now()
+                    WHERE id = %s AND user_id = %s
+                    RETURNING id, name, description, sort_order, is_default
+                    """,
+                    params,
+                )
+                row = cur.fetchone()
+            conn.commit()
+    except psycopg.errors.UniqueViolation as exc:
+        raise HTTPException(status_code=409, detail="Ya tienes una lista con ese nombre") from exc
+    if not row:
+        raise HTTPException(status_code=404, detail="Lista no encontrada")
+    return wishes.public_list(row)
+
+
+@app.delete("/wish-lists/{list_id}")
+def delete_wish_list(list_id: str, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            row = wishes.fetch_list(cur, user_id, list_id)
+            if not row:
+                raise HTTPException(status_code=404, detail="Lista no encontrada")
+            if row["is_default"]:
+                raise HTTPException(status_code=422, detail="La lista general no se puede borrar")
+            default = wishes.ensure_default_list(cur, user_id)
+            cur.execute("UPDATE wish_details SET list_id = %s, updated_at = now() WHERE list_id = %s", (default["id"], list_id))
+            moved = cur.rowcount
+            cur.execute("DELETE FROM wish_lists WHERE id = %s AND user_id = %s", (list_id, user_id))
+        conn.commit()
+    return {"ok": True, "moved": moved, "default_list_id": str(default["id"])}
+
+
+@app.post("/wish-items", status_code=201)
+def create_wish_item(body: WishItemIn, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            payload = _wish_payload(cur, user_id, body)
+            suggestion = {
+                "kind": "note",
+                "axis": "personal",
+                "module": "deseos",
+                "title": body.title.strip(),
+                "starts_at": None,
+                "repeats": None,
+                "time_known": False,
+                "alert_minutes_before": None,
+                "source": "deseos_ui",
+            }
+            row = _insert_item(cur, user_id, None, suggestion)
+            wishes.upsert_details(cur, str(row["id"]), payload)
+            item = _fetch_item(cur, str(row["id"]), user_id)
+        conn.commit()
+    return item
+
+
+@app.patch("/wish-items/{item_id}")
+def patch_wish_item(item_id: str, body: WishItemPatch, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, title FROM items WHERE id = %s AND user_id = %s AND module = 'deseos'",
+                (item_id, user_id),
+            )
+            base = cur.fetchone()
+            if not base:
+                raise HTTPException(status_code=404, detail="Deseo no encontrado")
+            existing = wishes.fetch_details(cur, [item_id]).get(item_id)
+            if not existing:
+                default = wishes.ensure_default_list(cur, user_id)
+                existing = {"list_id": default["id"], **wishes.meta_from_text(base["title"])}
+            payload = _wish_payload(cur, user_id, body, existing=existing, partial=True)
+            if "title" in body.model_fields_set:
+                cur.execute(
+                    "UPDATE items SET title = %s WHERE id = %s AND user_id = %s",
+                    ((body.title or "").strip(), item_id, user_id),
+                )
+            wishes.upsert_details(cur, item_id, payload)
+            item = _fetch_item(cur, item_id, user_id)
+        conn.commit()
+    return item
+
+
+@app.patch("/wish-items/{item_id}/status")
+def patch_wish_status(item_id: str, body: StatusIn, request: Request):
+    user_id = current_user(request)
+    if body.status not in {"open", "done"}:
+        raise HTTPException(status_code=422, detail="El estado debe ser pendiente o cumplido")
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE items SET status = %s
+                WHERE id = %s AND user_id = %s AND module = 'deseos'
+                RETURNING id
+                """,
+                (body.status, item_id, user_id),
+            )
+            if not cur.fetchone():
+                raise HTTPException(status_code=404, detail="Deseo no encontrado")
+            item = _fetch_item(cur, item_id, user_id)
+        conn.commit()
+    return item
+
+
 @app.post("/captures", status_code=201)
 def create_capture(body: CaptureIn, request: Request):
     user_id = current_user(request)
@@ -979,6 +1227,7 @@ def create_capture(body: CaptureIn, request: Request):
             )
             capture_id = str(cur.fetchone()["id"])
             list_row = None
+            wish_list_row = None
             created = []
             batch_seen: set[tuple] = set()
             deduped = 0
@@ -1005,6 +1254,11 @@ def create_capture(body: CaptureIn, request: Request):
                             list_row = cur.fetchone()
                     shopping_list_id = str(list_row["id"])
                     title_override = suggestion.get("title")
+                wish_list_id = None
+                if suggestion.get("module") == "deseos":
+                    if wish_list_row is None:
+                        wish_list_row = wishes.ensure_default_list(cur, user_id)
+                    wish_list_id = str(wish_list_row["id"])
                 item, was_deduped = _file_suggestion(
                     cur,
                     user_id,
@@ -1012,6 +1266,7 @@ def create_capture(body: CaptureIn, request: Request):
                     suggestion,
                     title=title_override,
                     shopping_list_id=shopping_list_id,
+                    wish_list_id=wish_list_id,
                     casa_place=casa_place,
                     raw_text=raw,
                     batch_seen=batch_seen,
@@ -1602,6 +1857,16 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     cur.execute("DELETE FROM travel_item_details WHERE item_id = %s", (item_id,))
                 if body.module != "diario":
                     cur.execute("DELETE FROM journal_entries WHERE item_id = %s", (item_id,))
+                if body.module == "deseos":
+                    detail = wishes.fetch_details(cur, [item_id]).get(item_id)
+                    if not detail:
+                        default = wishes.ensure_default_list(cur, user_id)
+                        payload = wishes.normalize_payload(
+                            {"list_id": str(default["id"]), **wishes.meta_from_text(body.title)}
+                        )
+                        wishes.upsert_details(cur, item_id, payload)
+                else:
+                    cur.execute("DELETE FROM wish_details WHERE item_id = %s", (item_id,))
                 item = _fetch_item(cur, item_id, user_id)
                 archive.maybe_learn_from_patch(cur, user_id, raw_text=raw_text, before=before, after=item)
         conn.commit()
@@ -1788,9 +2053,11 @@ def list_items(request: Request, limit: int = 500):
             exceptions = _fetch_exceptions(cur, user_id, item_ids)
             travel_details = travel.fetch_details(cur, item_ids)
             journal_details = journal.fetch_details(cur, item_ids)
+            wish_details = wishes.fetch_details(cur, item_ids)
             for row in rows:
                 row.update(travel_details.get(str(row["id"]), {}))
                 row.update(journal_details.get(str(row["id"]), {}))
+                row.update(wish_details.get(str(row["id"]), {}))
     return [_public_item(row, exceptions.get(str(row["id"]), [])) for row in rows]
 
 
@@ -1857,6 +2124,9 @@ def _fetch_item(cur, item_id: str, user_id: str) -> dict | None:
     journal_detail = journal.fetch_details(cur, [item_id]).get(str(item_id))
     if journal_detail:
         row.update(journal_detail)
+    wish_detail = wishes.fetch_details(cur, [item_id]).get(str(item_id))
+    if wish_detail:
+        row.update(wish_detail)
     exceptions = _fetch_exceptions(cur, user_id, [item_id])
     return _public_item(row, exceptions.get(item_id, []))
 
@@ -1931,6 +2201,7 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         **travel.public_travel_fields(row),
         **travel.public_detail_fields(row),
         **journal.public_fields(row),
+        **wishes.public_fields(row),
         "shopping_list_id": str(row["shopping_list_id"]) if row.get("shopping_list_id") else None,
         "status": row.get("status") or "open",
         "privacy": row["privacy"],

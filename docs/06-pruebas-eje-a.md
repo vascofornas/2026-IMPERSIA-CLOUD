@@ -10,6 +10,8 @@
 
 **Cierre Diario (9 oct 2026):** comprobar que la línea temporal agrupa por mes y día; las cuatro preguntas guiadas se guardan y editan; los días sin ánimo o energía no aparecen como valores bajos; un resumen borrado no reaparece al abrir Diario, pulsar Actualizar ni ejecutar el proceso periódico; otra cuenta no puede leer, editar o borrar entradas ni resúmenes ajenos.
 
+**Deseos (10 oct 2026):** varias listas privadas con ficha detallada, pendientes y cumplidos. Casos obligatorios: aspiración sin fecha → Deseos; cita futura con fecha → Agenda; viaje organizado → Viajes; compra inmediata → Casa; experiencia pasada → Diario. Comprobar alta desde Entrada y desde el módulo, movimiento entre listas, edición, reapertura, borrado de lista con traslado a «Mis deseos» y aislamiento entre cuentas. Detalle en [10-deseos.md](10-deseos.md).
+
 Frases cargadas con `services/api/scripts/seed_axis_a_entries.py` (archivado real con IA si está activa).
 
 ## Agenda y citas (20)

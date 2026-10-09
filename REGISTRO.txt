@@ -844,3 +844,6 @@ Diario: añadida «Evolución del mes» debajo de los resúmenes. Muestra ánimo
 
 10 de octubre de 2026, 01:05
 Diario, cierre funcional: la línea temporal queda agrupada por mes y día; la reflexión guiada añade «¿Cómo te sientes?» como texto opcional; borrar un resumen elimina su contenido y guarda solo el periodo descartado para que no reaparezca. Se suben migración 020, API, DiarioBoard.jsx, JournalEntryForm.jsx, styles.css, build web y documentación. El módulo queda alineado con el documento de producto y el plan de Diario completo.
+
+10 de octubre de 2026, 01:35
+Deseos privados por listas v1: «Mis deseos» como lista general y varias listas privadas editables; fichas de lugar, cosa, experiencia u otro con motivo, lugar, enlace, precio, moneda, prioridad y notas; pendientes, cumplidos y filtros. Entrada distingue aspiraciones sin fecha de Agenda, Viajes, Casa y Diario. Borrar una lista traslada su contenido a «Mis deseos». Se suben migración 021, wishes.py, API y clasificador, DeseosBoard.jsx, WishForm.jsx, estilos, build web y documentación para completar el último módulo del eje A.

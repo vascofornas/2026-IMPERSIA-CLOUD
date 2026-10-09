@@ -3531,6 +3531,192 @@ button.link.secondary {
   border-top: 1px solid var(--line);
 }
 
+/* Deseos */
+.module-deseos {
+  --wish: #e11d48;
+}
+
+.wishes-board {
+  max-width: 62rem;
+}
+
+.wish-hero,
+.wish-section-head,
+.wish-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wish-hero {
+  margin-bottom: 20px;
+}
+
+.wish-hero h2,
+.wish-section-head h3,
+.wish-list-editor h3,
+.wish-editor h3 {
+  margin: 0;
+}
+
+.wish-hero p,
+.wish-section-head p {
+  margin: 4px 0 0;
+}
+
+.wish-hero-actions,
+.wish-card-actions,
+.wish-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wish-list-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.wish-list-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 13rem;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--wish) 25%, var(--line));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--wish) 4%, var(--bg));
+}
+
+.wish-list-card h3 {
+  margin: 3px 0 8px;
+}
+
+.wish-list-card > p:not(.wish-list-kicker) {
+  flex: 1;
+  margin: 0 0 18px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.wish-list-kicker {
+  margin: 0;
+  color: var(--wish);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.wish-list-counts,
+.wish-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wish-list-counts {
+  margin: 0 0 14px;
+}
+
+.wish-list-counts span,
+.wish-badges span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--wish) 9%, var(--bg));
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.wish-back {
+  margin-bottom: 14px;
+}
+
+.wish-list-editor,
+.wish-editor,
+.wish-delete-list {
+  margin-bottom: 20px;
+}
+
+.wish-list-editor,
+.wish-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.wish-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.wish-wide {
+  grid-column: 1 / -1;
+}
+
+.wish-section-head {
+  margin-top: 24px;
+}
+
+.wish-filters select {
+  width: auto;
+  min-width: 10rem;
+}
+
+.wish-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.wish-card {
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--wish) 23%, var(--line));
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.wish-card.done {
+  opacity: 0.78;
+}
+
+.wish-card h4 {
+  margin: 10px 0 0;
+  font-size: 1.05rem;
+}
+
+.wish-card-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 15px 0;
+}
+
+.wish-card-details p {
+  margin: 0;
+  padding: 11px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--wish) 5%, var(--bg));
+  font-size: 0.84rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.wish-done {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.wish-empty {
+  margin-top: 16px;
+}
+
 @media (max-width: 700px) {
   .journal-guided-fields,
   .journal-form-grid,
@@ -3550,6 +3736,24 @@ button.link.secondary {
   }
 
   .journal-filters select {
+    flex: 1 1 10rem;
+  }
+
+  .wish-list-grid,
+  .wish-form-grid,
+  .wish-card-details {
+    grid-template-columns: 1fr;
+  }
+
+  .wish-wide {
+    grid-column: auto;
+  }
+
+  .wish-filters {
+    width: 100%;
+  }
+
+  .wish-filters select {
     flex: 1 1 10rem;
   }
 }

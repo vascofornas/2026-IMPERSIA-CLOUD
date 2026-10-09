@@ -107,7 +107,7 @@ Referencia para el prompt del modelo y para validación. **Subtipo** = variant p
 | **habitos** | rutina, ejercicio, meditacion, lectura, sueno, salud, otro | habit_role: routine \| log; frecuencia; seguimiento por día; notas/meta | HabitosBoard: rutinas + seguimiento + registro (PDF) |
 | **viajes** | plan, reserva, equipaje, nota | fechas viaje, destino, container_id | dentro de contenedor viaje |
 | **diario** | entrada, animo, reflexion | mood, tags | línea temporal, sin checklist |
-| **deseos** | lugar, cosa, experiencia, otro | sin fecha obligatoria | lista suelta, enlazable desde ocio |
+| **deseos** | lugar, cosa, experiencia, otro | lista privada, motivo, lugar, enlace, precio, prioridad y notas; sin fecha | varias listas, pendientes y cumplidos |
 
 **Desambiguación clave**
 
@@ -115,6 +115,8 @@ Referencia para el prompt del modelo y para validación. **Subtipo** = variant p
 - **Comprar X** → casa.compra; **quedan N X** → casa.inventario; **aspirar, basura, lavadora** → casa.domestica.
 - **He dormido mal, me siento…** → diario; **tarea doméstica** no es diario aunque no lleve fecha.
 - **Quiero ir al restaurante X** sin fecha → deseos; con fecha → agenda.ocio.
+- **Quiero conocer Japón algún día** → deseos.lugar; un viaje a Japón con fechas → viajes.
+- **Comprar leche** → casa.compra; **me gustaría tener una cámara algún día** → deseos.cosa.
 
 ### Profesional
 

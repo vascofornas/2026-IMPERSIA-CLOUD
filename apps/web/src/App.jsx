@@ -23,6 +23,7 @@ import HabitEditPanel, { editorFromRepeats, HabitLogEditPanel } from "./HabitEdi
 import HabitosBoard, { HoyBienestar } from "./HabitosBoard.jsx";
 import ViajesBoard from "./ViajesBoard.jsx";
 import DiarioBoard from "./DiarioBoard.jsx";
+import DeseosBoard from "./DeseosBoard.jsx";
 import { pendingControls } from "./healthControls.js";
 import { hasHoyBienestarContent, isHabitRoutine } from "./habitos.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
@@ -328,6 +329,50 @@ function Home({
     (summaryId) => call(`/journal-summaries/${summaryId}`, { method: "DELETE" }),
     [],
   );
+
+  const loadWishLists = useCallback(() => call("/wish-lists"), []);
+
+  async function createWishList(body) {
+    return call("/wish-lists", { method: "POST", body: JSON.stringify(body) });
+  }
+
+  async function updateWishList(listId, body) {
+    const list = await call(`/wish-lists/${listId}`, { method: "PATCH", body: JSON.stringify(body) });
+    setItems((prev) => prev.map((item) => item.wish_list_id === list.id ? { ...item, wish_list_name: list.name } : item));
+    return list;
+  }
+
+  async function deleteWishList(listId) {
+    const result = await call(`/wish-lists/${listId}`, { method: "DELETE" });
+    const fresh = await call("/items");
+    setItems(fresh);
+    setNotice(result.moved ? `${result.moved} deseo${result.moved === 1 ? "" : "s"} movido${result.moved === 1 ? "" : "s"} a Mis deseos.` : "Lista borrada.");
+    return result;
+  }
+
+  async function createWish(body) {
+    const item = await call("/wish-items", { method: "POST", body: JSON.stringify(body) });
+    setItems((prev) => [item, ...prev.filter((row) => row.id !== item.id)]);
+    setNotice("Deseo guardado.");
+    return item;
+  }
+
+  async function updateWish(itemId, body) {
+    const item = await call(`/wish-items/${itemId}`, { method: "PATCH", body: JSON.stringify(body) });
+    setItems((prev) => prev.map((row) => row.id === item.id ? item : row));
+    setNotice("Deseo actualizado.");
+    return item;
+  }
+
+  async function updateWishStatus(itemId, status) {
+    const item = await call(`/wish-items/${itemId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    setItems((prev) => prev.map((row) => row.id === item.id ? item : row));
+    setNotice(status === "done" ? "Deseo marcado como cumplido." : "Deseo devuelto a pendientes.");
+    return item;
+  }
 
   function onHealthControlCreated(control) {
     setHealthControls((prev) => [control, ...prev.filter((c) => c.id !== control.id)]);
@@ -867,6 +912,21 @@ function Home({
                 loadSummaries={loadJournalSummaries}
                 refreshSummaries={refreshJournalSummaries}
                 deleteSummary={deleteJournalSummary}
+              />
+            </div>
+          ) : current.id === "deseos" ? (
+            <div className="module-deseos">
+              <DeseosBoard
+                items={items}
+                loadLists={loadWishLists}
+                createList={createWishList}
+                updateList={updateWishList}
+                deleteList={deleteWishList}
+                createWish={createWish}
+                updateWish={updateWish}
+                updateWishStatus={updateWishStatus}
+                askRemove={askRemove}
+                setError={setError}
               />
             </div>
           ) : (

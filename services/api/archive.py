@@ -25,6 +25,7 @@ from classify import (
     split_compra_titles,
 )
 import llm
+import wishes
 
 AGENDA_TYPES = {"medica", "familiar", "ocio", "recordatorio", "general"}
 CASA_KINDS = {"compra", "inventario", "domestica", "mantenimiento", "suministro", "otro"}
@@ -71,6 +72,7 @@ Responde SOLO JSON válido con una clave "items": lista de 1 a 4 objetos. Cada o
 - agenda_type: medica|familiar|ocio|recordatorio|general|null (solo si module=agenda)
 - casa_kind: compra|inventario|domestica|mantenimiento|suministro|otro|null (solo si module=casa)
 - journal_kind: entrada|animo|reflexion|gratitud, mood y energy de 1 a 5, journal_tags como lista (solo si module=diario)
+- wish_kind: lugar|cosa|experiencia|otro; wish_reason, wish_place, wish_url, wish_estimated_price, wish_currency, wish_priority (baja|media|alta) y wish_notes (solo si module=deseos)
 - family_kind, leisure_kind, reminder_kind, supply_kind cuando aplique
 - medical_for, medical_place, family_for, family_name, family_place, leisure_with, leisure_place, casa_place, casa_notes, reminder_notes, family_notes: texto o null
 - role (opcional): "task" | "birthday_event" — task = aviso/tarea con la fecha principal de la frase; birthday_event = cumpleaños anual en la fecha literal mencionada (9 nov…)
@@ -95,6 +97,9 @@ Reglas:
 - Cita médica → agenda.medica.
 - Reflexión o ánimo sin tarea → diario.
 - En Diario solo indica mood o energy si la persona lo expresa con claridad; no inventes estados emocionales.
+- Aspiración sin fecha («quiero ir a Lisboa algún día», «me gustaría leer ese libro») → deseos.
+- Plan con fecha u hora → agenda; viaje ya organizado con fechas → viajes; compra que se quiere hacer ahora → casa.compra.
+- Algo ya vivido → diario, no deseos. En Deseos no inventes precio, lugar, motivo ni prioridad.
 - Varios hechos distintos (p. ej. separados por «;», «y también», dos fechas con dos acciones) → varios objetos en items.
 - «Mañana pensar regalo… cumple 54 el 9 de noviembre» → UN item recordatorio (role task); fecha de noviembre en reminder_notes, NO segundo item salvo que pidan guardar el cumple anual.
 - Si piden explícitamente recordar el cumple cada año el 9 nov → segundo item familiar cumpleanos (role birthday_event)."""
@@ -300,6 +305,32 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
                 result["journal_kind"] = "entrada"
         if not result.get("journal_occurred_on") and baseline.get("starts_at"):
             result["journal_occurred_on"] = baseline["starts_at"].date().isoformat()
+        result["starts_at"] = None
+        result["time_known"] = False
+        result["repeats"] = None
+        result["alert_minutes_before"] = None
+        return result
+
+    if result.get("module") == "deseos":
+        if baseline.get("module") == "agenda" and baseline.get("starts_at"):
+            result = dict(baseline)
+            result["title"] = entry_title(raw)
+            result["source"] = out.get("source") or baseline.get("source")
+            return result
+        _clear_agenda_fields(result)
+        _clear_casa_fields(result)
+        _clear_habit_fields(result)
+        _clear_travel_fields(result)
+        fallback = wishes.meta_from_text(raw)
+        if result.get("wish_kind") not in wishes.WISH_KINDS:
+            result["wish_kind"] = fallback["wish_kind"]
+        for key in ("wish_reason", "wish_place", "wish_url", "wish_notes"):
+            value = result.get(key)
+            result[key] = str(value).strip()[:2000] if value is not None and str(value).strip() else None
+        if not result.get("wish_reason"):
+            result["wish_reason"] = fallback["reason"]
+        if result.get("wish_priority") not in wishes.WISH_PRIORITIES:
+            result["wish_priority"] = fallback["priority"]
         result["starts_at"] = None
         result["time_known"] = False
         result["repeats"] = None
@@ -648,6 +679,28 @@ def _apply_llm_spec(baseline: dict, parsed: dict, title_raw: str) -> dict:
         out["journal_energy"] = energy if isinstance(energy, int) and 1 <= energy <= 5 else None
         tags = parsed.get("journal_tags")
         out["journal_tags"] = tags if isinstance(tags, list) else []
+    elif module == "deseos":
+        _clear_agenda_fields(out)
+        _clear_casa_fields(out)
+        _clear_habit_fields(out)
+        _clear_travel_fields(out)
+        fallback = wishes.meta_from_text(title_raw)
+        kind = parsed.get("wish_kind")
+        out["wish_kind"] = kind if kind in wishes.WISH_KINDS else fallback["wish_kind"]
+        for source_key, target_key, limit in (
+            ("wish_reason", "wish_reason", 2000),
+            ("wish_place", "wish_place", 300),
+            ("wish_url", "wish_url", 1000),
+            ("wish_notes", "wish_notes", 5000),
+        ):
+            value = parsed.get(source_key)
+            out[target_key] = str(value).strip()[:limit] if value is not None and str(value).strip() else None
+        price = parsed.get("wish_estimated_price")
+        out["wish_estimated_price"] = price if isinstance(price, (int, float)) and price >= 0 else None
+        currency = parsed.get("wish_currency")
+        out["wish_currency"] = str(currency).strip().upper()[:3] if currency and len(str(currency).strip()) == 3 else None
+        priority = parsed.get("wish_priority")
+        out["wish_priority"] = priority if priority in wishes.WISH_PRIORITIES else fallback["priority"]
     else:
         _clear_agenda_fields(out)
         _clear_casa_fields(out)
@@ -715,7 +768,17 @@ def _temporal_hint(baseline: dict) -> str:
 
 
 def _label_from_suggestion(suggestion: dict) -> dict:
-    keys = ("module", "axis", "kind", "title", "agenda_type", *AGENDA_FIELD_KEYS, *CASA_FIELD_KEYS)
+    keys = (
+        "module",
+        "axis",
+        "kind",
+        "title",
+        "agenda_type",
+        *AGENDA_FIELD_KEYS,
+        *CASA_FIELD_KEYS,
+        "wish_kind",
+        "wish_priority",
+    )
     return {key: suggestion.get(key) for key in keys if suggestion.get(key) is not None}
 
 

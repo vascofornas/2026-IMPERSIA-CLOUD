@@ -39,6 +39,8 @@ Dentro de **Bienestar y Hábitos** (PDF; módulo `habitos`), tres piezas: **ruti
 
 Dentro de **Diario**, la persona escribe de forma libre o con preguntas opcionales de reflexión. Cada entrada conserva texto largo, fecha vivida, tipo, ánimo, energía y etiquetas opcionales; se recupera en una línea temporal privada con filtros. Si la cuenta lo activa expresamente, Impersia genera lecturas semanales y mensuales con temas y preguntas, sin diagnósticos. Solo se envían al modelo las entradas del periodo analizado. Detalle en [09-diario.md](09-diario.md).
 
+Dentro de **Deseos**, la persona guarda posibilidades todavía sin fecha: cosas, lugares o experiencias. Puede ordenarlas en varias listas privadas, completar motivo, lugar, enlace, precio, prioridad y notas, y conservar aparte las que ya se cumplieron. Entrada las deja primero en «Mis deseos»; organizar no añade fricción a la captura. Detalle en [10-deseos.md](10-deseos.md).
+
 Agenda puede mostrar, además, un calendario que la persona ya tenga. El primero es Google Calendar, y solo si ella lo conecta. Impersia lo lee y lo junta en Agenda y en Hoy con lo que entró por Entrada. Lo de Google se distingue. Lo escrito en Impersia no se copia a Google en esta versión.
 
 Las entradas con hora pueden llevar aviso. Se cambia al editar la entrada, en el campo Aviso. Las repetidas comparten el mismo aviso para toda la serie.
