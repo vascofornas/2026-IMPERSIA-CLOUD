@@ -591,6 +591,22 @@ input, textarea, select {
   font: inherit;
 }
 
+input[type="radio"],
+input[type="checkbox"] {
+  display: inline-block;
+  width: 1.1rem;
+  height: 1.1rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  accent-color: var(--mark);
+  flex: none;
+  vertical-align: middle;
+}
+
 textarea { min-height: 96px; resize: vertical; }
 
 button {
@@ -1340,8 +1356,37 @@ button.link.danger:hover {
 [data-look="noche"] .item-actions .link.danger:hover,
 [data-look="grafito"] .item-actions .link.danger:hover { color: #fecaca; }
 
-.editor {
-  padding: 8px 0 16px;
+.editor,
+.card.editor {
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 4%, transparent);
+}
+
+.card.editor {
+  border-top: none;
+}
+
+.editor h3,
+.card.editor h3 {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+}
+
+.editor .actions,
+.card.editor .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.editor .actions button,
+.card.editor .actions button {
+  margin-top: 0;
 }
 
 @media (max-width: 1100px) {
@@ -1811,28 +1856,39 @@ button.link.danger:hover {
 }
 
 .habitos-edit-panel {
-  margin-bottom: 20px;
   border-color: color-mix(in srgb, var(--habitos) 35%, var(--line));
+  max-width: 36rem;
 }
 
 .habitos-edit-repeat {
   border: none;
-  margin: 0 0 12px;
+  margin: 12px 0;
   padding: 0;
+  min-width: 0;
 }
 
 .habitos-edit-repeat legend {
+  display: block;
+  width: 100%;
   font-size: 0.85rem;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  padding: 0;
 }
 
 .habitos-edit-radio {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-size: 0.92rem;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.habitos-edit-radio input[type="radio"] {
+  margin-top: 0;
 }
 
 .habitos-edit-days {

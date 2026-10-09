@@ -742,3 +742,6 @@ Modesto: con varias apariencias (data-look) algunos elementos de Bienestar/Hoy n
 
 9 de octubre de 2026, 14:10
 Modesto: botón Cambiar no funcionaba en varios sitios. Causas: registros sueño/salud sin panel de edición; filas repetidas que no entraban en modo editar; rutinas sin preparar repetición al editar serie. HabitLogEditPanel, isEditingRow/startEdit/beginEdit*, scroll al panel, Cambiar en salud, estilo button.link en hábitos. Despliegue web.
+
+9 de octubre de 2026, 14:20
+Panel Cambiar hábito: radios de Repetición desalineados (input width 100% global). styles.css: excepción radio/checkbox, tarjeta .editor legible en todos los temas. Despliegue web.
