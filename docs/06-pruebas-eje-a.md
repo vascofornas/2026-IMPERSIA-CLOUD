@@ -1,6 +1,10 @@
-# Pruebas eje A — Agenda y Casa
+# Pruebas eje A — Agenda, Casa y Bienestar
 
-**Estado (8 oct 2026):** bloque **cerrado para uso diario**. Entrada + archivado IA + pantallas Agenda/Casa/Hoy validados por Modesto. Siguiente trabajo de producto: otro módulo del eje A (p. ej. Hábitos) o Fase 2 del roadmap; aquí solo **bugs** de pantalla o archivado grave, no nueva ronda de parches de palabras.
+**Agenda + Casa (8 oct 2026):** **cerrado para uso diario**. Entrada + archivado IA + pantallas Agenda/Casa/Hoy validados por Modesto.
+
+**Bienestar y salud (9 oct 2026):** **cerrado v1 para producción**. Rutinas y seguimiento 7 días; Registro del mes (sueño, salud, medias y gráficas); controles de salud (tensión, glucosa, peso, medicación, sueño) solo desde Bienestar; Hoy con pendientes; aviso por correo si falta lectura (Perfil). Validado en impersia.cloud con datos reales y email de tensión. Detalle en [07-habitos.md](07-habitos.md). Fuera de v1: hero mañanera, franjas Mañana/Tarde/Noche, elegir minutos de aviso en UI, correo resumen único.
+
+**Mantenimiento:** en estos tres bloques solo **bugs** de pantalla, archivado grave o alertas; no nueva ronda de parches de palabras. Siguiente producto eje A: Viajes, Diario, Deseos u otro módulo del roadmap.
 
 Frases cargadas con `services/api/scripts/seed_axis_a_entries.py` (archivado real con IA si está activa).
 

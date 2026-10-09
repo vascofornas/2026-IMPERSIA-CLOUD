@@ -799,3 +799,6 @@ Avisos email controles de salud pendientes: alerts.py + tabla health_control_ale
 
 9 de octubre de 2026, 20:55
 Fix aviso email controles: ventana todo el día (no solo 5 min tras la hora); procesar controles aunque no haya entradas Agenda con aviso. Despliegue API + prueba send_alerts.
+
+9 de octubre de 2026, 21:00
+Cierre documental eje A Bienestar v1 producción: docs/06-pruebas-eje-a.md (Agenda+Casa+Bienestar), docs/07-habitos.md estado v1. Sin cambio de código en VPS.

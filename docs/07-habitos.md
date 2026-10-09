@@ -4,6 +4,8 @@ Referencia PDF (eje Vida personal): **«Rutinas diarias (ejercicio, meditación,
 
 Octubre 2026. Pantalla **distinta** de Agenda (calendario/citas) y Casa (logística del hogar).
 
+**Estado v1 (9 oct 2026):** **cerrado para producción** (ver cierre en [06-pruebas-eje-a.md](06-pruebas-eje-a.md)). Mejoras opcionales v1.5+: hero de rutina, franjas horarias, aviso configurable en formulario de control, un correo diario resumen.
+
 ## Tres piezas del módulo (documento padre)
 
 | Pieza | Qué es | Entrada (ejemplos) | En pantalla |
