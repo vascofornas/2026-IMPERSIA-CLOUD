@@ -85,7 +85,8 @@ Reglas:
 - Cumpleaños, aniversario, boda, bautizo, comida familiar → agenda.familiar (no ocio).
 - Pensar/comprar/elegir regalo de cumpleaños con fecha (mañana, el lunes…) → agenda.recordatorio (tarea personal), NO familiar ni «cada año».
 - «Tengo que / hay que …» con mañana o día concreto → agenda.recordatorio, no cita general.
-- Plan con amigos/pareja (cena, concierto, quedar) → agenda.ocio.
+- Compromiso o plan FUTURO con amigos/pareja (cena, concierto, quedar) → agenda.ocio.
+- Relato de algo YA VIVIDO («he comido con Eva», «hemos visto una serie») → diario, especialmente si expresa cómo se siente. No conviertas recuerdos en citas.
 - Cada lunes/día + yoga, gimnasio, meditar, correr → habitos (no ocio).
 - habit_role: routine (repetición) | log (sueño, medicación tomada, tensión, glucosa, peso, síntoma). habit_kind: rutina|ejercicio|meditacion|lectura|sueno|medicacion|presion|glucosa|peso|sintoma|salud|otro.
 - Los planes de control de salud (tensión diaria, peso, etc.) NO se crean por Entrada; el usuario los añade en Bienestar. Una lectura suelta («Tensión 120/80») sigue siendo habitos log.
@@ -231,6 +232,10 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
         if baseline.get(key) is not None or key not in result:
             result[key] = baseline.get(key)
 
+    if baseline.get("module") == "diario" and _looks_like_diary_narrative(low):
+        result["module"] = "diario"
+        _sync_module_fields(result)
+
     if _looks_like_utility_bill(low):
         result["module"] = "casa"
         _sync_module_fields(result)
@@ -354,6 +359,32 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
             _clear_casa_fields(result)
 
     return result
+
+
+def _looks_like_diary_narrative(low: str) -> bool:
+    emotion = bool(
+        re.search(
+            r"\b(me siento|estoy|me encuentro)\s+"
+            r"(content[oa]|feliz|triste|animad[oa]|preocupad[oa]|tranquil[oa]|seren[oa]|"
+            r"agobiad[oa]|cansad[oa]|emocionad[oa]|enfadas?[oa]|frustrad[oa]|orgullos?[oa])\b",
+            low,
+        )
+        or re.search(r"\b(mi ánimo|mi animo|emocionalmente)\b", low)
+    )
+    completed = bool(
+        re.search(
+            r"\b(he|hemos|ha|han)\s+(?:\w+\s+){0,2}\w+(?:ado|ido|to|so|cho)\b",
+            low,
+        )
+    )
+    future = bool(
+        re.search(
+            r"\b(mañana|manana|próxim[oa]|proxim[oa]|tengo que|hay que|voy a|vamos a|"
+            r"para el|para la|a las \d|reservar|quedaré|quedare)\b",
+            low,
+        )
+    )
+    return (emotion or completed) and not future
 
 
 def _refine_casa_kind(raw: str, kind: str | None) -> str:

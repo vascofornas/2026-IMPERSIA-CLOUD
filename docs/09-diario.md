@@ -24,6 +24,8 @@ Octubre de 2026. Diario es el espacio privado para contar lo vivido, ordenar pen
 - Idea que se quiere desarrollar → **Ideas**.
 - Información que se quiere recuperar como conocimiento → **Segunda memoria**.
 
+La fecha o franja del relato no lo convierte en cita. «Esta tarde estoy contento porque he comido con Eva y hemos visto una serie» es Diario: cuenta algo ya vivido. «Mañana voy a comer con Eva a las 14» es Agenda/Ocio: es un compromiso futuro.
+
 ## Análisis automático
 
 Está desactivado por cuenta hasta aceptarlo en Perfil. Al activarlo:
