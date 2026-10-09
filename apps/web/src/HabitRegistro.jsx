@@ -76,38 +76,40 @@ export default function HabitRegistro({ items, startEdit, askRemove }) {
   const sleeps = sleepLogs(items);
   const others = recentHabitLogs(items);
 
-  if (!sleeps.length && !others.length) {
-    return (
-      <p className="private">Peso, sueño o tensión: apúntalo en Entrada cuando quieras.</p>
-    );
-  }
-
   return (
     <>
-      {sleeps.length > 0 && (
-        <section className="habitos-section habitos-section-sleep" aria-labelledby="habitos-sleep-heading">
-          <h3 id="habitos-sleep-heading" className="habitos-subheading">
-            Sueño
-          </h3>
+      <section className="habitos-section habitos-section-sleep" aria-labelledby="habitos-sleep-heading">
+        <h3 id="habitos-sleep-heading" className="habitos-subheading">
+          Sueño
+        </h3>
+        {sleeps.length > 0 ? (
           <div className="habitos-sleep-grid">
             {sleeps.map((item) => (
               <SleepLogCard key={item.id} item={item} onEdit={startEdit} onRemove={askRemove} />
             ))}
           </div>
-        </section>
-      )}
-      {others.length > 0 && (
-        <section className="habitos-section habitos-section-health" aria-labelledby="habitos-health-heading">
-          <h3 id="habitos-health-heading" className="habitos-subheading">
-            Salud y otros
-          </h3>
+        ) : (
+          <p className="private habitos-registro-empty">
+            Anótalo en Entrada: «Anoche dormí 7 horas» o «Me desperté a las 3».
+          </p>
+        )}
+      </section>
+      <section className="habitos-section habitos-section-health" aria-labelledby="habitos-health-heading">
+        <h3 id="habitos-health-heading" className="habitos-subheading">
+          Salud
+        </h3>
+        {others.length > 0 ? (
           <ul className="habitos-health-list">
             {others.map((item) => (
               <HealthLogRow key={item.id} item={item} />
             ))}
           </ul>
-        </section>
-      )}
+        ) : (
+          <p className="private habitos-registro-empty">
+            Peso, tensión u otros datos puntuales: «Peso 72,4» o «Tensión 120/80 esta mañana».
+          </p>
+        )}
+      </section>
     </>
   );
 }

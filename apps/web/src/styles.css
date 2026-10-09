@@ -1615,6 +1615,15 @@ a.connect {
   margin-bottom: 24px;
 }
 
+.habitos-registro-empty {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px dashed color-mix(in srgb, var(--habitos) 22%, var(--line));
+  background: color-mix(in srgb, var(--habitos) 4%, var(--bg));
+  line-height: 1.45;
+}
+
 .habitos-section-registro .habitos-subheading:first-of-type {
   margin-top: 4px;
 }
