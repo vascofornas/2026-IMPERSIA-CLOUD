@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Apuntes de prueba: tensión, glucosa, peso y medicación (ago–oct 2026).
+Apuntes de prueba: tensión, glucosa, peso y medicación (desde hace ~2 meses hasta hoy).
 
 En el VPS:
   set -a; source /etc/impersia/api.env; set +a
@@ -27,8 +27,16 @@ from psycopg.rows import dict_row
 
 MAD = ZoneInfo("Europe/Madrid")
 SOURCE = "seed_health_demo"
-START = date(2026, 8, 1)
-END = date(2026, 10, 9)
+
+
+def demo_date_range() -> tuple[date, date]:
+    end = date.today()
+    month = end.month - 2
+    year = end.year
+    while month < 1:
+        month += 12
+        year -= 1
+    return date(year, month, 1), end
 
 
 def db():
@@ -101,12 +109,12 @@ def daterange(start: date, end: date):
         d += timedelta(days=1)
 
 
-def generate_entries(rng: random.Random) -> list[tuple[datetime, str, str, str | None]]:
+def generate_entries(rng: random.Random, start: date, end: date) -> list[tuple[datetime, str, str, str | None]]:
     out: list[tuple[datetime, str, str, str | None]] = []
     weight_kg = 73.4
     day_idx = 0
 
-    for d in daterange(START, END):
+    for d in daterange(start, end):
         day_idx += 1
         wd = d.weekday()  # 0=lun
 
@@ -169,7 +177,8 @@ def main() -> None:
             if removed:
                 print(f"Reemplazo: {removed} apuntes demo anteriores")
 
-            entries = generate_entries(rng)
+            start, end = demo_date_range()
+            entries = generate_entries(rng, start, end)
             for when, title, kind, notes in entries:
                 insert_log(cur, user_id, when, title=title, habit_kind=kind, habit_notes=notes)
         conn.commit()
@@ -177,7 +186,7 @@ def main() -> None:
     by_kind: dict[str, int] = {}
     for _, _, k, _ in entries:
         by_kind[k] = by_kind.get(k, 0) + 1
-    print(f"Listo: {len(entries)} apuntes ({START} → {END})")
+    print(f"Listo: {len(entries)} apuntes ({start} → {end})")
     for k in ("medicacion", "presion", "glucosa", "peso"):
         print(f"  · {k}: {by_kind.get(k, 0)}")
 

@@ -760,3 +760,6 @@ Registro clínico ligero v1.2: tipos medicacion, presion, glucosa, peso, sintoma
 
 9 de octubre de 2026, 16:05
 Datos demo salud en producción (1 ago–9 oct 2026): 129 apuntes (59 medicación, 30 tensión, 30 glucosa, 10 peso) para ADMIN_EMAIL, archived_source seed_health_demo. Script services/api/scripts/seed_health_clinical_demo.py (--clear para borrar).
+
+9 de octubre de 2026, 16:20
+Modesto no veía Registro: GET /items limitaba a 30 y los apuntes demo quedaban fuera. main.py límite 500 (param limit). Seed demo con fechas relativas (mes actual −2 → hoy). Resiembra en VPS + restart API.

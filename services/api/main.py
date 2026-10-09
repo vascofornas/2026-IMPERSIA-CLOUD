@@ -1234,8 +1234,9 @@ def delete_item(item_id: str, request: Request):
 
 
 @app.get("/items")
-def list_items(request: Request):
+def list_items(request: Request, limit: int = 500):
     user_id = current_user(request)
+    cap = max(1, min(int(limit), 2000))
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -1244,9 +1245,9 @@ def list_items(request: Request):
                 FROM items
                 WHERE user_id = %s
                 ORDER BY created_at DESC
-                LIMIT 30
+                LIMIT %s
                 """,
-                (user_id,),
+                (user_id, cap),
             )
             rows = cur.fetchall()
             exceptions = _fetch_exceptions(cur, user_id, [str(row["id"]) for row in rows])
