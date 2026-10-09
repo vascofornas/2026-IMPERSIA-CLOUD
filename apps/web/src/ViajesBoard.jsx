@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Icon } from "./icons.jsx";
 import TravelDetailForm from "./TravelDetailForm.jsx";
 import {
@@ -456,6 +456,35 @@ function TripDetail({
   );
 }
 
+function TripOverviewCard({ trip, items, onOpen }) {
+  const pieces = piecesForTrip(items, trip.id);
+  const reservations = pieces.filter((item) => item.travel_role === "reserva").length;
+  const experiences = pieces.filter((item) => item.travel_role === "experiencia").length;
+  const itinerary = pieces.filter((item) => item.travel_role === "plan").length;
+  const pending = pieces.filter((item) => CHECKLIST_ROLES.has(item.travel_role) && item.status !== "done").length;
+
+  return (
+    <button
+      type="button"
+      className={["viajes-overview-card", !tripIsUpcoming(trip) ? "past" : ""].filter(Boolean).join(" ")}
+      onClick={onOpen}
+    >
+      <span className="viajes-overview-card-top">
+        <strong>{trip.title}</strong>
+        <span>{tripRangeLabel(trip)}</span>
+      </span>
+      {trip.travel_place && <span className="viajes-overview-place">{trip.travel_place}</span>}
+      <span className="viajes-overview-counts">
+        <span>{reservations} reserva{reservations === 1 ? "" : "s"}</span>
+        <span>{itinerary} en itinerario</span>
+        <span>{experiences} experiencia{experiences === 1 ? "" : "s"}</span>
+        {pending > 0 && <span>{pending} pendiente{pending === 1 ? "" : "s"}</span>}
+      </span>
+      <span className="viajes-overview-open">Abrir ficha completa →</span>
+    </button>
+  );
+}
+
 export default function ViajesBoard({
   items,
   createTrip,
@@ -471,10 +500,8 @@ export default function ViajesBoard({
 }) {
   const trips = travelTrips(items);
   const orphans = orphanTravelPieces(items);
-  const upcoming = useMemo(() => trips.filter(tripIsUpcoming), [trips]);
   const [selectedId, setSelectedId] = useState(null);
-  const activeId = selectedId || upcoming[0]?.id || trips[0]?.id || null;
-  const activeTrip = trips.find((t) => t.id === activeId) || null;
+  const activeTrip = trips.find((trip) => trip.id === selectedId) || null;
 
   function handleCreated(item) {
     onItemCreated(item);
@@ -493,69 +520,66 @@ export default function ViajesBoard({
     );
   }
 
+  if (activeTrip) {
+    return (
+      <div className="viajes-board">
+        <div className="viajes-back-row">
+          <button
+            type="button"
+            className="link"
+            onClick={() => {
+              setSelectedId(null);
+              setEditing(null);
+            }}
+          >
+            ← Todos los viajes
+          </button>
+        </div>
+        <TripDetail
+          trip={activeTrip}
+          items={items}
+          createPiece={createPiece}
+          onPieceCreated={handleCreated}
+          setError={setError}
+          onToggleStatus={onToggleStatus}
+          editing={editing}
+          setEditing={setEditing}
+          startEdit={startEdit}
+          saveEdit={saveEdit}
+          askRemove={askRemove}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="viajes-board">
       <div className="viajes-head-row">
-        <p className="private viajes-lead-compact">
-          Reservas, tareas, equipaje y experiencias dentro de cada viaje. Con fecha concreta de cita → Agenda.
-        </p>
+        <h2 className="viajes-overview-title">Mis viajes</h2>
         <AddTripForm createTrip={createTrip} onCreated={handleCreated} setError={setError} />
       </div>
-      <div className={["viajes-layout", trips.length === 1 ? "single" : ""].filter(Boolean).join(" ")}>
-        {trips.length > 1 && (
-          <aside className="viajes-trip-list" aria-label="Lista de viajes">
-            {trips.map((trip) => (
-              <button
-                key={trip.id}
-                type="button"
-                className={["viajes-trip-card", trip.id === activeId ? "on" : "", !tripIsUpcoming(trip) ? "past" : ""]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={() => setSelectedId(trip.id)}
-              >
-                <span className="viajes-trip-card-title">{trip.title}</span>
-                <span className="private viajes-trip-card-dates">{tripRangeLabel(trip)}</span>
-              </button>
-            ))}
-          </aside>
-        )}
-        <div className="viajes-main">
-          {activeTrip ? (
-            <TripDetail
-              trip={activeTrip}
-              items={items}
-              createPiece={createPiece}
-              onPieceCreated={handleCreated}
-              setError={setError}
-              onToggleStatus={onToggleStatus}
-              editing={editing}
-              setEditing={setEditing}
-              startEdit={startEdit}
-              saveEdit={saveEdit}
-              askRemove={askRemove}
-            />
-          ) : (
-            <p className="private">Elige un viaje.</p>
-          )}
-          {orphans.length > 0 && (
-            <section className="viajes-orphans">
-              <h3 className="viajes-subheading">Sin viaje asignado</h3>
-              <p className="private">Enlázalos editando el ítem o crea un viaje y vuelve a archivar en Entrada.</p>
-              <ul className="viajes-piece-list">
-                {orphans.map((item) => (
-                  <PieceRow
-                    key={item.id}
-                    item={item}
-                    onToggleStatus={onToggleStatus}
-                    startEdit={startEdit}
-                    askRemove={askRemove}
-                  />
-                ))}
-              </ul>
-            </section>
-          )}
-        </div>
+      <div className="viajes-overview-grid">
+        {trips.map((trip) => (
+          <TripOverviewCard key={trip.id} trip={trip} items={items} onOpen={() => setSelectedId(trip.id)} />
+        ))}
       </div>
+      {orphans.length > 0 && (
+        <section className="viajes-orphans">
+          <h3 className="viajes-subheading">Sin viaje asignado</h3>
+          <p className="private">Enlázalos editando el ítem o crea un viaje y vuelve a archivar en Entrada.</p>
+          <ul className="viajes-piece-list">
+            {orphans.map((item) => (
+              <PieceRow
+                key={item.id}
+                item={item}
+                onToggleStatus={onToggleStatus}
+                startEdit={startEdit}
+                askRemove={askRemove}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

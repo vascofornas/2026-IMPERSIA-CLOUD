@@ -2632,6 +2632,82 @@ button.link.secondary {
   margin-bottom: 16px;
 }
 
+.viajes-overview-title {
+  margin: 8px 0 0;
+  font-size: 1.2rem;
+}
+
+.viajes-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.viajes-overview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 11rem;
+  padding: 18px;
+  text-align: left;
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--viajes) 25%, var(--line));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--viajes) 3%, var(--bg));
+  cursor: pointer;
+}
+
+.viajes-overview-card:hover,
+.viajes-overview-card:focus-visible {
+  border-color: var(--viajes);
+  background: color-mix(in srgb, var(--viajes) 7%, var(--bg));
+}
+
+.viajes-overview-card.past {
+  opacity: 0.72;
+}
+
+.viajes-overview-card-top {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.viajes-overview-card-top strong {
+  color: var(--viajes);
+  font-size: 1.05rem;
+}
+
+.viajes-overview-card-top > span,
+.viajes-overview-place {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.viajes-overview-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.viajes-overview-counts > span {
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--viajes) 8%, var(--bg));
+  font-size: 0.74rem;
+}
+
+.viajes-overview-open {
+  margin-top: auto;
+  color: var(--viajes);
+  font-size: 0.84rem;
+  font-weight: 650;
+}
+
+.viajes-back-row {
+  margin-bottom: 12px;
+}
+
 .viajes-layout {
   display: grid;
   grid-template-columns: minmax(9rem, 11rem) 1fr;
@@ -3012,6 +3088,10 @@ button.link.secondary {
 }
 
 @media (max-width: 700px) {
+  .viajes-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
   .viajes-sections {
     grid-template-columns: 1fr;
   }
