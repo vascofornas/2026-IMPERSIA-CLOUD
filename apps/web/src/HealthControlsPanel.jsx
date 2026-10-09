@@ -246,7 +246,9 @@ export function HealthControlsGuide({ compact }) {
         </li>
         <li>El historial del mes está en <strong>Registro</strong>, a la izquierda.</li>
       </ol>
-      <p className="private habitos-controls-disclaimer">Cuaderno personal. No sustituye al médico.</p>
+      <p className="private habitos-controls-disclaimer">
+        Cuaderno personal. No sustituye al médico. Con avisos por correo activos en Perfil, te escribimos a tu hora si falta el registro.
+      </p>
     </div>
   );
 }
