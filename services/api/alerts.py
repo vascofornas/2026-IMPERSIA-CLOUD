@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from email.message import EmailMessage
 import os
 import smtplib
@@ -75,8 +75,113 @@ def run_email_alerts(conn) -> int:
             if _send_email(row["email"], occ):
                 _mark_sent(conn, row["item_id"], day)
                 sent += 1
+    sent += _run_health_control_email_alerts(conn, now)
     conn.commit()
     return sent
+
+
+def _run_health_control_email_alerts(conn, now: datetime) -> int:
+    import health_controls as hc
+
+    today = now.date()
+    sent = 0
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT
+                u.email,
+                u.id AS user_id,
+                c.id AS control_id,
+                c.kind,
+                c.title,
+                c.repeats,
+                c.reminder_time,
+                c.alert_minutes_before
+            FROM health_controls c
+            JOIN users u ON u.id = c.user_id
+            WHERE u.alert_email = true AND c.status = 'active'
+            """
+        )
+        rows = cur.fetchall()
+
+    for row in rows:
+        control = {
+            "id": row["control_id"],
+            "kind": row["kind"],
+            "title": row["title"],
+            "repeats": row["repeats"],
+            "reminder_time": row["reminder_time"],
+            "alert_minutes_before": row["alert_minutes_before"],
+        }
+        cid = str(row["control_id"])
+        with conn.cursor() as cur:
+            if hc.logs_for_day(cur, str(row["user_id"]), cid, today):
+                continue
+        if not hc.control_due_on_day(control, today, has_log=False):
+            continue
+
+        reminder_at = _control_reminder_at(today, control["reminder_time"])
+        if reminder_at is None:
+            continue
+        alert_min = control.get("alert_minutes_before")
+        if alert_min is None:
+            alert_min = 0
+
+        occ = {
+            "title": f"Pendiente: {control['title']}",
+            "module": "habitos",
+            "starts_at": reminder_at,
+            "time_known": True,
+            "alert_minutes_before": alert_min,
+        }
+        if not _should_send({}, occ, now):
+            continue
+        day = day_key(reminder_at)
+        if _health_control_already_sent(conn, cid, day):
+            continue
+        if _send_email(row["email"], occ):
+            _mark_health_control_sent(conn, cid, day)
+            sent += 1
+    return sent
+
+
+def _control_reminder_at(day: date, reminder_time) -> datetime | None:
+    if isinstance(reminder_time, time):
+        rt = reminder_time
+    elif reminder_time is None:
+        rt = time(8, 0)
+    else:
+        raw = str(reminder_time).strip()[:5]
+        parts = raw.split(":")
+        try:
+            rt = time(int(parts[0]), int(parts[1]) if len(parts) > 1 else 0)
+        except (ValueError, IndexError):
+            rt = time(8, 0)
+    return datetime.combine(day, rt, tzinfo=MADRID)
+
+
+def _health_control_already_sent(conn, control_id: str, day: str) -> bool:
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT 1 FROM health_control_alert_deliveries
+            WHERE health_control_id = %s AND occurrence_day = %s AND channel = 'email'
+            """,
+            (control_id, day),
+        )
+        return cur.fetchone() is not None
+
+
+def _mark_health_control_sent(conn, control_id: str, day: str) -> None:
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO health_control_alert_deliveries (health_control_id, occurrence_day, channel)
+            VALUES (%s, %s, 'email')
+            ON CONFLICT DO NOTHING
+            """,
+            (control_id, day),
+        )
 
 
 def _fetch_candidates(conn):
@@ -372,7 +477,7 @@ def _email_legal_plain() -> list[str]:
         f"Privacidad: {PRIVACY_URL}",
         f"Contacto: {CONTACT_EMAIL}",
         "Responsable: Impersia (impersia.cloud).",
-        "Tratamos tu correo para enviarte recordatorios de entradas tuyas con fecha y hora.",
+        "Tratamos tu correo para enviarte recordatorios de entradas y controles de salud con fecha y hora.",
         "Base legal: tu consentimiento (RGPD art. 6.1.a), retirable en Perfil.",
         "Puedes ejercer acceso, rectificación, supresión y otros derechos escribiendo al contacto.",
         "© Impersia 2026",
@@ -457,7 +562,7 @@ def _email_html(occ: dict, when: str, module: str) -> str:
 
 def _email_legal_html() -> str:
     return f"""<strong style="color:#374151;">Aviso de servicio, no publicidad.</strong><br><br>
-Recibes este correo porque activaste los avisos por correo en tu perfil de Impersia y tienes una entrada con fecha y hora.<br><br>
+Recibes este correo porque activaste los avisos por correo en tu perfil de Impersia (entradas con fecha u hora, o controles de salud pendientes).<br><br>
 <strong style="color:#374151;">Responsable:</strong> Impersia (impersia.cloud)<br>
 <strong style="color:#374151;">Contacto:</strong> <a href="mailto:{CONTACT_EMAIL}" style="color:{MARK};text-decoration:underline;">{CONTACT_EMAIL}</a><br><br>
 <strong style="color:#374151;">Datos personales (RGPD):</strong> usamos tu correo solo para estos recordatorios. Base legal: tu consentimiento (art. 6.1.a), que puedes retirar en <a href="{PROFILE_URL}" style="color:{MARK};text-decoration:underline;">Perfil</a> → Desactivar avisos por correo.<br><br>

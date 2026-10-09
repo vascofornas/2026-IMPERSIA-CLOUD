@@ -2076,7 +2076,9 @@ function AlertPermission({ alertEmail, onAlertEmail, setError }) {
       </section>
       <section>
         <h2>Correo</h2>
-        <p className="lead">Te escribimos a tu cuenta cuando toque, aunque no tengas Impersia abierto.</p>
+        <p className="lead">
+          Te escribimos a tu cuenta cuando toque una entrada con fecha, o si falta registrar un control de salud, aunque no tengas Impersia abierto.
+        </p>
         {alertEmail ? (
           <>
             <p className="private"><Icon name="aviso" /> Los avisos por correo están activos.</p>

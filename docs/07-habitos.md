@@ -167,6 +167,8 @@ Wearables, rachas largas, correlaciones (sueño vs síntomas). No bloquear v1.
 
 **Datos:** `health_controls`; lecturas en `items.health_control_id`. API: `POST/GET /health-controls`, `POST …/readings`.
 
+**Avisos por correo (v1.4):** si en **Perfil** tienes activos los avisos por correo, el servidor envía un email a la **hora habitual** del control cuando ese día toca registrar y aún no hay lectura (como Agenda; un aviso por control y día). Por defecto aviso a la hora (`alert_minutes_before = 0`).
+
 ### Fuera de alcance
 
 Informes PDF para el sistema sanitario, recetas electrónicas, interacciones entre fármacos, compartir con terceros, pestaña «Salud» aparte del módulo habitos.

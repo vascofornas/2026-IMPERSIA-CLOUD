@@ -36,6 +36,8 @@ def insert_control(cur, user_id: str, capture_id: str | None, spec: dict) -> dic
     repeats = (spec.get("repeats") or "daily").strip() or "daily"
     reminder = _parse_time(spec.get("reminder_time") or "08:00")
     alert = spec.get("alert_minutes_before")
+    if alert is None:
+        alert = 0
     cur.execute(
         """
         INSERT INTO health_controls
