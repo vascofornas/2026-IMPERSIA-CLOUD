@@ -1,4 +1,10 @@
-import { chartGeometry, polylinePoints, registroChartBlocks } from "./healthCharts.js";
+import {
+  chartGeometry,
+  formatAxisValue,
+  polylinePoints,
+  registroChartBlocks,
+  registroMonthAverages,
+} from "./healthCharts.js";
 
 function ChartAxes({ geom }) {
   const { plotLeft, plotTop, plotBottom, width, yAxisTicks, xAxisTicks } = geom;
@@ -56,13 +62,30 @@ function MeasureChart({ block }) {
   if (!geom) return null;
 
   const last = block.series[block.series.length - 1];
-  let caption = `${block.series.length} lecturas en el mes`;
+  const n = block.series.length;
+  let mediaPart = "";
+  if (block.mode === "pressure") {
+    const sys =
+      block.series.reduce((acc, p) => acc + p.systolic, 0) / n;
+    const dia =
+      block.series.reduce((acc, p) => acc + p.diastolic, 0) / n;
+    mediaPart = `Media: ${formatAxisValue(sys, "presion")}/${formatAxisValue(dia, "presion")} mmHg`;
+  } else {
+    const avg = block.series.reduce((acc, p) => acc + p.value, 0) / n;
+    const unit =
+      block.kind === "glucosa" ? " mg/dL" : block.kind === "peso" ? " kg" : block.kind === "sueno" ? " h" : "";
+    mediaPart = `Media: ${formatAxisValue(avg, block.kind)}${unit}`;
+  }
+
+  let caption = `${n} lectura${n === 1 ? "" : "s"} en el mes`;
   if (block.mode === "pressure" && last) {
-    caption = `Última: ${last.systolic}/${last.diastolic} mmHg · ${caption}`;
+    caption = `${mediaPart} · Última: ${last.systolic}/${last.diastolic} mmHg · ${caption}`;
   } else if (last?.value != null) {
     const unit =
       block.kind === "glucosa" ? " mg/dL" : block.kind === "peso" ? " kg" : block.kind === "sueno" ? " h" : "";
-    caption = `Última: ${String(last.value).replace(".", ",")}${unit} · ${caption}`;
+    caption = `${mediaPart} · Última: ${String(last.value).replace(".", ",")}${unit} · ${caption}`;
+  } else {
+    caption = `${mediaPart} · ${caption}`;
   }
 
   const yUnit =
@@ -123,20 +146,50 @@ function MeasureChart({ block }) {
   );
 }
 
+function MonthAverages({ rows }) {
+  if (!rows.length) return null;
+  return (
+    <div className="habitos-registro-averages" role="region" aria-label="Medias del mes">
+      <p className="habitos-registro-averages-kicker">Medias del mes</p>
+      <ul className="habitos-registro-averages-grid">
+        {rows.map((row) => (
+          <li key={row.kind} className="habitos-registro-average">
+            <p className="habitos-registro-average-label">{row.title}</p>
+            <p className="habitos-registro-average-value">{row.value}</p>
+            <p className="private habitos-registro-average-n">
+              {row.n} lectura{row.n === 1 ? "" : "s"}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export default function RegistroMeasureCharts({ items, year, month }) {
+  const averages = registroMonthAverages(items, year, month);
   const blocks = registroChartBlocks(items, year, month);
-  if (!blocks.length) return null;
+  if (!averages.length && !blocks.length) return null;
 
   return (
-    <section className="habitos-registro-charts" aria-labelledby="habitos-charts-heading">
-      <h3 id="habitos-charts-heading" className="habitos-subheading">
-        Gráficas del mes
-      </h3>
-      <div className="habitos-measure-chart-grid">
-        {blocks.map((block) => (
-          <MeasureChart key={block.id} block={block} />
-        ))}
-      </div>
+    <section
+      className="habitos-registro-charts"
+      aria-label={blocks.length ? "Medias y gráficas del mes" : "Medias del mes"}
+      {...(blocks.length ? { "aria-labelledby": "habitos-charts-heading" } : {})}
+    >
+      <MonthAverages rows={averages} />
+      {blocks.length > 0 && (
+        <>
+          <h3 id="habitos-charts-heading" className="habitos-subheading">
+            Gráficas del mes
+          </h3>
+          <div className="habitos-measure-chart-grid">
+            {blocks.map((block) => (
+              <MeasureChart key={block.id} block={block} />
+            ))}
+          </div>
+        </>
+      )}
     </section>
   );
 }

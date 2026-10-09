@@ -83,6 +83,63 @@ export function glucoseSeries(items, year, month) {
     .filter(Boolean);
 }
 
+function mean(nums) {
+  if (!nums.length) return null;
+  return nums.reduce((a, b) => a + b, 0) / nums.length;
+}
+
+/** Medias del mes para métricas numéricas (≥1 lectura). */
+export function registroMonthAverages(items, year, month) {
+  const rows = [];
+
+  const presion = pressureSeries(items, year, month);
+  if (presion.length) {
+    const sys = mean(presion.map((p) => p.systolic));
+    const dia = mean(presion.map((p) => p.diastolic));
+    rows.push({
+      kind: "presion",
+      title: habitKindLabel("presion"),
+      value: `${formatAxisValue(sys, "presion")}/${formatAxisValue(dia, "presion")} mmHg`,
+      n: presion.length,
+    });
+  }
+
+  const peso = weightSeries(items, year, month);
+  if (peso.length) {
+    const kg = mean(peso.map((p) => p.value));
+    rows.push({
+      kind: "peso",
+      title: habitKindLabel("peso"),
+      value: `${formatAxisValue(kg, "peso")} kg`,
+      n: peso.length,
+    });
+  }
+
+  const glucosa = glucoseSeries(items, year, month);
+  if (glucosa.length) {
+    const mg = mean(glucosa.map((p) => p.value));
+    rows.push({
+      kind: "glucosa",
+      title: habitKindLabel("glucosa"),
+      value: `${formatAxisValue(mg, "glucosa")} mg/dL`,
+      n: glucosa.length,
+    });
+  }
+
+  const sueno = sleepSeries(items, year, month);
+  if (sueno.length) {
+    const h = mean(sueno.map((p) => p.value));
+    rows.push({
+      kind: "sueno",
+      title: habitKindLabel("sueno"),
+      value: `${formatAxisValue(h, "sueno")} h`,
+      n: sueno.length,
+    });
+  }
+
+  return rows;
+}
+
 export function registroChartBlocks(items, year, month) {
   const blocks = [];
   const presion = pressureSeries(items, year, month);

@@ -219,11 +219,6 @@ export function registroPeriodSummary(sleepEntries, healthEntries) {
     if (detail.length) parts.push(detail.join(", "));
     else parts.push(`${healthEntries.length} de salud`);
   }
-  const hours = sleepEntries.map((item) => sleepHoursFromLog(item)).filter((h) => h != null);
-  if (hours.length >= 2) {
-    const avg = Math.round((hours.reduce((a, b) => a + b, 0) / hours.length) * 10) / 10;
-    parts.push(`media sueño ${String(avg).replace(".", ",")} h`);
-  }
   return parts.join(" · ");
 }
 

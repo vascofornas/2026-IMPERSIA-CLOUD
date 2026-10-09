@@ -787,3 +787,9 @@ Controles de salud v1.3: tipos presion, glucosa, medicacion, peso. Entrada crea 
 
 9 de octubre de 2026, 19:00
 Control de sueño en controles de salud: kind sueno (horas 1–24 + nota opcional). Migración 015, health_controls.py, validación POST readings, web Añadir control + formulario, gráfica del mes en h. docs/07-habitos. seed backfill sueno. Build web + despliegue API (015) y dist.
+
+9 de octubre de 2026, 19:15
+Producción: backfill sueño control «Sueño» (5166fcab…) 69 lecturas seed_control_backfill (1 ago–8 oct 2026), script --fill-missing sin borrar otros controles.
+
+9 de octubre de 2026, 19:45
+Registro: bloque «Medias del mes» (tensión, peso, glucosa, sueño) y media en pie de cada gráfica. healthCharts.js, RegistroMeasureCharts.jsx, styles.css, docs/07-habitos. Despliegue web.
