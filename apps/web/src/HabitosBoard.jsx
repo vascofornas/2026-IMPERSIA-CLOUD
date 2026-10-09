@@ -1,10 +1,6 @@
+import HabitRegistro, { HoySleepSnippet } from "./HabitRegistro.jsx";
 import HabitTracker from "./HabitTracker.jsx";
-import {
-  habitKindLabel,
-  isHabitRoutine,
-  latestSleepLine,
-  recentHabitLogs,
-} from "./habitos.js";
+import { isHabitRoutine, latestSleepLog } from "./habitos.js";
 
 function openHabitRoutines(items) {
   return items
@@ -23,7 +19,7 @@ export function HoyBienestar({
   editingId,
 }) {
   const routines = openHabitRoutines(items);
-  const sleep = latestSleepLine(items);
+  const sleep = latestSleepLog(items);
   if (!routines.length && !sleep) return null;
 
   return (
@@ -47,7 +43,7 @@ export function HoyBienestar({
           ))}
         </div>
       )}
-      {sleep && <p className="private habitos-sleep-line">Sueño: {sleep}</p>}
+      {sleep && <HoySleepSnippet items={items} />}
     </section>
   );
 }
@@ -62,7 +58,6 @@ export default function HabitosBoard({
   askRemove,
   editingId,
 }) {
-  const logs = recentHabitLogs(items);
   const openRoutines = openHabitRoutines(items);
 
   if (!items.some((item) => item.module === "habitos")) {
@@ -101,21 +96,9 @@ export default function HabitosBoard({
         </section>
       )}
 
-      <section>
+      <section className="habitos-section habitos-section-registro">
         <h2>Registro</h2>
-        {!logs.length ? (
-          <p className="private">Peso, sueño o tensión: apúntalo en Entrada cuando quieras.</p>
-        ) : (
-          <ul className="habitos-logs">
-            {logs.map((item) => (
-              <li key={item.id}>
-                <span className="mod m-habitos">{habitKindLabel(item.habit_kind)}</span>
-                <span className="title">{item.title}</span>
-                {item.habit_notes && <span className="private"> · {item.habit_notes}</span>}
-              </li>
-            ))}
-          </ul>
-        )}
+        <HabitRegistro items={items} startEdit={startEdit} askRemove={askRemove} />
       </section>
     </div>
   );

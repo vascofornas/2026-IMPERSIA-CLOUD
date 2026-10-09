@@ -129,19 +129,75 @@ export function groupRoutinesByFranja(routines) {
   return order.filter((id) => map.get(id).length).map((id) => ({ id, label: franjaLabel(id), items: map.get(id) }));
 }
 
-export function latestSleepLine(items) {
-  const logs = items
+export function sleepLogs(items, limit = 8) {
+  return items
     .filter((item) => isHabitLog(item) && item.habit_kind === "sueno")
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  const latest = logs[0];
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, limit);
+}
+
+export function latestSleepLog(items) {
+  return sleepLogs(items, 1)[0] || null;
+}
+
+export function latestSleepLine(items) {
+  const latest = latestSleepLog(items);
   if (!latest) return null;
-  const detail = latest.habit_notes || latest.title;
-  return detail;
+  const { hours, note } = sleepLogDisplay(latest);
+  if (hours != null) return `${formatSleepHours(hours)}${note ? ` · ${note}` : ""}`;
+  return latest.habit_notes || latest.title;
+}
+
+function formatSleepHours(value) {
+  const n = Number(value);
+  if (Number.isNaN(n)) return String(value);
+  if (Number.isInteger(n)) return `${n} h`;
+  return `${String(n).replace(".", ",")} h`;
+}
+
+export function sleepHoursFromLog(item) {
+  const notes = item?.habit_notes || "";
+  const title = item?.title || "";
+  const fromNotes = notes.match(/^([\d.,]+)\s*h(?:oras)?/i);
+  if (fromNotes) return Number(fromNotes[1].replace(",", "."));
+  const fromTitle = title.match(/(\d+(?:[.,]\d+)?)\s*h(?:oras)?/i);
+  if (fromTitle) return Number(fromTitle[1].replace(",", "."));
+  return null;
+}
+
+export function sleepLogDisplay(item) {
+  const hours = sleepHoursFromLog(item);
+  let note = (item.title || "").trim();
+  note = note.replace(/^(?:anoche\s+)?/i, "");
+  note = note.replace(/^he\s+dormido\s+/i, "");
+  note = note.replace(/^dorm[ií](?:do)?\s+/i, "");
+  note = note.replace(/\d+(?:[.,]\d+)?\s*h(?:oras)?(?:\s+seguidas?)?/gi, " ");
+  note = note.replace(/\bsolo\b/gi, " ");
+  note = note.split(/\s+/).join(" ").replace(/^[ .,;:-]+|[ .,;:-]+$/g, "");
+  if (!note || note.length < 3) note = null;
+  if (note && hours != null && note.toLowerCase().includes("seguid")) {
+    note = null;
+  }
+  return { hours, note };
+}
+
+export function logWhenLabel(createdAt) {
+  if (!createdAt) return "";
+  const at = new Date(createdAt);
+  if (Number.isNaN(at.getTime())) return "";
+  const now = new Date();
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startAt = new Date(at.getFullYear(), at.getMonth(), at.getDate());
+  const diffDays = Math.round((startToday - startAt) / 86400000);
+  if (diffDays === 0) return "Hoy";
+  if (diffDays === 1) return "Ayer";
+  if (diffDays === 2) return "Anteayer";
+  return at.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "short" });
 }
 
 export function recentHabitLogs(items, limit = 8) {
   return items
-    .filter(isHabitLog)
+    .filter((item) => isHabitLog(item) && item.habit_kind !== "sueno")
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, limit);
 }
