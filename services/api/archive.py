@@ -86,7 +86,7 @@ Reglas:
 - Plan con amigos/pareja (cena, concierto, quedar) → agenda.ocio.
 - Cada lunes/día + yoga, gimnasio, meditar, correr → habitos (no ocio).
 - habit_role: routine (repetición) | log (sueño, medicación tomada, tensión, glucosa, peso, síntoma). habit_kind: rutina|ejercicio|meditacion|lectura|sueno|medicacion|presion|glucosa|peso|sintoma|salud|otro.
-- health_control (objeto, solo si piden PLAN de control, no una lectura): kind presion|glucosa|medicacion|peso, title, repeats daily|weekly, reminder_time HH:MM, alert_minutes_before opcional. Ej.: «Quiero controlarme la tensión cada día a las 8» → health_control, sin habit log.
+- health_control (objeto, solo si piden PLAN de control, no una lectura): kind presion|glucosa|medicacion|peso, title, repeats daily|weekly, reminder_time HH:MM, alert_minutes_before opcional. Ej.: «Quiero controlarme la tensión cada día a las 8», «Quiero revisar mi peso cada día a las 8» → health_control, sin habit log.
 - «Anoche dormí N horas», peso, tensión → habitos log (no diario si es dato).
 - Comida o reunión de empresa/trabajo con fecha → reuniones.
 - Cita médica → agenda.medica.

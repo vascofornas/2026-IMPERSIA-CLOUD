@@ -764,5 +764,8 @@ Datos demo salud en producción (1 ago–9 oct 2026): 129 apuntes (59 medicació
 9 de octubre de 2026, 16:20
 Modesto no veía Registro: GET /items limitaba a 30 y los apuntes demo quedaban fuera. main.py límite 500 (param limit). Seed demo con fechas relativas (mes actual −2 → hoy). Resiembra en VPS + restart API.
 
+9 de octubre de 2026, 17:25
+Modesto: «quiero revisar mi peso cada día a las 8» no creaba control (solo log). classify: revisar/comprobar/pesarme y quiero+cada; peso diario no forzado a semanal. Despliegue API + web.
+
 9 de octubre de 2026, 17:10
 Controles de salud v1.3: tipos presion, glucosa, medicacion, peso. Entrada crea plan (health_control en classify/archive); tabla health_controls + lecturas en items.health_control_id. API GET /health-controls, POST readings. Web: guía 3 pasos, Controles en Bienestar y Hoy, formulario Registrar. docs/07-habitos. Migración 014. Despliegue API + web.

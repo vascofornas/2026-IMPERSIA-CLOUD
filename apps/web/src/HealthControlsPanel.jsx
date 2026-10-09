@@ -114,8 +114,8 @@ export function HealthControlsGuide() {
       </p>
       <ol className="habitos-controls-steps">
         <li>
-          <strong>Entrada, una sola vez:</strong> «Quiero controlarme la tensión cada día a las 8» (o glucosa, peso,
-          medicación).
+          <strong>Entrada, una sola vez:</strong> «Quiero controlarme la tensión cada día a las 8», «Quiero revisar mi
+          peso cada día a las 8» (o glucosa, medicación).
         </li>
         <li>
           <strong>Cada día, aquí:</strong> cuando toque, pulsa <em>Registrar ahora</em> y pon el dato (o confirma la

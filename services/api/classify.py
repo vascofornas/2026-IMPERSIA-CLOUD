@@ -537,13 +537,23 @@ def parse_health_control_setup(raw: str, low: str) -> dict | None:
     setup = re.search(
         r"\b("
         r"controlarme|controlar(?:me)?|quiero control|necesito control|"
-        r"seguir(?:me)?(?: la| el)?|medirme (?:la |el )?|"
-        r"cada d[ií]a (?:medir|tomar|controlar|pesarme)|"
-        r"recordar(?:me)? (?:para|de) (?:medir|tomar|pesarme)"
+        r"seguir(?:me)?(?: la| el| mi)?|medirme (?:la |el |mi )?|"
+        r"revisar(?:me)?(?: la| el| mi)?|comprobar(?:me)?(?: la| el| mi)?|"
+        r"pesarme|"
+        r"cada d[ií]a (?:medir|tomar|controlar|pesarme|revisar)|"
+        r"recordar(?:me)? (?:para|de) (?:medir|tomar|pesarme|revisar)"
         r")\b",
         low,
     )
-    if not setup and not re.search(r"\bcontrol de (?:la |el )?(?:tensi[oó]n|glucosa|peso|medicaci[oó]n)\b", low):
+    plan_phrase = re.search(
+        r"\bcontrol de (?:la |el |mi )?(?:tensi[oó]n|glucosa|peso|medicaci[oó]n)\b",
+        low,
+    )
+    quiero_plan = re.search(
+        r"\bquiero (?:control|medir|revisar|comprobar|seguir)\b",
+        low,
+    ) and re.search(r"\bcada\b", low)
+    if not setup and not plan_phrase and not quiero_plan:
         return None
     kind = None
     if re.search(r"tensi[oó]n|presi[oó]n arterial|\bpa\b", low):
@@ -566,7 +576,9 @@ def parse_health_control_setup(raw: str, low: str) -> dict | None:
     hour, minute = _clock(low)
     reminder_time = f"{hour:02d}:{minute:02d}" if hour is not None else "08:00"
     repeats = "daily"
-    if kind == "peso" or re.search(r"\b(?:domingo|semanal|cada semana)\b", low):
+    if re.search(r"\b(?:domingo|semanal|cada semana)\b", low):
+        repeats = "weekly"
+    elif kind == "peso" and not re.search(r"\bcada d[ií]a\b", low):
         repeats = "weekly"
     alert = _alert_minutes_before(low, hour is not None)
     return {
