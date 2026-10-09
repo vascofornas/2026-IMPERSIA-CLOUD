@@ -829,3 +829,6 @@ Viajes: primera pantalla simplificada como índice de tarjetas, una por viaje. C
 
 9 de octubre de 2026, 23:15
 Agenda interna: proyección automática de Viajes sin duplicar datos. El viaje ocupa todos los días entre ida y vuelta; reservas, itinerario y experiencias con inicio aparecen con su hora. Equipaje y notas quedan fuera. Las tarjetas de Agenda son de lectura y abren la ficha de Viajes; editar o borrar el dossier actualiza el calendario. travel.js, App.jsx y docs/08-viajes.md. Build, prueba de proyección y despliegue web.
+
+9 de octubre de 2026, 23:20
+Cierre de sesión: monorepositorio API + web limpio, commit final en main, push a GitHub y etiqueta anotada sesion-2026-10-09.
