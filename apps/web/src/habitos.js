@@ -13,9 +13,16 @@ const KIND_LABEL = {
   meditacion: "Meditación",
   lectura: "Lectura",
   sueno: "Sueño",
+  medicacion: "Medicación",
+  presion: "Tensión",
+  glucosa: "Glucosa",
+  peso: "Peso",
+  sintoma: "Síntoma",
   salud: "Salud",
-  otro: "Bienestar",
+  otro: "Registro",
 };
+
+const HEALTH_SUMMARY_ORDER = ["medicacion", "presion", "glucosa", "peso", "sintoma", "salud", "otro"];
 
 export function habitKindLabel(kind) {
   return KIND_LABEL[kind] || KIND_LABEL.otro;
@@ -198,7 +205,20 @@ export function registroPeriodSummary(sleepEntries, healthEntries) {
   if (!total) return null;
   const parts = [`${total} apunte${total === 1 ? "" : "s"}`];
   if (sleepEntries.length) parts.push(`${sleepEntries.length} de sueño`);
-  if (healthEntries.length) parts.push(`${healthEntries.length} de salud`);
+  if (healthEntries.length) {
+    const byKind = {};
+    for (const item of healthEntries) {
+      const k = item.habit_kind || "otro";
+      byKind[k] = (byKind[k] || 0) + 1;
+    }
+    const detail = HEALTH_SUMMARY_ORDER.filter((k) => byKind[k]).map((k) => {
+      const n = byKind[k];
+      const label = KIND_LABEL[k] || k;
+      return `${n} ${label.toLowerCase()}${n === 1 ? "" : ""}`;
+    });
+    if (detail.length) parts.push(detail.join(", "));
+    else parts.push(`${healthEntries.length} de salud`);
+  }
   const hours = sleepEntries.map((item) => sleepHoursFromLog(item)).filter((h) => h != null);
   if (hours.length >= 2) {
     const avg = Math.round((hours.reduce((a, b) => a + b, 0) / hours.length) * 10) / 10;

@@ -331,7 +331,20 @@ def legacy_kind(module: str) -> str:
 
 
 HABIT_ROLES = {"routine", "log"}
-HABIT_KINDS = {"rutina", "ejercicio", "meditacion", "lectura", "sueno", "salud", "otro"}
+HABIT_KINDS = {
+    "rutina",
+    "ejercicio",
+    "meditacion",
+    "lectura",
+    "sueno",
+    "medicacion",
+    "presion",
+    "glucosa",
+    "peso",
+    "sintoma",
+    "salud",
+    "otro",
+}
 
 
 HEALTH_SYMPTOM_HINTS = (
@@ -366,14 +379,56 @@ def looks_like_health_symptom(low: str) -> bool:
     return False
 
 
+def looks_like_medication_log(low: str) -> bool:
+    if any(w in low for w in ("insulina", "inyect", "inyección", "inyeccion", "comprimido", "cápsula", "capsula")):
+        if any(w in low for w in ("tomé", "tome", "he tomado", "tomada", "tomado", "puse", "me puse")):
+            return True
+    if not any(w in low for w in ("tomé", "tome", "he tomado", "tomada", "tomado la", "tomado el", "tomado")):
+        return False
+    return any(
+        w in low
+        for w in (
+            "pastilla",
+            "pastillas",
+            "medic",
+            "medicación",
+            "medicacion",
+            "fármaco",
+            "farmaco",
+            "dosis",
+            "paracetamol",
+            "omeprazol",
+            "insulina",
+        )
+    )
+
+
+def looks_like_glucose_log(low: str) -> bool:
+    if any(w in low for w in ("glucosa", "glicemia", "azúcar en sangre", "azucar en sangre")):
+        return True
+    if ("azúcar" in low or "azucar" in low) and re.search(r"\d", low):
+        return True
+    return False
+
+
+def looks_like_blood_pressure_log(low: str) -> bool:
+    if re.search(r"\d{2,3}\s*/\s*\d{2,3}", low):
+        return True
+    return any(w in low for w in ("tensión", "tension", "presión arterial", "presion arterial", " presión", " presion"))
+
+
 def looks_like_habit_log(low: str) -> bool:
     if re.search(r"\banoche\b", low) and re.search(r"dorm", low):
         return True
     if re.search(r"dorm[ií]", low) and re.search(r"\d+\s*h", low):
         return True
-    if re.search(r"\bpeso\b", low) and re.search(r"\d", low):
+    if looks_like_medication_log(low):
         return True
-    if "tensión" in low or "tension" in low:
+    if looks_like_glucose_log(low):
+        return True
+    if looks_like_blood_pressure_log(low):
+        return True
+    if re.search(r"\bpeso\b", low) and re.search(r"\d", low):
         return True
     if looks_like_health_symptom(low):
         return True
@@ -408,22 +463,53 @@ def _habit_routine_kind(low: str) -> str:
 def _habit_log_kind(low: str) -> str:
     if re.search(r"dorm", low) and not looks_like_health_symptom(low):
         return "sueno"
-    if re.search(r"\bpeso\b", low) or "tensión" in low or "tension" in low:
-        return "salud"
+    if looks_like_medication_log(low):
+        return "medicacion"
+    if looks_like_glucose_log(low):
+        return "glucosa"
+    if looks_like_blood_pressure_log(low):
+        return "presion"
+    if re.search(r"\bpeso\b", low):
+        return "peso"
     if looks_like_health_symptom(low):
-        return "salud"
+        return "sintoma"
     return "otro"
+
+
+def _habit_log_notes(low: str, kind: str) -> str | None:
+    if kind == "sueno":
+        m = re.search(r"(\d+(?:[.,]\d+)?)\s*h(?:oras)?", low)
+        if m and "dorm" in low:
+            return f"{m.group(1).replace(',', '.')} h"
+    if kind == "presion":
+        m = re.search(r"(\d{2,3})\s*/\s*(\d{2,3})", low)
+        if m:
+            return f"{m.group(1)}/{m.group(2)} mmHg"
+    if kind == "glucosa":
+        m = re.search(r"(?:glucosa|glicemia|azúcar|azucar)[^\d]{0,20}(\d{2,3}(?:[.,]\d+)?)", low)
+        if m:
+            return f"{m.group(1).replace(',', '.')} mg/dL"
+        m = re.search(r"(\d{2,3}(?:[.,]\d+)?)\s*(?:mg\s*/?\s*dl|mgdl)", low)
+        if m:
+            return f"{m.group(1).replace(',', '.')} mg/dL"
+        m = re.search(r"(\d{2,3}(?:[.,]\d+)?)", low)
+        if m:
+            return f"{m.group(1).replace(',', '.')} mg/dL"
+    if kind == "peso":
+        m = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:kg|kilos)?", low)
+        if m:
+            val = m.group(1).replace(",", ".")
+            return f"{val} kg"
+    return None
 
 
 def habit_meta(raw: str, low: str) -> dict:
     if looks_like_habit_log(low):
-        notes = None
-        m = re.search(r"(\d+(?:[.,]\d+)?)\s*h(?:oras)?", low)
-        if m and "dorm" in low:
-            notes = f"{m.group(1).replace(',', '.')} h"
+        kind = _habit_log_kind(low)
+        notes = _habit_log_notes(low, kind)
         return {
             "habit_role": "log",
-            "habit_kind": _habit_log_kind(low),
+            "habit_kind": kind,
             "habit_notes": notes,
         }
     notes = None

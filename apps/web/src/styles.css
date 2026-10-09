@@ -2028,6 +2028,12 @@ button.link.secondary {
   color: var(--muted);
 }
 
+.habitos-registro-health-lead {
+  margin: -6px 0 14px;
+  max-width: 36rem;
+  line-height: 1.45;
+}
+
 .habitos-section-registro .habitos-subheading:first-of-type {
   margin-top: 4px;
 }

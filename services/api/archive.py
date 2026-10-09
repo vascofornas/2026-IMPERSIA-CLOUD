@@ -85,7 +85,7 @@ Reglas:
 - «Tengo que / hay que …» con mañana o día concreto → agenda.recordatorio, no cita general.
 - Plan con amigos/pareja (cena, concierto, quedar) → agenda.ocio.
 - Cada lunes/día + yoga, gimnasio, meditar, correr → habitos (no ocio).
-- habit_role: routine (repetición) | log (sueño, peso, tensión puntual). habit_kind: rutina|ejercicio|meditacion|lectura|sueno|salud|otro.
+- habit_role: routine (repetición) | log (sueño, medicación tomada, tensión, glucosa, peso, síntoma). habit_kind: rutina|ejercicio|meditacion|lectura|sueno|medicacion|presion|glucosa|peso|sintoma|salud|otro.
 - «Anoche dormí N horas», peso, tensión → habitos log (no diario si es dato).
 - Comida o reunión de empresa/trabajo con fecha → reuniones.
 - Cita médica → agenda.medica.

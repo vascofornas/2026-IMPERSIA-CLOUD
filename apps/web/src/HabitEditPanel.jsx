@@ -38,8 +38,12 @@ export function editorFromRepeats(repeats) {
 
 const LOG_KINDS = [
   ["sueno", "Sueño"],
-  ["salud", "Salud"],
+  ["medicacion", "Medicación (toma)"],
+  ["presion", "Tensión arterial"],
+  ["glucosa", "Glucosa / azúcar"],
   ["peso", "Peso"],
+  ["sintoma", "Síntoma / malestar"],
+  ["salud", "Salud (general)"],
   ["otro", "Otro registro"],
 ];
 

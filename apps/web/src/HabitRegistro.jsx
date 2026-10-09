@@ -194,8 +194,12 @@ export default function HabitRegistro({ items, startEdit, askRemove, editingId }
 
       <section className="habitos-section habitos-section-health" aria-labelledby="habitos-health-heading">
         <h3 id="habitos-health-heading" className="habitos-subheading">
-          Salud
+          Salud y medicación
         </h3>
+        <p className="private habitos-registro-health-lead">
+          Apúntalo en Entrada: «Tomé la pastilla de la tensión», «Glucosa 120 en ayunas», «Tensión 128/82». Es tu cuaderno
+          personal; no sustituye al médico.
+        </p>
         {health.length > 0 ? (
           healthWeeks.map((week) => (
             <WeekBlock key={week.label} label={week.label}>

@@ -67,7 +67,7 @@ Dos formas de ítem en `module = habitos`:
 | Tipo lógico | `habit_role` | Campos clave |
 | --- | --- | --- |
 | Rutina (seguimiento) | `routine` | `repeats`, `starts_at`, `time_known`, `habit_kind`: rutina \| ejercicio \| meditacion \| lectura \| otro |
-| Registro (puntual) | `log` | `starts_at` = día del registro, sin `repeats`; `habit_kind`: sueno \| salud; `habit_notes` / `meta` (horas, calidad…) |
+| Registro (puntual) | `log` | `starts_at` = día del registro, sin `repeats`; `habit_kind`: sueno \| medicacion \| presion \| glucosa \| peso \| sintoma \| salud \| otro; `habit_notes` (horas, mmHg, mg/dL, kg…) |
 
 El **seguimiento** no es un tercer ítem: son **marcas por día** sobre rutinas (excepciones/hecho, mismo motor que series).
 
@@ -94,10 +94,10 @@ El **seguimiento** no es un tercer ítem: son **marcas por día** sobre rutinas 
 
 Pregunta de producto: «¿Cómo he estado de salud este mes?» No es Agenda ni Diario: son **registros puntuales** (`habit_role = log`) que, juntos, cuentan una historia en el tiempo.
 
-### Qué hay hoy (v0)
+### Qué hay hoy
 
-- **Registro → Salud / Sueño**: lista de las **últimas ~8 entradas**, ordenadas por fecha.
-- Sirve para recordar lo reciente; **no** hay selector de mes ni resumen del periodo.
+- **Registro → Salud / Sueño**: selector de **mes**, resumen del periodo y listas por **semana**.
+- Archivado: Entrada natural clasifica sueño, medicación, tensión, glucosa, peso y síntomas en `habit_kind` fino; lo genérico queda en `salud` u `otro`.
 
 ### Principios
 
@@ -131,9 +131,31 @@ Cuando el archivado deja **número** en `habit_notes` (peso, horas de sueño, te
 
 Wearables, rachas largas, correlaciones (sueño vs síntomas). No bloquear v1.
 
+### Registro «clínico ligero» (mayores, crónicos — decisión oct 2026)
+
+**Sí, encaja en Impersia**, con límites claros: cuaderno personal y línea temporal, **no** historia clínica ni sustituto del médico/farmacia.
+
+| Tipo | Entrada (Ejemplos) | Modelo |
+| --- | --- | --- |
+| **Medicación (toma hecha)** | «Tomé la pastilla de la tensión», «Insulina 8 unidades antes de cenar» | `log` · `habit_kind`: **medicacion** · notas = dosis/nombre si se detecta |
+| **Presión arterial** | «Tensión 128/82 esta mañana», «PA 130/85 en reposo» | `log` · **presion** · `habit_notes` = «128/82 mmHg» |
+| **Glucosa / azúcar** | «Glucosa 142 después de comer», «Azúcar 95 en ayunas» | `log` · **glucosa** · número en notas |
+| **Peso** | «Peso 72,4 hoy» | `log` · **peso** |
+| **Síntoma / malestar** | resfriado, dolor, fiebre (ya cubierto) | `log` · **sintoma** (hoy agrupado como `salud`) |
+| **Pauta recurrente** | «Cada mañana tomar omeprazol a las 8» | **rutina** (`repeats`), no log; aviso opcional en Agenda si lleva hora |
+
+**Principios UX (edad, enfermedad):**
+
+- Seguir **Entrada en lenguaje natural**; etiquetas visibles grandes en Registro (Pastilla, Tensión, Azúcar…).
+- En la vista **mes**: resumen por tipo («14 tomas · 22 tensiones · 8 glucosas») y filtros opcionales, sin pantallas hospitalarias.
+- **Medicación**: distinguir *«ya la tomé»* (log) de *«tengo que tomarla cada día»* (rutina + Hoy).
+- Disclaimer breve en Registro: datos personales; llevar al médico lo importante.
+
+**v1.2 (hecho):** `HABIT_KINDS` ampliado; reglas en `classify.py`; etiquetas y resumen mensual por subtipo en Registro; edición manual del tipo en el panel de log. Pendiente: mini gráficas presión/glucosa/peso.
+
 ### Fuera de alcance
 
-Informes PDF, recordatorios médicos, compartir con terceros, pestaña «Salud» aparte del módulo habitos.
+Informes PDF para el sistema sanitario, recetas electrónicas, interacciones entre fármacos, compartir con terceros, pestaña «Salud» aparte del módulo habitos.
 
 ## Fuera de este bloque (futuro)
 
