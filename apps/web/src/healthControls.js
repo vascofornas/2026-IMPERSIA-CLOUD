@@ -1,12 +1,13 @@
 import { habitKindLabel } from "./habitos.js";
 
-export const CONTROL_KINDS = ["presion", "glucosa", "medicacion", "peso"];
+export const CONTROL_KINDS = ["presion", "glucosa", "medicacion", "peso", "sueno"];
 
 export const CONTROL_KIND_OPTIONS = [
   ["presion", "Tensión arterial"],
   ["glucosa", "Glucosa (azúcar)"],
   ["medicacion", "Medicación (toma diaria)"],
   ["peso", "Peso"],
+  ["sueno", "Sueño (horas)"],
 ];
 
 export const CONTROL_DEFAULT_TITLE = {
@@ -14,6 +15,7 @@ export const CONTROL_DEFAULT_TITLE = {
   glucosa: "Control de glucosa",
   medicacion: "Control de medicación",
   peso: "Control de peso",
+  sueno: "Registro de sueño",
 };
 
 export function controlKindLabel(kind) {

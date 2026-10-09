@@ -7,13 +7,14 @@ from zoneinfo import ZoneInfo
 
 MADRID = ZoneInfo("Europe/Madrid")
 
-CONTROL_KINDS = frozenset({"presion", "glucosa", "medicacion", "peso"})
+CONTROL_KINDS = frozenset({"presion", "glucosa", "medicacion", "peso", "sueno"})
 
 KIND_DEFAULT_TITLE = {
     "presion": "Control de tensión arterial",
     "glucosa": "Control de glucosa",
     "medicacion": "Control de medicación",
     "peso": "Control de peso",
+    "sueno": "Registro de sueño",
 }
 
 
@@ -104,6 +105,11 @@ def _habit_notes_for_reading(kind: str, payload: dict) -> str | None:
     if kind == "peso" and payload.get("kg") is not None:
         kg = payload["kg"]
         return f"{kg} kg".replace(".", ",") if isinstance(kg, str) else f"{kg} kg"
+    if kind == "sueno" and payload.get("hours") is not None:
+        h = payload["hours"]
+        if isinstance(h, (int, float)):
+            s = str(int(h)) if float(h).is_integer() else str(round(float(h), 1)).replace(".", ",")
+            return f"{s} h"
     return payload.get("note")
 
 
@@ -119,6 +125,12 @@ def _title_for_reading(control: dict, payload: dict, notes: str | None) -> str:
     if kind == "medicacion":
         base = control.get("title") or "Medicación"
         return f"{base} — tomada" if payload.get("taken", True) else f"{base} — no tomada"
+    if kind == "sueno" and payload.get("hours") is not None:
+        h = payload["hours"]
+        hs = str(int(h)) if isinstance(h, (int, float)) and float(h).is_integer() else str(h).replace(".", ",")
+        base = f"Dormí {hs} horas"
+        note = (payload.get("note") or "").strip()
+        return f"{base} · {note}" if note else base
     return control.get("title") or "Registro de salud"
 
 

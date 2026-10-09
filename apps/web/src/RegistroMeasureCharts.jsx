@@ -60,12 +60,21 @@ function MeasureChart({ block }) {
   if (block.mode === "pressure" && last) {
     caption = `Última: ${last.systolic}/${last.diastolic} mmHg · ${caption}`;
   } else if (last?.value != null) {
-    const unit = block.kind === "glucosa" ? " mg/dL" : block.kind === "peso" ? " kg" : "";
+    const unit =
+      block.kind === "glucosa" ? " mg/dL" : block.kind === "peso" ? " kg" : block.kind === "sueno" ? " h" : "";
     caption = `Última: ${String(last.value).replace(".", ",")}${unit} · ${caption}`;
   }
 
   const yUnit =
-    block.kind === "presion" ? "mmHg" : block.kind === "glucosa" ? "mg/dL" : block.kind === "peso" ? "kg" : "";
+    block.kind === "presion"
+      ? "mmHg"
+      : block.kind === "glucosa"
+        ? "mg/dL"
+        : block.kind === "peso"
+          ? "kg"
+          : block.kind === "sueno"
+            ? "h"
+            : "";
 
   return (
     <figure className="habitos-measure-chart">

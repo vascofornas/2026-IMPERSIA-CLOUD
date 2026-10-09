@@ -153,11 +153,11 @@ Wearables, rachas largas, correlaciones (sueño vs síntomas). No bloquear v1.
 
 **v1.2 (hecho):** `HABIT_KINDS` ampliado; reglas en `classify.py`; etiquetas y resumen mensual por subtipo en Registro; edición manual del tipo en el panel de log.
 
-**v1.1 gráficas (hecho):** en Registro, «Gráficas del mes» para tensión (sistólica/diastólica), peso y glucosa si hay ≥2 lecturas numéricas en el mes.
+**v1.1 gráficas (hecho):** en Registro, «Gráficas del mes» para tensión (sistólica/diastólica), peso, glucosa y sueño (horas) si hay ≥2 lecturas numéricas en el mes.
 
 ### Controles de salud (v1.3 — plan activo)
 
-**Tipos permitidos (lista cerrada):** `presion`, `glucosa`, `medicacion`, `peso`. Fuera: diagnósticos, recetas, informes hospitalarios.
+**Tipos permitidos (lista cerrada):** `presion`, `glucosa`, `medicacion`, `peso`, `sueno` (horas dormidas). Fuera: diagnósticos, recetas, informes hospitalarios.
 
 **Usuario (sin Entrada para el plan):**
 

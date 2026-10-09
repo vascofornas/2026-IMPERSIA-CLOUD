@@ -1,4 +1,4 @@
-import { habitKindLabel, isHabitLog, logRecordDate } from "./habitos.js";
+import { habitKindLabel, isHabitLog, logRecordDate, sleepHoursFromLog } from "./habitos.js";
 
 const MIN_POINTS = 2;
 
@@ -61,6 +61,17 @@ export function weightSeries(items, year, month) {
     .filter(Boolean);
 }
 
+export function sleepSeries(items, year, month) {
+  return logsOfKindInMonth(items, year, month, "sueno")
+    .map((item) => {
+      const h = sleepHoursFromLog(item);
+      const d = logRecordDate(item);
+      if (h == null || !d) return null;
+      return { date: d, label: d.getDate(), value: h };
+    })
+    .filter(Boolean);
+}
+
 export function glucoseSeries(items, year, month) {
   return logsOfKindInMonth(items, year, month, "glucosa")
     .map((item) => {
@@ -86,6 +97,10 @@ export function registroChartBlocks(items, year, month) {
   if (glucosa.length >= MIN_POINTS) {
     blocks.push({ id: "glucosa", kind: "glucosa", title: habitKindLabel("glucosa"), series: glucosa, mode: "single" });
   }
+  const sueno = sleepSeries(items, year, month);
+  if (sueno.length >= MIN_POINTS) {
+    blocks.push({ id: "sueno", kind: "sueno", title: habitKindLabel("sueno"), series: sueno, mode: "single" });
+  }
   return blocks;
 }
 
@@ -96,6 +111,10 @@ function scale(value, min, max, height) {
 
 export function formatAxisValue(value, kind) {
   if (kind === "peso") {
+    const n = Math.round(value * 10) / 10;
+    return Number.isInteger(n) ? String(n) : String(n).replace(".", ",");
+  }
+  if (kind === "sueno") {
     const n = Math.round(value * 10) / 10;
     return Number.isInteger(n) ? String(n) : String(n).replace(".", ",");
   }

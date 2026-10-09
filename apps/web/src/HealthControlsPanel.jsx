@@ -14,6 +14,8 @@ function ReadingForm({ control, registerReading, onSaved, onError }) {
   const [dia, setDia] = useState("");
   const [mg, setMg] = useState("");
   const [kg, setKg] = useState("");
+  const [hours, setHours] = useState("");
+  const [sleepNote, setSleepNote] = useState("");
 
   async function submit(e) {
     e.preventDefault();
@@ -29,6 +31,11 @@ function ReadingForm({ control, registerReading, onSaved, onError }) {
         body = { kg: Number(String(kg).replace(",", ".")) };
       } else if (control.kind === "medicacion") {
         body = { taken: true };
+      } else if (control.kind === "sueno") {
+        body = {
+          hours: Number(String(hours).replace(",", ".")),
+          note: sleepNote.trim() || null,
+        };
       }
       const item = await registerReading(control.id, body);
       onSaved(item, control.id);
@@ -37,6 +44,8 @@ function ReadingForm({ control, registerReading, onSaved, onError }) {
       setDia("");
       setMg("");
       setKg("");
+      setHours("");
+      setSleepNote("");
     } catch (err) {
       onError(err.message);
     } finally {
@@ -80,6 +89,25 @@ function ReadingForm({ control, registerReading, onSaved, onError }) {
       )}
       {control.kind === "medicacion" && (
         <p className="private habitos-control-med-hint">Confirma que ya tomaste la dosis de hoy.</p>
+      )}
+      {control.kind === "sueno" && (
+        <>
+          <label>
+            Horas dormidas
+            <input
+              type="text"
+              inputMode="decimal"
+              required
+              placeholder="7 o 7,5"
+              value={hours}
+              onChange={(e) => setHours(e.target.value)}
+            />
+          </label>
+          <label>
+            Nota (opcional)
+            <input type="text" value={sleepNote} onChange={(e) => setSleepNote(e.target.value)} placeholder="Me desperté una vez" />
+          </label>
+        </>
       )}
       <div className="habitos-control-form-actions">
         <button type="submit" className="primary" disabled={busy}>
@@ -211,7 +239,7 @@ export function HealthControlsGuide({ compact }) {
       </p>
       <ol className="habitos-controls-steps">
         <li>
-          Pulsa <strong>Añadir control</strong>, elige tipo (tensión, glucosa, peso o medicación), frecuencia y hora.
+          Pulsa <strong>Añadir control</strong>, elige tipo (tensión, glucosa, peso, sueño o medicación), frecuencia y hora.
         </li>
         <li>
           <strong>Cada día</strong> (o cada domingo, si lo elegiste) usa <em>Registrar ahora</em> aquí o en <strong>Hoy</strong>.

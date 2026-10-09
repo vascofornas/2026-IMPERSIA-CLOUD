@@ -233,6 +233,7 @@ class HealthReadingIn(BaseModel):
     diastolic: int | None = None
     mg_dl: int | None = None
     kg: float | None = None
+    hours: float | None = None
     taken: bool | None = True
     note: str | None = None
 
@@ -926,6 +927,9 @@ def create_health_reading(control_id: str, body: HealthReadingIn, request: Reque
             elif kind == "peso":
                 if body.kg is None:
                     raise HTTPException(status_code=422, detail="Indica el peso en kg")
+            elif kind == "sueno":
+                if body.hours is None or body.hours <= 0 or body.hours > 24:
+                    raise HTTPException(status_code=422, detail="Indica las horas de sueño (1–24)")
             row = health_controls.insert_reading(cur, user_id, control, payload)
             item = _fetch_item(cur, str(row["id"]), user_id)
         conn.commit()

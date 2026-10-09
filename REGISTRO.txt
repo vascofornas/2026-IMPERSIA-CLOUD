@@ -784,3 +784,6 @@ Controles de salud sin Entrada: borrados todos health_controls y lecturas ligada
 
 9 de octubre de 2026, 17:10
 Controles de salud v1.3: tipos presion, glucosa, medicacion, peso. Entrada crea plan (health_control en classify/archive); tabla health_controls + lecturas en items.health_control_id. API GET /health-controls, POST readings. Web: guía 3 pasos, Controles en Bienestar y Hoy, formulario Registrar. docs/07-habitos. Migración 014. Despliegue API + web.
+
+9 de octubre de 2026, 19:00
+Control de sueño en controles de salud: kind sueno (horas 1–24 + nota opcional). Migración 015, health_controls.py, validación POST readings, web Añadir control + formulario, gráfica del mes en h. docs/07-habitos. seed backfill sueno. Build web + despliegue API (015) y dist.

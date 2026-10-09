@@ -91,6 +91,9 @@ def payload_for_kind(kind: str, rng: random.Random, day_idx: int, *, day: date |
     if kind == "peso":
         kg = round(73.2 - day_idx * 0.015 + rng.gauss(0, 0.12), 1)
         return {"kg": max(71.0, min(75.0, kg))}
+    if kind == "sueno":
+        h = round(6.5 + rng.random() * 2.2, 1)
+        return {"hours": h}
     return {"taken": True}
 
 
