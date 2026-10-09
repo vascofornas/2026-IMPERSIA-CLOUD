@@ -1642,6 +1642,90 @@ button.link.secondary {
   max-width: 36rem;
 }
 
+.habitos-registro-charts {
+  margin: 0 0 24px;
+}
+
+.habitos-measure-chart-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.habitos-measure-chart {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--habitos) 18%, var(--line));
+  background: color-mix(in srgb, var(--habitos) 4%, var(--bg));
+}
+
+.habitos-measure-chart-title {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--habitos);
+}
+
+.habitos-measure-chart-svg {
+  width: 100%;
+  max-width: 22rem;
+  height: auto;
+  display: block;
+}
+
+.habitos-chart-line {
+  stroke: var(--habitos);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.habitos-chart-line-sys {
+  stroke: var(--habitos);
+}
+
+.habitos-chart-line-dia {
+  stroke: color-mix(in srgb, var(--habitos) 55%, var(--muted));
+  stroke-dasharray: 4 3;
+}
+
+.habitos-chart-dot,
+.habitos-chart-dot-sys {
+  fill: var(--habitos);
+}
+
+.habitos-chart-dot-dia {
+  fill: color-mix(in srgb, var(--habitos) 55%, var(--muted));
+}
+
+.habitos-measure-chart-legend {
+  margin: 6px 0 0;
+  display: flex;
+  gap: 12px;
+  font-size: 0.78rem;
+}
+
+.habitos-chart-legend-sys::before,
+.habitos-chart-legend-dia::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+  background: var(--habitos);
+}
+
+.habitos-chart-legend-dia::before {
+  background: color-mix(in srgb, var(--habitos) 55%, var(--muted));
+}
+
+.habitos-measure-chart-caption {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+}
+
 .habitos-section-controls-aside {
   margin: 0;
   padding: 16px 18px;

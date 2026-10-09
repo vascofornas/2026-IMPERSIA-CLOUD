@@ -12,6 +12,7 @@ import {
   sleepLogDisplay,
   sleepLogs,
 } from "./habitos.js";
+import RegistroMeasureCharts from "./RegistroMeasureCharts.jsx";
 
 function sleepQualityClass(hours) {
   if (hours == null) return "";
@@ -170,6 +171,8 @@ export default function HabitRegistro({ items, startEdit, askRemove, editingId }
           Nada apuntado en {monthName}. Escríbelo en Entrada cuando pase.
         </p>
       )}
+
+      <RegistroMeasureCharts items={items} year={cursor.year} month={cursor.month} />
 
       <section className="habitos-section habitos-section-sleep" aria-labelledby="habitos-sleep-heading">
         <h3 id="habitos-sleep-heading" className="habitos-subheading">

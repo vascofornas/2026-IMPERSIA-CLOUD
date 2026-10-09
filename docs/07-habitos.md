@@ -151,7 +151,9 @@ Wearables, rachas largas, correlaciones (sueño vs síntomas). No bloquear v1.
 - **Medicación**: distinguir *«ya la tomé»* (log) de *«tengo que tomarla cada día»* (rutina + Hoy).
 - Disclaimer breve en Registro: datos personales; llevar al médico lo importante.
 
-**v1.2 (hecho):** `HABIT_KINDS` ampliado; reglas en `classify.py`; etiquetas y resumen mensual por subtipo en Registro; edición manual del tipo en el panel de log. Pendiente: mini gráficas presión/glucosa/peso.
+**v1.2 (hecho):** `HABIT_KINDS` ampliado; reglas en `classify.py`; etiquetas y resumen mensual por subtipo en Registro; edición manual del tipo en el panel de log.
+
+**v1.1 gráficas (hecho):** en Registro, «Gráficas del mes» para tensión (sistólica/diastólica), peso y glucosa si hay ≥2 lecturas numéricas en el mes.
 
 ### Controles de salud (v1.3 — plan activo)
 

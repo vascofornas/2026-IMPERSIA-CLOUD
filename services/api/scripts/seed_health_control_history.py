@@ -67,7 +67,16 @@ def at_time(day: date, t: time) -> datetime:
     return datetime.combine(day, t, tzinfo=MAD)
 
 
-def payload_for_kind(kind: str, rng: random.Random, day_idx: int) -> dict:
+def payload_peso_trend(day: date, end: date, start_kg: float = 74.8, end_kg: float = 73.5, rng: random.Random | None = None) -> dict:
+    rng = rng or random.Random(0)
+    total = max(1, (end - START).days)
+    elapsed = (day - START).days
+    t = elapsed / total
+    kg = round(start_kg + (end_kg - start_kg) * t + rng.gauss(0, 0.12), 1)
+    return {"kg": kg}
+
+
+def payload_for_kind(kind: str, rng: random.Random, day_idx: int, *, day: date | None = None, end: date | None = None) -> dict:
     if kind == "presion":
         sys = int(128 + rng.gauss(0, 5) - day_idx * 0.015)
         dia = int(78 + rng.gauss(0, 4))
@@ -77,6 +86,8 @@ def payload_for_kind(kind: str, rng: random.Random, day_idx: int) -> dict:
     if kind == "glucosa":
         mg = int(108 + rng.gauss(0, 11))
         return {"mg_dl": max(90, min(150, mg))}
+    if kind == "peso" and day and end:
+        return payload_peso_trend(day, end, rng=rng)
     if kind == "peso":
         kg = round(73.2 - day_idx * 0.015 + rng.gauss(0, 0.12), 1)
         return {"kg": max(71.0, min(75.0, kg))}
@@ -111,6 +122,7 @@ def insert_backfill(cur, user_id: str, control: dict, when: datetime, payload: d
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--clear", action="store_true")
+    parser.add_argument("--fill-missing", action="store_true", help="Solo días sin lectura; no borra backfill previo")
     args = parser.parse_args()
     end = yesterday_local()
     if end < START:
@@ -127,7 +139,8 @@ def main() -> None:
                 print(f"Borrados {n} apuntes {SOURCE}")
                 return
 
-            clear_backfill(cur, user_id)
+            if not args.fill_missing:
+                clear_backfill(cur, user_id)
             controls = [dict(c) for c in health_controls.list_controls(cur, user_id)]
             if not controls:
                 raise SystemExit("No hay controles activos")
@@ -146,7 +159,7 @@ def main() -> None:
                     if not hasattr(rt, "hour"):
                         rt = time(8, 0)
                     when = at_time(d, rt)
-                    payload = payload_for_kind(control["kind"], rng, day_idx)
+                    payload = payload_for_kind(control["kind"], rng, day_idx, day=d, end=end)
                     insert_backfill(cur, user_id, control, when, payload)
                     total += 1
                 d += timedelta(days=1)
