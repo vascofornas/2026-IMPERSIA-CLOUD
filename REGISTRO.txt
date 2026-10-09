@@ -757,3 +757,6 @@ Vista salud/sueño por mes (07-habitos v1): selector mes, resumen (apuntes, medi
 
 9 de octubre de 2026, 15:35
 Registro clínico ligero v1.2: tipos medicacion, presion, glucosa, peso, sintoma (+ salud legacy). classify.py (reglas + habit_notes mmHg/mg/dL/kg), archive.py prompt, HABIT_KINDS ya en API. Web: etiquetas, resumen mensual por tipo, lead en Registro, LOG_KINDS al editar. docs/07-habitos. Archivos: classify.py, archive.py, habitos.js, HabitRegistro.jsx, HabitEditPanel.jsx, styles.css, 07-habitos.md. Despliegue API + web.
+
+9 de octubre de 2026, 16:05
+Datos demo salud en producción (1 ago–9 oct 2026): 129 apuntes (59 medicación, 30 tensión, 30 glucosa, 10 peso) para ADMIN_EMAIL, archived_source seed_health_demo. Script services/api/scripts/seed_health_clinical_demo.py (--clear para borrar).
