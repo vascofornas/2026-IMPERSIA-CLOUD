@@ -23,7 +23,9 @@ Piezas enlazadas con `travel_trip_id` al viaje padre (ítem `trip`).
 
 1. **+ Nuevo viaje** en la pantalla Viajes (título, destino, ida/vuelta).
 2. **Entrada** abre viaje («Viaje a Lisboa del 20 al 24 de octubre») o añade piezas («vuelo Lisboa», «visitar museo») al viaje abierto si el destino encaja.
-3. **+ Añadir** dentro del viaje: reserva, plan, equipaje, experiencia, nota.
+3. La ficha muestra siempre cinco apartados: **Reservas**, **Itinerario y por hacer**, **Experiencias**, **Equipaje** y **Notas**.
+4. Cada apartado tiene su propio botón «Añadir» y un ejemplo que explica qué se guarda allí. No hay que elegir el tipo en una lista.
+5. La lista lateral de viajes solo aparece cuando hay más de uno; con un único viaje se muestra directamente su ficha.
 
 ## Desvíos
 

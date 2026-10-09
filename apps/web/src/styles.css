@@ -2639,6 +2639,10 @@ button.link.secondary {
   align-items: start;
 }
 
+.viajes-layout.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 @media (max-width: 640px) {
   .viajes-layout {
     grid-template-columns: 1fr;
@@ -2683,7 +2687,7 @@ button.link.secondary {
 }
 
 .viajes-detail {
-  padding: 14px 16px;
+  padding: 20px;
   border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--viajes) 20%, var(--line));
   background: color-mix(in srgb, var(--viajes) 4%, var(--bg));
@@ -2712,22 +2716,58 @@ button.link.secondary {
   color: var(--muted);
 }
 
+.viajes-detail-help {
+  margin: 0 0 16px;
+}
+
+.viajes-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .viajes-role-block {
-  margin-top: 14px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.viajes-role-block:last-child {
+  grid-column: 1 / -1;
+}
+
+.viajes-role-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .viajes-role-heading,
 .viajes-subheading {
-  margin: 0 0 8px;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--viajes);
+}
+
+.viajes-role-hint {
+  margin: 3px 0 0;
+  max-width: 20rem;
   font-size: 0.82rem;
-  font-weight: 650;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--viajes) 70%, var(--muted));
+  line-height: 1.35;
+}
+
+.viajes-section-empty {
+  margin: 12px 0 0;
+  font-size: 0.84rem;
 }
 
 .viajes-piece-list {
-  margin: 0;
+  margin: 12px 0 0;
   padding: 0;
   list-style: none;
   display: flex;
@@ -2786,9 +2826,18 @@ button.link.secondary {
 }
 
 .viajes-form-inline {
+  flex: 1 0 100%;
   flex-direction: row;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
+  margin: 4px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.viajes-piece-input {
+  flex: 1 1 16rem;
+  min-width: 0;
 }
 
 .viajes-form-title {
@@ -2815,4 +2864,14 @@ button.link.secondary {
 
 .viajes-empty-inline {
   margin: 0;
+}
+
+@media (max-width: 700px) {
+  .viajes-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .viajes-role-block:last-child {
+    grid-column: auto;
+  }
 }

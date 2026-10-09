@@ -2,15 +2,50 @@ import { useMemo, useState } from "react";
 import { Icon } from "./icons.jsx";
 import {
   CHECKLIST_ROLES,
-  groupPiecesByRole,
   orphanTravelPieces,
   piecesForTrip,
-  travelRoleLabel,
   travelTrips,
   tripIsUpcoming,
   tripRangeLabel,
-  TRAVEL_ROLE_OPTIONS,
 } from "./travel.js";
+
+const TRAVEL_SECTIONS = [
+  {
+    role: "reserva",
+    title: "Reservas",
+    hint: "Transporte y alojamiento: vuelos, trenes, hotel o coche.",
+    addLabel: "Añadir reserva",
+    placeholder: "Ej.: Hotel en Taüll · reserva 4582",
+  },
+  {
+    role: "plan",
+    title: "Itinerario y por hacer",
+    hint: "Lugares, actividades y gestiones que quieres organizar.",
+    addLabel: "Añadir al itinerario",
+    placeholder: "Ej.: Día 1 · paseo por Aigüestortes",
+  },
+  {
+    role: "experiencia",
+    title: "Experiencias",
+    hint: "Museos, excursiones, restaurantes, tours y planes especiales.",
+    addLabel: "Añadir experiencia",
+    placeholder: "Ej.: Excursión guiada al Estany Llong",
+  },
+  {
+    role: "equipaje",
+    title: "Equipaje",
+    hint: "Lista de cosas que no quieres olvidar.",
+    addLabel: "Añadir al equipaje",
+    placeholder: "Ej.: Botas de montaña",
+  },
+  {
+    role: "nota",
+    title: "Notas",
+    hint: "Direcciones, teléfonos y cualquier información útil.",
+    addLabel: "Añadir nota",
+    placeholder: "Ej.: El hotel guarda las maletas desde las 10:00",
+  },
+];
 
 function AddTripForm({ createTrip, onCreated, setError }) {
   const [open, setOpen] = useState(false);
@@ -47,14 +82,14 @@ function AddTripForm({ createTrip, onCreated, setError }) {
   if (!open) {
     return (
       <button type="button" className="primary viajes-add-trip" onClick={() => setOpen(true)}>
-        + Viaje y experiencias
+        + Nuevo viaje
       </button>
     );
   }
 
   return (
     <form className="viajes-form card editor" onSubmit={submit}>
-      <h3 className="viajes-form-title">Nuevo viaje y experiencias</h3>
+      <h3 className="viajes-form-title">Nuevo viaje</h3>
       <p className="private viajes-form-hint">Primero el viaje (destino y fechas). Después añades reservas, experiencias y equipaje dentro.</p>
       <label>
         Título
@@ -84,10 +119,9 @@ function AddTripForm({ createTrip, onCreated, setError }) {
   );
 }
 
-function AddPieceForm({ tripId, createPiece, onCreated, setError }) {
+function AddPieceForm({ tripId, role, addLabel, placeholder, createPiece, onCreated, setError }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [role, setRole] = useState("plan");
   const [title, setTitle] = useState("");
 
   async function submit(e) {
@@ -109,21 +143,17 @@ function AddPieceForm({ tripId, createPiece, onCreated, setError }) {
   if (!open) {
     return (
       <button type="button" className="secondary viajes-add-piece" onClick={() => setOpen(true)}>
-        + Reserva o experiencia
+        + {addLabel}
       </button>
     );
   }
 
   return (
     <form className="viajes-form viajes-form-inline" onSubmit={submit}>
-      <select value={role} onChange={(e) => setRole(e.target.value)} aria-label="Tipo">
-        {TRAVEL_ROLE_OPTIONS.map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
-      <input type="text" required placeholder="Título" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <label className="viajes-piece-input">
+        Qué quieres guardar
+        <input type="text" required autoFocus placeholder={placeholder} value={title} onChange={(e) => setTitle(e.target.value)} />
+      </label>
       <button type="submit" className="primary" disabled={busy}>
         Guardar
       </button>
@@ -166,7 +196,6 @@ function PieceRow({ item, onToggleStatus, startEdit, askRemove }) {
 
 function TripDetail({ trip, items, createPiece, onPieceCreated, setError, onToggleStatus, startEdit, askRemove }) {
   const pieces = piecesForTrip(items, trip.id);
-  const groups = groupPiecesByRole(pieces);
   const pending = pieces.filter((p) => CHECKLIST_ROLES.has(p.travel_role) && p.status !== "done").length;
 
   return (
@@ -184,19 +213,31 @@ function TripDetail({ trip, items, createPiece, onPieceCreated, setError, onTogg
             )}
           </p>
         </div>
-        <AddPieceForm tripId={trip.id} createPiece={createPiece} onCreated={onPieceCreated} setError={setError} />
       </header>
-      {groups.length === 0 ? (
-        <p className="private viajes-empty-inline">
-          Nada dentro de este viaje. Añade reservas, experiencias o tareas — o escríbelo en Entrada («vuelo Lisboa», «visitar
-          museo»).
-        </p>
-      ) : (
-        groups.map((group) => (
-          <section key={group.role} className="viajes-role-block">
-            <h4 className="viajes-role-heading">{group.label}</h4>
-            <ul className="viajes-piece-list">
-              {group.items.map((item) => (
+      <p className="private viajes-detail-help">Guarda cada cosa en su apartado. Pulsa «Añadir» en la sección que necesites.</p>
+      <div className="viajes-sections">
+        {TRAVEL_SECTIONS.map((section) => {
+          const sectionItems = pieces.filter((item) => item.travel_role === section.role);
+          return (
+            <section key={section.role} className="viajes-role-block">
+              <div className="viajes-role-head">
+                <div>
+                  <h4 className="viajes-role-heading">{section.title}</h4>
+                  <p className="private viajes-role-hint">{section.hint}</p>
+                </div>
+                <AddPieceForm
+                  tripId={trip.id}
+                  role={section.role}
+                  addLabel={section.addLabel}
+                  placeholder={section.placeholder}
+                  createPiece={createPiece}
+                  onCreated={onPieceCreated}
+                  setError={setError}
+                />
+              </div>
+              {sectionItems.length > 0 ? (
+                <ul className="viajes-piece-list">
+                  {sectionItems.map((item) => (
                 <PieceRow
                   key={item.id}
                   item={item}
@@ -205,10 +246,14 @@ function TripDetail({ trip, items, createPiece, onPieceCreated, setError, onTogg
                   askRemove={askRemove}
                 />
               ))}
-            </ul>
-          </section>
-        ))
-      )}
+                </ul>
+              ) : (
+                <p className="private viajes-section-empty">Todavía no has añadido nada.</p>
+              )}
+            </section>
+          );
+        })}
+      </div>
     </article>
   );
 }
@@ -255,22 +300,24 @@ export default function ViajesBoard({
         </p>
         <AddTripForm createTrip={createTrip} onCreated={handleCreated} setError={setError} />
       </div>
-      <div className="viajes-layout">
-        <aside className="viajes-trip-list" aria-label="Lista de viajes">
-          {trips.map((trip) => (
-            <button
-              key={trip.id}
-              type="button"
-              className={["viajes-trip-card", trip.id === activeId ? "on" : "", !tripIsUpcoming(trip) ? "past" : ""]
-                .filter(Boolean)
-                .join(" ")}
-              onClick={() => setSelectedId(trip.id)}
-            >
-              <span className="viajes-trip-card-title">{trip.title}</span>
-              <span className="private viajes-trip-card-dates">{tripRangeLabel(trip)}</span>
-            </button>
-          ))}
-        </aside>
+      <div className={["viajes-layout", trips.length === 1 ? "single" : ""].filter(Boolean).join(" ")}>
+        {trips.length > 1 && (
+          <aside className="viajes-trip-list" aria-label="Lista de viajes">
+            {trips.map((trip) => (
+              <button
+                key={trip.id}
+                type="button"
+                className={["viajes-trip-card", trip.id === activeId ? "on" : "", !tripIsUpcoming(trip) ? "past" : ""]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() => setSelectedId(trip.id)}
+              >
+                <span className="viajes-trip-card-title">{trip.title}</span>
+                <span className="private viajes-trip-card-dates">{tripRangeLabel(trip)}</span>
+              </button>
+            ))}
+          </aside>
+        )}
         <div className="viajes-main">
           {activeTrip ? (
             <TripDetail

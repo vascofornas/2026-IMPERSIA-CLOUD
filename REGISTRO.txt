@@ -814,3 +814,6 @@ UI: módulo renombrado «Viajes y experiencias» (menú, h1, avisos email). stru
 
 9 de octubre de 2026, 21:45
 Viajes: corregido el error 500 al pulsar «Crear». El INSERT de items tenía un marcador de más (42 huecos para 41 valores); main.py queda alineado y validado. Despliegue API.
+
+9 de octubre de 2026, 22:00
+Viajes: ficha reorganizada para que se entienda cómo usarla. Con un solo viaje ya no se repite en una lista lateral; aparecen siempre Reservas, Itinerario y por hacer, Experiencias, Equipaje y Notas, cada apartado con explicación, ejemplo y botón propio. ViajesBoard.jsx, styles.css y docs/08-viajes.md. Build web correcto y despliegue web.
