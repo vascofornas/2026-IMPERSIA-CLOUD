@@ -22,6 +22,7 @@ import { CASA_KIND, casaEventLine, groupCasaItems, isCasaItem, SUPPLY_KIND } fro
 import HabitEditPanel, { editorFromRepeats, HabitLogEditPanel } from "./HabitEditPanel.jsx";
 import HabitosBoard, { HoyBienestar } from "./HabitosBoard.jsx";
 import ViajesBoard from "./ViajesBoard.jsx";
+import DiarioBoard from "./DiarioBoard.jsx";
 import { pendingControls } from "./healthControls.js";
 import { hasHoyBienestarContent, isHabitRoutine } from "./habitos.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
@@ -130,8 +131,10 @@ export default function App() {
       googleEmail={me.google_email || ""}
       look={me.look || "claro"}
       alertEmail={Boolean(me.alert_email)}
+      journalAIEnabled={Boolean(me.journal_ai_enabled)}
       onLook={(look) => setMe({ ...me, look })}
       onAlertEmail={(alertEmail) => setMe({ ...me, alert_email: alertEmail })}
+      onJournalAI={(enabled) => setMe({ ...me, journal_ai_enabled: enabled })}
       onLeave={() => setMe(null)}
     />
   );
@@ -187,7 +190,17 @@ function Auth({ onEnter }) {
   );
 }
 
-function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLeave }) {
+function Home({
+  email,
+  googleEmail,
+  look,
+  alertEmail,
+  journalAIEnabled,
+  onLook,
+  onAlertEmail,
+  onJournalAI,
+  onLeave,
+}) {
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
   const [healthControls, setHealthControls] = useState([]);
@@ -291,6 +304,30 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
     setItems((prev) => [item, ...prev.filter((row) => row.id !== item.id)]);
     setNotice("Guardado en Viajes y experiencias.");
   }
+
+  async function createJournalEntry(body) {
+    const item = await call("/journal-entries", { method: "POST", body: JSON.stringify(body) });
+    setItems((prev) => [item, ...prev.filter((row) => row.id !== item.id)]);
+    setNotice("Guardado en tu Diario.");
+    return item;
+  }
+
+  async function updateJournalEntry(itemId, body) {
+    const item = await call(`/journal-entries/${itemId}`, { method: "PATCH", body: JSON.stringify(body) });
+    setItems((prev) => prev.map((row) => (row.id === item.id ? item : row)));
+    setNotice("Entrada de Diario actualizada.");
+    return item;
+  }
+
+  const loadJournalSummaries = useCallback(() => call("/journal-summaries"), []);
+  const refreshJournalSummaries = useCallback(
+    () => call("/journal-summaries/refresh", { method: "POST", body: "{}" }),
+    [],
+  );
+  const deleteJournalSummary = useCallback(
+    (summaryId) => call(`/journal-summaries/${summaryId}`, { method: "DELETE" }),
+    [],
+  );
 
   function onHealthControlCreated(control) {
     setHealthControls((prev) => [control, ...prev.filter((c) => c.id !== control.id)]);
@@ -818,6 +855,20 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
                 editingId={editing?.module === "habitos" ? editing.id : null}
               />
             </div>
+          ) : current.id === "diario" ? (
+            <div className="module-diario">
+              <DiarioBoard
+                items={items}
+                createEntry={createJournalEntry}
+                updateEntry={updateJournalEntry}
+                askRemove={askRemove}
+                setError={setError}
+                journalAIEnabled={journalAIEnabled}
+                loadSummaries={loadJournalSummaries}
+                refreshSummaries={refreshJournalSummaries}
+                deleteSummary={deleteJournalSummary}
+              />
+            </div>
           ) : (
             <div className="panes">
               <section>
@@ -863,6 +914,11 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
           <h1>Perfil</h1>
           <p className="lead">{email}</p>
           <AlertPermission alertEmail={alertEmail} onAlertEmail={onAlertEmail} setError={setError} />
+          <JournalAISetting
+            enabled={journalAIEnabled}
+            onChange={onJournalAI}
+            setError={setError}
+          />
         </>
       )}
       {screen === "apariencia" && (
@@ -2052,6 +2108,42 @@ function useAlerts(items) {
 
 const TEST_NOTICE =
   "Aviso enviado. Mira arriba a la derecha del Mac. En Ajustes → Notificaciones → Google Chrome, el estilo debe ser «Alertas» o «Banners», no «Ninguno».";
+
+function JournalAISetting({ enabled, onChange, setError }) {
+  const [busy, setBusy] = useState(false);
+
+  async function toggle() {
+    setBusy(true);
+    setError("");
+    try {
+      const data = await call("/me", {
+        method: "PATCH",
+        body: JSON.stringify({ journal_ai_enabled: !enabled }),
+      });
+      onChange(Boolean(data.journal_ai_enabled));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="profile-journal-ai">
+      <h2>Análisis del Diario</h2>
+      <p className="lead">
+        Si lo activas, Impersia envía al modelo únicamente las entradas de la semana o del mes para preparar resúmenes,
+        temas repetidos y preguntas de reflexión. No hace diagnósticos.
+      </p>
+      <p className="private">
+        {enabled ? "El análisis automático semanal y mensual está activo." : "Tu historial no se usa para resúmenes automáticos."}
+      </p>
+      <button type="button" className={enabled ? "secondary" : ""} onClick={toggle} disabled={busy}>
+        {busy ? "Guardando…" : enabled ? "Desactivar análisis del Diario" : "Activar análisis del Diario"}
+      </button>
+    </section>
+  );
+}
 
 function AlertPermission({ alertEmail, onAlertEmail, setError }) {
   const [browser, setBrowser] = useState(() => ("Notification" in window ? Notification.permission : "unsupported"));

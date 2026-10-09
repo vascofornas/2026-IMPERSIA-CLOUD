@@ -24,6 +24,7 @@ from admin_llm import router as admin_llm_router
 import archive
 import dedup
 import health_controls
+import journal
 import travel
 from classify import (
     HABIT_KINDS,
@@ -167,8 +168,14 @@ def read_user_email(user_id: str) -> str:
     return row["email"]
 
 
-def public_account(user_id: str, email: str, look: str, alert_email: bool = False) -> dict:
-    account = _account(user_id, email, look, alert_email)
+def public_account(
+    user_id: str,
+    email: str,
+    look: str,
+    alert_email: bool = False,
+    journal_ai_enabled: bool = False,
+) -> dict:
+    account = _account(user_id, email, look, alert_email, journal_ai_enabled)
     if not llm.is_admin_email(email):
         account.pop("is_admin", None)
     return account
@@ -221,6 +228,30 @@ class TravelDetailFields(BaseModel):
     travel_url: str | None = Field(default=None, max_length=1000)
     travel_notes: str | None = Field(default=None, max_length=5000)
     travel_budget: Decimal | None = Field(default=None, ge=0)
+
+
+class JournalEntryIn(BaseModel):
+    content: str = Field(min_length=1, max_length=50_000)
+    journal_kind: str = "entrada"
+    occurred_on: str | None = None
+    mood: int | None = Field(default=None, ge=1, le=5)
+    energy: int | None = Field(default=None, ge=1, le=5)
+    guided_happened: str | None = Field(default=None, max_length=10_000)
+    guided_grateful: str | None = Field(default=None, max_length=10_000)
+    guided_need: str | None = Field(default=None, max_length=10_000)
+    tags: list[str] = Field(default_factory=list, max_length=12)
+
+
+class JournalEntryPatch(BaseModel):
+    content: str | None = Field(default=None, max_length=50_000)
+    journal_kind: str | None = None
+    occurred_on: str | None = None
+    mood: int | None = Field(default=None, ge=1, le=5)
+    energy: int | None = Field(default=None, ge=1, le=5)
+    guided_happened: str | None = Field(default=None, max_length=10_000)
+    guided_grateful: str | None = Field(default=None, max_length=10_000)
+    guided_need: str | None = Field(default=None, max_length=10_000)
+    tags: list[str] | None = Field(default=None, max_length=12)
 
 
 class ItemPatch(TravelDetailFields):
@@ -310,6 +341,7 @@ class ShoppingListPatch(BaseModel):
 class MePatch(BaseModel):
     look: str | None = None
     alert_email: bool | None = None
+    journal_ai_enabled: bool | None = None
 
 
 class ClientEventIn(BaseModel):
@@ -333,7 +365,13 @@ def health(response: Response):
     return {"status": "ok", "database": "ok"}
 
 
-def _account(user_id: str, email: str, look: str, alert_email: bool = False) -> dict:
+def _account(
+    user_id: str,
+    email: str,
+    look: str,
+    alert_email: bool = False,
+    journal_ai_enabled: bool = False,
+) -> dict:
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT google_email FROM google_links WHERE user_id = %s", (user_id,))
@@ -342,6 +380,7 @@ def _account(user_id: str, email: str, look: str, alert_email: bool = False) -> 
         "email": email,
         "look": look if look in LOOKS else "claro",
         "alert_email": bool(alert_email),
+        "journal_ai_enabled": bool(journal_ai_enabled),
         "google_email": link["google_email"] if link else None,
         "is_admin": llm.is_admin_email(email),
     }
@@ -392,7 +431,10 @@ def login(body: Credentials, response: Response, request: Request):
     email = body.email.lower()
     with db() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, password_hash, look, alert_email FROM users WHERE email = %s", (email,))
+            cur.execute(
+                "SELECT id, password_hash, look, alert_email, journal_ai_enabled FROM users WHERE email = %s",
+                (email,),
+            )
             row = cur.fetchone()
     if not row or not check_password(body.password, row["password_hash"]):
         events.log_from_request(
@@ -411,7 +453,13 @@ def login(body: Credentials, response: Response, request: Request):
         email=email,
         meta={"admin": llm.is_admin_email(email)},
     )
-    return public_account(user_id, email, row["look"], row.get("alert_email", False))
+    return public_account(
+        user_id,
+        email,
+        row["look"],
+        row.get("alert_email", False),
+        row.get("journal_ai_enabled", False),
+    )
 
 
 @app.post("/auth/logout")
@@ -452,17 +500,17 @@ def me(request: Request):
     user_id = current_user(request)
     with db() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT email, look, alert_email FROM users WHERE id = %s", (user_id,))
+            cur.execute("SELECT email, look, alert_email, journal_ai_enabled FROM users WHERE id = %s", (user_id,))
             row = cur.fetchone()
     if not row:
         raise HTTPException(status_code=401, detail="Necesitas entrar")
-    return public_account(user_id, row["email"], row["look"], row["alert_email"])
+    return public_account(user_id, row["email"], row["look"], row["alert_email"], row["journal_ai_enabled"])
 
 
 @app.patch("/me")
 def patch_me(body: MePatch, request: Request):
     user_id = current_user(request)
-    if body.look is None and body.alert_email is None:
+    if body.look is None and body.alert_email is None and body.journal_ai_enabled is None:
         raise HTTPException(status_code=422, detail="Nada que cambiar")
     if body.look is not None and body.look not in LOOKS:
         raise HTTPException(status_code=400, detail="Esa apariencia no existe")
@@ -474,11 +522,18 @@ def patch_me(body: MePatch, request: Request):
     if body.alert_email is not None:
         updates.append("alert_email = %s")
         params.append(body.alert_email)
+    if body.journal_ai_enabled is not None:
+        updates.append("journal_ai_enabled = %s")
+        params.append(body.journal_ai_enabled)
     params.append(user_id)
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                f"UPDATE users SET {', '.join(updates)} WHERE id = %s RETURNING email, look, alert_email",
+                f"""
+                UPDATE users SET {', '.join(updates)}
+                WHERE id = %s
+                RETURNING email, look, alert_email, journal_ai_enabled
+                """,
                 params,
             )
             row = cur.fetchone()
@@ -490,9 +545,13 @@ def patch_me(body: MePatch, request: Request):
         "profile.update",
         user_id=user_id,
         email=row["email"],
-        meta={"look": body.look, "alert_email": body.alert_email},
+        meta={
+            "look": body.look,
+            "alert_email": body.alert_email,
+            "journal_ai_enabled": body.journal_ai_enabled,
+        },
     )
-    return public_account(user_id, row["email"], row["look"], row["alert_email"])
+    return public_account(user_id, row["email"], row["look"], row["alert_email"], row["journal_ai_enabled"])
 
 
 APP_HOME = "https://impersia.cloud/app/#agenda"
@@ -809,6 +868,7 @@ def _file_suggestion(
     title: str | None = None,
     shopping_list_id: str | None = None,
     casa_place: str | None = None,
+    raw_text: str | None = None,
     batch_seen: set[tuple] | None = None,
 ) -> tuple[dict | None, bool]:
     title_val = (title or suggestion.get("title") or "").strip()
@@ -816,12 +876,13 @@ def _file_suggestion(
     if shopping_list_id:
         probe["shopping_list_id"] = shopping_list_id
     fp = dedup.fingerprint(probe, title=title_val)
-    if batch_seen is not None:
+    is_journal = suggestion.get("module") == "diario"
+    if batch_seen is not None and not is_journal:
         if fp in batch_seen:
             return None, True
         batch_seen.add(fp)
 
-    existing = dedup.find_duplicate(cur, user_id, probe, title=title_val)
+    existing = None if is_journal else dedup.find_duplicate(cur, user_id, probe, title=title_val)
     if existing:
         row = dedup.merge_existing(cur, user_id, capture_id, suggestion, existing)
         item = _public_item(row)
@@ -837,6 +898,20 @@ def _file_suggestion(
         shopping_list_id=shopping_list_id,
         casa_place=casa_place,
     )
+    if is_journal:
+        payload = journal.normalize_payload(
+            {
+                "content": raw_text or title_val,
+                "journal_kind": suggestion.get("journal_kind") or "entrada",
+                "occurred_on": suggestion.get("journal_occurred_on"),
+                "mood": suggestion.get("journal_mood"),
+                "energy": suggestion.get("journal_energy"),
+                "tags": suggestion.get("journal_tags") or [],
+            }
+        )
+        journal.upsert_details(cur, str(row["id"]), payload)
+        item = _fetch_item(cur, str(row["id"]), user_id)
+        return item, False
     return _public_item(row), False
 
 
@@ -936,6 +1011,7 @@ def create_capture(body: CaptureIn, request: Request):
                     title=title_override,
                     shopping_list_id=shopping_list_id,
                     casa_place=casa_place,
+                    raw_text=raw,
                     batch_seen=batch_seen,
                 )
                 if item is None:
@@ -1114,6 +1190,150 @@ def create_travel_piece(trip_id: str, body: TravelPieceIn, request: Request):
             item = _fetch_item(cur, str(row["id"]), user_id)
         conn.commit()
     return item
+
+
+def _journal_payload(body: JournalEntryIn | JournalEntryPatch, *, existing: dict | None = None, partial: bool = False):
+    try:
+        return journal.normalize_payload(
+            body.model_dump(),
+            existing=existing,
+            fields_set=set(body.model_fields_set) if partial else None,
+        )
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.post("/journal-entries", status_code=201)
+def create_journal_entry(body: JournalEntryIn, request: Request):
+    user_id = current_user(request)
+    payload = _journal_payload(body)
+    suggestion = {
+        "kind": "note",
+        "axis": "personal",
+        "module": "diario",
+        "title": journal.title_from_content(payload["content"]),
+        "starts_at": None,
+        "repeats": None,
+        "time_known": False,
+        "alert_minutes_before": None,
+        "source": "diario_ui",
+    }
+    with db() as conn:
+        with conn.cursor() as cur:
+            row = _insert_item(cur, user_id, None, suggestion)
+            journal.upsert_details(cur, str(row["id"]), payload)
+            item = _fetch_item(cur, str(row["id"]), user_id)
+        conn.commit()
+    return item
+
+
+@app.patch("/journal-entries/{item_id}")
+def patch_journal_entry(item_id: str, body: JournalEntryPatch, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, title, created_at
+                FROM items
+                WHERE id = %s AND user_id = %s AND module = 'diario'
+                """,
+                (item_id, user_id),
+            )
+            base = cur.fetchone()
+            if not base:
+                raise HTTPException(status_code=404, detail="Entrada de Diario no encontrada")
+            existing = journal.fetch_details(cur, [item_id]).get(item_id)
+            if not existing:
+                existing = {
+                    "content": base["title"],
+                    "journal_kind": "entrada",
+                    "occurred_on": base["created_at"].date(),
+                    "mood": None,
+                    "energy": None,
+                    "guided_happened": None,
+                    "guided_grateful": None,
+                    "guided_need": None,
+                    "tags": [],
+                }
+            payload = _journal_payload(body, existing=existing, partial=True)
+            cur.execute(
+                "UPDATE items SET title = %s WHERE id = %s AND user_id = %s",
+                (journal.title_from_content(payload["content"]), item_id, user_id),
+            )
+            journal.upsert_details(cur, item_id, payload)
+            item = _fetch_item(cur, item_id, user_id)
+        conn.commit()
+    return item
+
+
+@app.get("/journal-entries")
+def get_journal_entries(
+    request: Request,
+    month: str | None = None,
+    mood: int | None = None,
+    kind: str | None = None,
+    tag: str | None = None,
+):
+    user_id = current_user(request)
+    if mood is not None and mood not in range(1, 6):
+        raise HTTPException(status_code=422, detail="Ánimo no válido")
+    if kind and kind not in journal.JOURNAL_KINDS:
+        raise HTTPException(status_code=422, detail="Tipo de Diario no válido")
+    try:
+        with db() as conn:
+            with conn.cursor() as cur:
+                ids = journal.list_entries(cur, user_id, month=month, mood=mood, kind=kind, tag=tag)
+                return [item for item_id in ids if (item := _fetch_item(cur, item_id, user_id))]
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="Mes no válido") from exc
+
+
+@app.get("/journal-summaries")
+def get_journal_summaries(request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT journal_ai_enabled FROM users WHERE id = %s", (user_id,))
+            account = cur.fetchone()
+            if not account:
+                raise HTTPException(status_code=401, detail="Necesitas entrar")
+            if account["journal_ai_enabled"]:
+                items = journal.ensure_current_summaries(cur, user_id)
+            else:
+                items = []
+        conn.commit()
+    return {"enabled": bool(account["journal_ai_enabled"]), "items": items}
+
+
+@app.post("/journal-summaries/refresh")
+def refresh_journal_summaries(request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT journal_ai_enabled FROM users WHERE id = %s", (user_id,))
+            account = cur.fetchone()
+            if not account or not account["journal_ai_enabled"]:
+                raise HTTPException(status_code=403, detail="Activa el análisis del Diario en Perfil")
+            items = journal.ensure_current_summaries(cur, user_id)
+        conn.commit()
+    return {"enabled": True, "items": items}
+
+
+@app.delete("/journal-summaries/{summary_id}")
+def delete_journal_summary(summary_id: str, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM journal_summaries WHERE id = %s AND user_id = %s RETURNING id",
+                (summary_id, user_id),
+            )
+            deleted = cur.fetchone()
+        conn.commit()
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Resumen no encontrado")
+    return {"ok": True}
 
 
 @app.post("/captures/{capture_id}/confirm", status_code=201)
@@ -1364,6 +1584,8 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     _save_travel_details(cur, item_id, body, partial=True)
                 else:
                     cur.execute("DELETE FROM travel_item_details WHERE item_id = %s", (item_id,))
+                if body.module != "diario":
+                    cur.execute("DELETE FROM journal_entries WHERE item_id = %s", (item_id,))
                 item = _fetch_item(cur, item_id, user_id)
                 archive.maybe_learn_from_patch(cur, user_id, raw_text=raw_text, before=before, after=item)
         conn.commit()
@@ -1549,8 +1771,10 @@ def list_items(request: Request, limit: int = 500):
             item_ids = [str(row["id"]) for row in rows]
             exceptions = _fetch_exceptions(cur, user_id, item_ids)
             travel_details = travel.fetch_details(cur, item_ids)
+            journal_details = journal.fetch_details(cur, item_ids)
             for row in rows:
                 row.update(travel_details.get(str(row["id"]), {}))
+                row.update(journal_details.get(str(row["id"]), {}))
     return [_public_item(row, exceptions.get(str(row["id"]), [])) for row in rows]
 
 
@@ -1614,6 +1838,9 @@ def _fetch_item(cur, item_id: str, user_id: str) -> dict | None:
     details = travel.fetch_details(cur, [item_id]).get(str(item_id))
     if details:
         row.update(details)
+    journal_detail = journal.fetch_details(cur, [item_id]).get(str(item_id))
+    if journal_detail:
+        row.update(journal_detail)
     exceptions = _fetch_exceptions(cur, user_id, [item_id])
     return _public_item(row, exceptions.get(item_id, []))
 
@@ -1687,6 +1914,7 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         "health_control_id": str(row["health_control_id"]) if row.get("health_control_id") else None,
         **travel.public_travel_fields(row),
         **travel.public_detail_fields(row),
+        **journal.public_fields(row),
         "shopping_list_id": str(row["shopping_list_id"]) if row.get("shopping_list_id") else None,
         "status": row.get("status") or "open",
         "privacy": row["privacy"],

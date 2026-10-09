@@ -6,6 +6,8 @@
 
 **Mantenimiento:** en estos tres bloques solo **bugs** de pantalla, archivado grave o alertas; no nueva ronda de parches de palabras. Siguiente producto eje A: Viajes, Diario, Deseos u otro módulo del roadmap.
 
+**Diario (9 oct 2026):** escritura libre y guiada, texto largo, fecha vivida, ánimo, energía, etiquetas, filtros y línea temporal. Análisis semanal/mensual solo con consentimiento en Perfil. Casos frontera obligatorios: reflexión emocional → Diario; síntoma o medida física → Bienestar; acción pendiente → módulo operativo; idea desarrollable → Ideas. Detalle en [09-diario.md](09-diario.md).
+
 Frases cargadas con `services/api/scripts/seed_axis_a_entries.py` (archivado real con IA si está activa).
 
 ## Agenda y citas (20)

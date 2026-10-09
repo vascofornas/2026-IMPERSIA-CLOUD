@@ -832,3 +832,6 @@ Agenda interna: proyección automática de Viajes sin duplicar datos. El viaje o
 
 9 de octubre de 2026, 23:20
 Cierre de sesión: monorepositorio API + web limpio, commit final en main, push a GitHub y etiqueta anotada sesion-2026-10-09.
+
+9 de octubre de 2026, 23:50
+Diario personal v1: escritura libre y guiada, texto largo, fecha vivida, tipo, ánimo, energía, etiquetas, línea temporal, ficha completa y filtros. Entrada conserva el texto íntegro y Diario no aparece en Hoy ni Agenda. Análisis automático semanal/mensual con consentimiento por cuenta, resumen prudente sin diagnósticos, borrado y timer diario. Migración 019 (journal_entries, journal_summaries, journal_ai_enabled), journal.py, endpoints, DiarioBoard.jsx, JournalEntryForm.jsx, Perfil, systemd y docs/09-diario.md. Build web, py_compile, lint y despliegue/prueba integral.

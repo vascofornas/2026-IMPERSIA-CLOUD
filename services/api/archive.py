@@ -70,6 +70,7 @@ Responde SOLO JSON válido con una clave "items": lista de 1 a 4 objetos. Cada o
 - module: uno de agenda, casa, habitos, viajes, diario, deseos, proyectos, reuniones, memoria, ideas, muro, listas, circulos, espacios
 - agenda_type: medica|familiar|ocio|recordatorio|general|null (solo si module=agenda)
 - casa_kind: compra|inventario|domestica|mantenimiento|suministro|otro|null (solo si module=casa)
+- journal_kind: entrada|animo|reflexion|gratitud, mood y energy de 1 a 5, journal_tags como lista (solo si module=diario)
 - family_kind, leisure_kind, reminder_kind, supply_kind cuando aplique
 - medical_for, medical_place, family_for, family_name, family_place, leisure_with, leisure_place, casa_place, casa_notes, reminder_notes, family_notes: texto o null
 - role (opcional): "task" | "birthday_event" — task = aviso/tarea con la fecha principal de la frase; birthday_event = cumpleaños anual en la fecha literal mencionada (9 nov…)
@@ -92,6 +93,7 @@ Reglas:
 - Comida o reunión de empresa/trabajo con fecha → reuniones.
 - Cita médica → agenda.medica.
 - Reflexión o ánimo sin tarea → diario.
+- En Diario solo indica mood o energy si la persona lo expresa con claridad; no inventes estados emocionales.
 - Varios hechos distintos (p. ej. separados por «;», «y también», dos fechas con dos acciones) → varios objetos en items.
 - «Mañana pensar regalo… cumple 54 el 9 de noviembre» → UN item recordatorio (role task); fecha de noviembre en reminder_notes, NO segundo item salvo que pidan guardar el cumple anual.
 - Si piden explícitamente recordar el cumple cada año el 9 nov → segundo item familiar cumpleanos (role birthday_event)."""
@@ -275,6 +277,28 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
         _clear_agenda_fields(result)
         _clear_casa_fields(result)
         _apply_travel_fields(result, raw)
+        return result
+
+    if result.get("module") == "diario":
+        _clear_agenda_fields(result)
+        _clear_casa_fields(result)
+        _clear_habit_fields(result)
+        _clear_travel_fields(result)
+        if result.get("journal_kind") not in {"entrada", "animo", "reflexion", "gratitud"}:
+            if "agradezco" in low or "agradecido" in low or "agradecida" in low:
+                result["journal_kind"] = "gratitud"
+            elif "me siento" in low or "ánimo" in low or "animo" in low:
+                result["journal_kind"] = "animo"
+            elif any(word in low for word in ("pienso", "reflex", "me doy cuenta", "he aprendido")):
+                result["journal_kind"] = "reflexion"
+            else:
+                result["journal_kind"] = "entrada"
+        if not result.get("journal_occurred_on") and baseline.get("starts_at"):
+            result["journal_occurred_on"] = baseline["starts_at"].date().isoformat()
+        result["starts_at"] = None
+        result["time_known"] = False
+        result["repeats"] = None
+        result["alert_minutes_before"] = None
         return result
 
     if _is_personal_agenda_reminder(low) and result.get("module") == "agenda":
@@ -581,6 +605,18 @@ def _apply_llm_spec(baseline: dict, parsed: dict, title_raw: str) -> dict:
         _clear_habit_fields(out)
         out["agenda_type"] = None
         _apply_travel_fields(out, title_raw)
+    elif module == "diario":
+        _clear_agenda_fields(out)
+        _clear_casa_fields(out)
+        _clear_habit_fields(out)
+        _clear_travel_fields(out)
+        out["journal_kind"] = parsed.get("journal_kind")
+        mood = parsed.get("mood")
+        energy = parsed.get("energy")
+        out["journal_mood"] = mood if isinstance(mood, int) and 1 <= mood <= 5 else None
+        out["journal_energy"] = energy if isinstance(energy, int) and 1 <= energy <= 5 else None
+        tags = parsed.get("journal_tags")
+        out["journal_tags"] = tags if isinstance(tags, list) else []
     else:
         _clear_agenda_fields(out)
         _clear_casa_fields(out)
