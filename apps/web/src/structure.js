@@ -33,7 +33,7 @@ export const AXES = [
       },
       {
         id: "viajes",
-        label: "Viajes",
+        label: "Viajes y experiencias",
         blurb: "Viaje contenedor: reservas, por hacer, equipaje, experiencias y notas. Entrada abre o rellena el viaje.",
         examples: [
           ["Lisboa, 20 al 24 de octubre", "vuelo y hotel"],

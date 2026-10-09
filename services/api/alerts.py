@@ -12,7 +12,7 @@ MODULE_LABELS = {
     "agenda": "Agenda",
     "casa": "Casa",
     "habitos": "Bienestar y hábitos",
-    "viajes": "Viajes",
+    "viajes": "Viajes y experiencias",
     "diario": "Diario",
     "deseos": "Deseos",
     "proyectos": "Proyectos",

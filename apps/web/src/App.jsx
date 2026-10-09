@@ -288,7 +288,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
 
   function onTravelItemCreated(item) {
     setItems((prev) => [item, ...prev.filter((row) => row.id !== item.id)]);
-    setNotice("Guardado en Viajes.");
+    setNotice("Guardado en Viajes y experiencias.");
   }
 
   function onHealthControlCreated(control) {

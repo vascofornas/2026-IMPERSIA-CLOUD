@@ -808,3 +808,6 @@ Entrada ya no archiva lecturas de controles (tensión, glucosa, peso, medicació
 
 9 de octubre de 2026, 21:30
 Viajes v1: travel_role (trip, reserva, plan, equipaje, experiencia, nota), travel_trip_id, migración 017, travel.py, API /travel-trips, ViajesBoard, classify/archive. docs/08-viajes.md. Despliegue API + web + 017.
+
+9 de octubre de 2026, 21:35
+UI: módulo renombrado «Viajes y experiencias» (menú, h1, avisos email). structure.js, App.jsx, alerts.py. Despliegue web + API.
