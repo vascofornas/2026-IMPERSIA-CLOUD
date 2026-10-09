@@ -98,44 +98,54 @@ export default function HabitosBoard({
 
   return (
     <div className="habitos-board">
-      {openRoutines.length > 0 && (
-        <section className="habitos-section habitos-section-track">
-          <h2>Seguimiento</h2>
-          <p className="private habitos-section-lead">
-            Misma vista que en Hoy. Verde = hecho el día que tocaba. La franja gris = ese día no entra en tu rutina (p. ej.
-            remo solo martes y jueves; pasos cada día).
-          </p>
-          <div className="habitos-track-grid">
-            {openRoutines.map((item) => (
-              <HabitTracker
-                key={item.id}
-                item={item}
-                todayStart={todayStart}
-                expandItems={expandItems}
-                endOfDay={endOfDay}
-                onEdit={startEdit}
-                onRemove={askRemove}
-                onMarkDone={onMarkDone}
-                editingId={editingId}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      <div className="habitos-board-layout">
+        <div className="habitos-board-main">
+          {openRoutines.length > 0 && (
+            <section className="habitos-section habitos-section-track">
+              <h2>Seguimiento</h2>
+              <p className="private habitos-section-lead">
+                Misma vista que en Hoy. Verde = hecho el día que tocaba. La franja gris = ese día no entra en tu rutina.
+              </p>
+              <div className="habitos-track-grid">
+                {openRoutines.map((item) => (
+                  <HabitTracker
+                    key={item.id}
+                    item={item}
+                    todayStart={todayStart}
+                    expandItems={expandItems}
+                    endOfDay={endOfDay}
+                    onEdit={startEdit}
+                    onRemove={askRemove}
+                    onMarkDone={onMarkDone}
+                    editingId={editingId}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
-      <HealthControlsPanel
-        controls={healthControls}
-        createControl={createControl}
-        registerReading={registerReading}
-        onControlCreated={onControlCreated}
-        onReadingSaved={onHealthReadingSaved}
-        setError={setError}
-      />
+          <section className="habitos-section habitos-section-registro">
+            <h2>Registro</h2>
+            <p className="private habitos-section-lead habitos-registro-page-lead">
+              Historial del mes: sueño y apuntes de salud. Tensión, glucosa, peso y medicación diaria van en{" "}
+              <strong>Controles de salud</strong> (columna de la derecha en pantalla ancha).
+            </p>
+            <HabitRegistro items={items} startEdit={startEdit} askRemove={askRemove} editingId={editingId} />
+          </section>
+        </div>
 
-      <section className="habitos-section habitos-section-registro">
-        <h2>Registro</h2>
-        <HabitRegistro items={items} startEdit={startEdit} askRemove={askRemove} editingId={editingId} />
-      </section>
+        <aside className="habitos-board-aside" aria-label="Controles de salud">
+          <HealthControlsPanel
+            controls={healthControls}
+            createControl={createControl}
+            registerReading={registerReading}
+            onControlCreated={onControlCreated}
+            onReadingSaved={onHealthReadingSaved}
+            setError={setError}
+            aside
+          />
+        </aside>
+      </div>
     </div>
   );
 }

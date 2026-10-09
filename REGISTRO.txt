@@ -767,6 +767,9 @@ Modesto no veía Registro: GET /items limitaba a 30 y los apuntes demo quedaban 
 9 de octubre de 2026, 17:25
 Modesto: «quiero revisar mi peso cada día a las 8» no creaba control (solo log). classify: revisar/comprobar/pesarme y quiero+cada; peso diario no forzado a semanal. Despliegue API + web.
 
+9 de octubre de 2026, 18:00
+Bienestar: layout dos columnas (Registro izquierda, Controles derecha sticky); textos Registro/salud alineados con controles sin Entrada. Despliegue web.
+
 9 de octubre de 2026, 17:45
 Controles de salud sin Entrada: borrados todos health_controls y lecturas ligadas en producción. Creación solo POST /health-controls + formulario «Añadir control» en Bienestar. Entrada ya no crea planes (archive/classify desenganchado). Despliegue API + web.
 

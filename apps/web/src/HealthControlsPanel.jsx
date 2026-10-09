@@ -196,7 +196,14 @@ function AddControlForm({ createControl, onCreated, setError }) {
   );
 }
 
-export function HealthControlsGuide() {
+export function HealthControlsGuide({ compact }) {
+  if (compact) {
+    return (
+      <p className="private habitos-controls-guide-compact">
+        Añade un control, elige hora y frecuencia. Cada día pulsa <strong>Registrar ahora</strong> (también en Hoy).
+      </p>
+    );
+  }
   return (
     <div className="habitos-controls-guide">
       <p className="habitos-controls-guide-lead">
@@ -207,14 +214,11 @@ export function HealthControlsGuide() {
           Pulsa <strong>Añadir control</strong>, elige tipo (tensión, glucosa, peso o medicación), frecuencia y hora.
         </li>
         <li>
-          <strong>Cada día</strong> (o cada domingo, si lo elegiste) usa <em>Registrar ahora</em> en esta pantalla o en{" "}
-          <strong>Hoy</strong>.
+          <strong>Cada día</strong> (o cada domingo, si lo elegiste) usa <em>Registrar ahora</em> aquí o en <strong>Hoy</strong>.
         </li>
-        <li>
-          En <strong>Registro</strong>, abajo, ves el historial del mes.
-        </li>
+        <li>El historial del mes está en <strong>Registro</strong>, a la izquierda.</li>
       </ol>
-      <p className="private habitos-controls-disclaimer">Cuaderno personal. No sustituye al médico. No uses Entrada para crear el plan.</p>
+      <p className="private habitos-controls-disclaimer">Cuaderno personal. No sustituye al médico.</p>
     </div>
   );
 }
@@ -227,6 +231,7 @@ export default function HealthControlsPanel({
   onReadingSaved,
   setError,
   compact,
+  aside,
 }) {
   const list = compact ? pendingControls(controls) : controls || [];
   if (!list.length && compact) return null;
@@ -236,14 +241,19 @@ export default function HealthControlsPanel({
   }
 
   return (
-    <section className="habitos-section habitos-section-controls" aria-labelledby="habitos-controls-heading">
+    <section
+      className={["habitos-section habitos-section-controls", aside ? "habitos-section-controls-aside" : ""]
+        .filter(Boolean)
+        .join(" ")}
+      aria-labelledby="habitos-controls-heading"
+    >
       <div className="habitos-controls-head-row">
-        <h3 id="habitos-controls-heading" className="habitos-subheading">
+        <h2 id="habitos-controls-heading" className={aside ? "habitos-controls-aside-title" : "habitos-subheading"}>
           Controles de salud
-        </h3>
+        </h2>
         {!compact && <AddControlForm createControl={createControl} onCreated={onControlCreated} setError={setError} />}
       </div>
-      {!compact && <HealthControlsGuide />}
+      {!compact && <HealthControlsGuide compact={aside} />}
       {!list.length ? (
         <p className="private habitos-registro-empty">
           Todavía no tienes controles. Pulsa <strong>Añadir control</strong> arriba.

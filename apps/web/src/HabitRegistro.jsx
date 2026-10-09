@@ -197,8 +197,8 @@ export default function HabitRegistro({ items, startEdit, askRemove, editingId }
           Salud y medicación
         </h3>
         <p className="private habitos-registro-health-lead">
-          Apúntalo en Entrada: «Tomé la pastilla de la tensión», «Glucosa 120 en ayunas», «Tensión 128/82». Es tu cuaderno
-          personal; no sustituye al médico.
+          Síntomas y notas sueltas (resfriado, dolor…). Si usas un control programado, las lecturas también aparecen aquí.
+          Cuaderno personal; no sustituye al médico.
         </p>
         {health.length > 0 ? (
           healthWeeks.map((week) => (
