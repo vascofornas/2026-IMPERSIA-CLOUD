@@ -1,4 +1,4 @@
-"""Controles de salud: plan creado por Entrada; lecturas diarias como items log."""
+"""Controles de salud: plan y lecturas solo desde Bienestar (API / UI); no Entrada."""
 
 from __future__ import annotations
 

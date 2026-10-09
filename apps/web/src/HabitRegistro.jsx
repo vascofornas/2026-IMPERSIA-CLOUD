@@ -168,7 +168,7 @@ export default function HabitRegistro({ items, startEdit, askRemove, editingId }
         </p>
       ) : (
         <p className="private habitos-registro-summary habitos-registro-summary-empty">
-          Nada apuntado en {monthName}. Escríbelo en Entrada cuando pase.
+          Nada apuntado en {monthName}. Sueño y lecturas van con Controles; síntomas en Entrada.
         </p>
       )}
 
@@ -190,7 +190,7 @@ export default function HabitRegistro({ items, startEdit, askRemove, editingId }
           ))
         ) : (
           <p className="private habitos-registro-empty">
-            En {monthName} no hay sueño registrado. «Anoche dormí 7 horas» en Entrada.
+            En {monthName} no hay sueño registrado. Usa el control de sueño en Controles → Registrar ahora.
           </p>
         )}
       </section>
@@ -200,7 +200,7 @@ export default function HabitRegistro({ items, startEdit, askRemove, editingId }
           Salud y medicación
         </h3>
         <p className="private habitos-registro-health-lead">
-          Síntomas y notas sueltas (resfriado, dolor…). Si usas un control programado, las lecturas también aparecen aquí.
+          Síntomas y notas sueltas (resfriado, dolor…).           Las lecturas de controles aparecen aquí; los síntomas sueltos puedes escribirlos en Entrada.
           Cuaderno personal; no sustituye al médico.
         </p>
         {health.length > 0 ? (
@@ -215,7 +215,7 @@ export default function HabitRegistro({ items, startEdit, askRemove, editingId }
           ))
         ) : (
           <p className="private habitos-registro-empty">
-            En {monthName} no hay salud registrada. Peso, tensión o síntomas en Entrada.
+            En {monthName} no hay notas de salud. Síntomas en Entrada; tensión, peso, etc. en Controles.
           </p>
         )}
       </section>

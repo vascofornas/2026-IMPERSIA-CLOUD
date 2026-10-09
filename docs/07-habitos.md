@@ -165,7 +165,7 @@ Wearables, rachas largas, correlaciones (sueño vs síntomas). No bloquear v1.
 
 1. **Bienestar → Añadir control:** tipo, frecuencia (cada día / domingos), hora.
 2. **Registrar ahora** en Bienestar o **Hoy** cuando toque.
-3. **Registro:** historial del mes. Entrada solo para apuntes sueltos («Tensión 120/80»), no para crear el plan.
+3. **Registro:** historial del mes (lecturas hechas con **Registrar ahora**). **Entrada no** guarda tensión, glucosa, peso, medicación ni sueño; sí síntomas («resfriado», dolor…).
 
 **Datos:** `health_controls`; lecturas en `items.health_control_id`. API: `POST/GET /health-controls`, `POST …/readings`.
 

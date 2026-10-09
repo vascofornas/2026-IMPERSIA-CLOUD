@@ -90,8 +90,8 @@ export default function HabitosBoard({
   if (!items.some((item) => item.module === "habitos") && !(healthControls?.length > 0)) {
     return (
       <p className="private">
-        Todavía no hay rutinas ni registros aquí. En Entrada: «Cada mañana medito 10 min» o «Anoche dormí 7 horas». Los
-        controles de salud se añaden con <strong>Añadir control</strong> en esta pantalla.
+        Todavía no hay rutinas ni registros aquí. En Entrada: «Cada mañana medito 10 min» o un síntoma suelto. Lecturas
+        de salud y sueño: <strong>Añadir control</strong> y <strong>Registrar ahora</strong>.
       </p>
     );
   }

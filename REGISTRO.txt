@@ -802,3 +802,6 @@ Fix aviso email controles: ventana todo el día (no solo 5 min tras la hora); pr
 
 9 de octubre de 2026, 21:00
 Cierre documental eje A Bienestar v1 producción: docs/06-pruebas-eje-a.md (Agenda+Casa+Bienestar), docs/07-habitos.md estado v1. Sin cambio de código en VPS.
+
+9 de octubre de 2026, 21:10
+Entrada ya no archiva lecturas de controles (tensión, glucosa, peso, medicación, sueño): 422 con mensaje a Bienestar → Controles. classify, archive, main; textos Registro. Despliegue API + web.

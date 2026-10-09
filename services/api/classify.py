@@ -421,6 +421,16 @@ def looks_like_blood_pressure_log(low: str) -> bool:
     return any(w in low for w in ("tensión", "tension", "presión arterial", "presion arterial", " presión", " presion"))
 
 
+HEALTH_READING_KINDS = frozenset({"presion", "glucosa", "medicacion", "peso", "sueno"})
+
+
+def looks_like_control_reading_log(low: str) -> bool:
+    """Lectura numérica de control (tensión, glucosa…): no archivar por Entrada."""
+    if not looks_like_habit_log(low):
+        return False
+    return _habit_log_kind(low) in HEALTH_READING_KINDS
+
+
 def looks_like_habit_log(low: str) -> bool:
     if re.search(r"\banoche\b", low) and re.search(r"dorm", low):
         return True

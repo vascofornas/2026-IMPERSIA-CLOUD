@@ -20,6 +20,7 @@ from classify import (
     entry_title,
     habit_meta,
     legacy_kind,
+    looks_like_control_reading_log,
     looks_like_habit_log,
     split_compra_titles,
 )
@@ -246,7 +247,9 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
         _apply_habit_fields(result, raw)
         return result
 
-    if looks_like_habit_log(low):
+    if looks_like_control_reading_log(low):
+        pass
+    elif looks_like_habit_log(low):
         result["module"] = "habitos"
         _sync_module_fields(result)
         _clear_agenda_fields(result)

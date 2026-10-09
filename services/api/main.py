@@ -31,11 +31,25 @@ from classify import (
     compra_store_name,
     habit_meta,
     legacy_kind,
+    looks_like_control_reading_log,
     looks_like_habit_log,
     split_compra_titles,
 )
 import events
 import llm
+
+HEALTH_READING_ENTRADA_MSG = (
+    "Las lecturas de tensión, glucosa, peso, medicación y sueño se registran en "
+    "Bienestar → Controles, con «Registrar ahora» (también en Hoy)."
+)
+
+
+def _is_blocked_health_reading(suggestion: dict) -> bool:
+    return (
+        suggestion.get("habit_role") == "log"
+        and (suggestion.get("habit_kind") or "") in health_controls.CONTROL_KINDS
+    )
+
 
 app = FastAPI(title="Impersia API")
 app.include_router(admin_llm_router)
@@ -776,9 +790,14 @@ def patch_active_shopping_list(body: ShoppingListPatch, request: Request):
 def create_capture(body: CaptureIn, request: Request):
     user_id = current_user(request)
     raw = body.text.strip()
+    low = raw.lower()
+    if looks_like_control_reading_log(low):
+        raise HTTPException(status_code=422, detail=HEALTH_READING_ENTRADA_MSG)
     with db() as conn:
         with conn.cursor() as cur:
-            suggestions = archive.archive_items(cur, user_id, raw)
+            suggestions = [s for s in archive.archive_items(cur, user_id, raw) if not _is_blocked_health_reading(s)]
+            if not suggestions:
+                raise HTTPException(status_code=422, detail=HEALTH_READING_ENTRADA_MSG)
             primary = suggestions[0]
             cur.execute(
                 """
