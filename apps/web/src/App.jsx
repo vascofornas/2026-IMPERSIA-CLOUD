@@ -19,7 +19,7 @@ import {
   medicalForLabel,
 } from "./agenda.js";
 import { CASA_KIND, casaEventLine, groupCasaItems, isCasaItem, SUPPLY_KIND } from "./casa.js";
-import HabitEditPanel, { editorFromRepeats } from "./HabitEditPanel.jsx";
+import HabitEditPanel, { editorFromRepeats, HabitLogEditPanel } from "./HabitEditPanel.jsx";
 import HabitosBoard, { HoyBienestar } from "./HabitosBoard.jsx";
 import { hasHoyBienestarContent, isHabitRoutine } from "./habitos.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
@@ -195,6 +195,19 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   const [notice, setNotice] = useState("");
   const [shoppingList, setShoppingList] = useState(null);
   const screen = useHash();
+
+  useEffect(() => {
+    if (!editing) return;
+    const t = window.setTimeout(() => {
+      const habitPanel = document.getElementById("habitos-edit-anchor");
+      if (habitPanel) {
+        habitPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      document.querySelector("main.content .card.editor")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [editing?.id, editing?.editScope, editing?.occurrenceDay, editing?.habit_role]);
 
   useEffect(() => {
     trackScreen(screen);
@@ -393,20 +406,25 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
     }
   }
 
+  function withHabitEditFields(row) {
+    if (!isHabitRoutine(row)) return row;
+    const { mode, weekDays } = editorFromRepeats(row.repeats);
+    return {
+      ...row,
+      habitRepeatMode: mode,
+      habitWeekDays: weekDays,
+      habit_role: row.habit_role || "routine",
+      habit_kind: row.habit_kind || "ejercicio",
+    };
+  }
+
   function startEdit(item) {
     if (item.repeats && item.occurrenceKey) {
       setPendingAction({ item, mode: "edit" });
       return;
     }
-    const row = { ...baseItem(item), editScope: "all" };
-    if (isHabitRoutine(row)) {
-      const { mode, weekDays } = editorFromRepeats(row.repeats);
-      row.habitRepeatMode = mode;
-      row.habitWeekDays = weekDays;
-      row.habit_role = row.habit_role || "routine";
-      row.habit_kind = row.habit_kind || "ejercicio";
-    }
-    setEditing(row);
+    const base = items.find((entry) => entry.id === item.id) || baseItem(item);
+    setEditing(withHabitEditFields({ ...base, editScope: "all" }));
   }
 
   async function saveHabitEdit(overrides) {
@@ -415,21 +433,28 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
 
   function beginEditOne(item) {
     setPendingAction(null);
-    setEditing({
-      ...baseItem(item),
-      occurrenceDay: dayKey(item.starts_at),
-      editScope: "one",
-    });
+    const base = items.find((entry) => entry.id === item.id) || baseItem(item);
+    setEditing(
+      withHabitEditFields({
+        ...base,
+        starts_at: item.starts_at,
+        time_known: item.time_known,
+        occurrenceDay: dayKey(item.starts_at),
+        editScope: "one",
+      }),
+    );
   }
 
   function beginEditAll(item) {
     setPendingAction(null);
-    const row = items.find((entry) => entry.id === item.id) || baseItem(item);
-    setEditing({
-      ...row,
-      occurrenceKey: item.occurrenceKey || null,
-      editScope: "all",
-    });
+    const base = items.find((entry) => entry.id === item.id) || baseItem(item);
+    setEditing(
+      withHabitEditFields({
+        ...base,
+        editScope: "all",
+        anchorOccurrenceKey: item.occurrenceKey || null,
+      }),
+    );
   }
 
   function askRemove(item) {
@@ -521,6 +546,14 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
       </aside>
       <main className="content">
       {error && <p className="error">{error}</p>}
+      {editing?.module === "habitos" && editing?.habit_role === "log" && (
+        <HabitLogEditPanel
+          editing={editing}
+          setEditing={setEditing}
+          onSave={saveHabitEdit}
+          onCancel={() => setEditing(null)}
+        />
+      )}
       {editing?.module === "habitos" && editing?.habit_role !== "log" && (
         <HabitEditPanel
           editing={editing}
@@ -1916,11 +1949,16 @@ function baseItem(item) {
 
 function isEditingRow(item, editing) {
   if (!editing || editing.id !== item.id) return false;
-  if (editing.editScope === "one") {
-    return item.occurrenceKey && dayKey(item.starts_at) === editing.occurrenceDay;
+  if (editing.module === "habitos" && editing.habit_role !== "log" && isHabitRoutine(editing)) {
+    return false;
   }
-  if (editing.editScope === "all" && editing.occurrenceKey) {
-    return item.occurrenceKey === editing.occurrenceKey;
+  if (editing.editScope === "one") {
+    return dayKey(item.starts_at) === editing.occurrenceDay;
+  }
+  if (editing.editScope === "all") {
+    if (!item.occurrenceKey) return true;
+    if (editing.anchorOccurrenceKey) return item.occurrenceKey === editing.anchorOccurrenceKey;
+    return false;
   }
   return !item.occurrenceKey;
 }

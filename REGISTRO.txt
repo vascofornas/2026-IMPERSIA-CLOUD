@@ -739,3 +739,6 @@ Hoy → Próximos: series repetidas (p. ej. basura diaria) una sola fila; icono 
 
 9 de octubre de 2026, 13:55
 Modesto: con varias apariencias (data-look) algunos elementos de Bienestar/Hoy no se ven igual. styles.css: tokens --habitos/--habitos-on/--habitos-warn/--habitos-caution por tema; quitados verdes y blancos fijos en tarjetas, checks, sueño y etiqueta repetir; Tinta con verde legible; refuerzo Noche/Grafito (celdas off/miss, zona Bienestar en Hoy). Despliegue web.
+
+9 de octubre de 2026, 14:10
+Modesto: botón Cambiar no funcionaba en varios sitios. Causas: registros sueño/salud sin panel de edición; filas repetidas que no entraban en modo editar; rutinas sin preparar repetición al editar serie. HabitLogEditPanel, isEditingRow/startEdit/beginEdit*, scroll al panel, Cambiar en salud, estilo button.link en hábitos. Despliegue web.

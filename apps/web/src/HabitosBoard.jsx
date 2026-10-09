@@ -107,7 +107,7 @@ export default function HabitosBoard({
 
       <section className="habitos-section habitos-section-registro">
         <h2>Registro</h2>
-        <HabitRegistro items={items} startEdit={startEdit} askRemove={askRemove} />
+        <HabitRegistro items={items} startEdit={startEdit} askRemove={askRemove} editingId={editingId} />
       </section>
     </div>
   );

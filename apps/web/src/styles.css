@@ -1248,6 +1248,49 @@ a.connect {
   line-height: 1.45;
 }
 
+button.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+button.link .icon {
+  width: 15px;
+  height: 15px;
+}
+
+button.link:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  color: var(--ink);
+}
+
+button.link.danger {
+  color: #b91c1c;
+}
+
+button.link.danger:hover {
+  background: color-mix(in srgb, #b91c1c 10%, transparent);
+  color: #991b1b;
+}
+
+[data-look="noche"] button.link.danger,
+[data-look="grafito"] button.link.danger {
+  color: #fca5a5;
+}
+
+[data-look="noche"] button.link.danger:hover,
+[data-look="grafito"] button.link.danger:hover {
+  color: #fecaca;
+}
+
 .item-actions {
   display: inline-flex;
   gap: 4px;
@@ -1968,6 +2011,24 @@ a.connect {
   align-items: start;
   padding: 12px 0;
   border-bottom: 1px solid var(--line);
+}
+
+.habitos-health-row.editing {
+  background: color-mix(in srgb, var(--habitos) 8%, var(--bg));
+  margin: 0 -8px;
+  padding: 12px 8px;
+  border-radius: 10px;
+}
+
+.habitos-health-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.habitos-sleep-card.editing {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--habitos) 45%, transparent);
 }
 
 .habitos-health-kind {

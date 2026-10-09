@@ -36,8 +36,67 @@ export function editorFromRepeats(repeats) {
   return { mode: "daily", weekDays: [] };
 }
 
+const LOG_KINDS = [
+  ["sueno", "Sueño"],
+  ["salud", "Salud"],
+  ["peso", "Peso"],
+  ["otro", "Otro registro"],
+];
+
+export function HabitLogEditPanel({ editing, setEditing, onSave, onCancel }) {
+  if (!editing || editing.module !== "habitos" || editing.habit_role !== "log") return null;
+
+  return (
+    <article className="habitos-edit-panel card editor" id="habitos-edit-anchor">
+      <h3>Cambiar registro</h3>
+      <label>
+        Texto
+        <input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+      </label>
+      <label>
+        Tipo
+        <select
+          value={editing.habit_kind || "otro"}
+          onChange={(e) => setEditing({ ...editing, habit_kind: e.target.value, habit_role: "log" })}
+        >
+          {LOG_KINDS.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Notas <span className="private">(horas, detalle…)</span>
+        <textarea
+          value={editing.habit_notes || ""}
+          rows={2}
+          onChange={(e) => setEditing({ ...editing, habit_notes: e.target.value })}
+        />
+      </label>
+      <div className="actions">
+        <button
+          type="button"
+          onClick={() =>
+            onSave({
+              habit_role: "log",
+              habit_kind: editing.habit_kind || "otro",
+              habit_notes: (editing.habit_notes || "").trim() || null,
+            })
+          }
+        >
+          Guardar
+        </button>
+        <button type="button" className="secondary" onClick={onCancel}>
+          Cancelar
+        </button>
+      </div>
+    </article>
+  );
+}
+
 export default function HabitEditPanel({ editing, setEditing, onSave, onCancel }) {
-  if (!editing || editing.module !== "habitos") return null;
+  if (!editing || editing.module !== "habitos" || editing.habit_role === "log") return null;
 
   const mode = editing.habitRepeatMode || editorFromRepeats(editing.repeats).mode;
   const weekDays = editing.habitWeekDays ?? editorFromRepeats(editing.repeats).weekDays;
@@ -50,7 +109,7 @@ export default function HabitEditPanel({ editing, setEditing, onSave, onCancel }
   }
 
   return (
-    <article className="habitos-edit-panel card editor">
+    <article className="habitos-edit-panel card editor" id="habitos-edit-anchor">
       <h3>Cambiar hábito</h3>
       <label>
         Título

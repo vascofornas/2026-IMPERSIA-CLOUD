@@ -15,15 +15,22 @@ function sleepQualityClass(hours) {
   return "low";
 }
 
-export function SleepLogCard({ item, compact, onEdit, onRemove }) {
+export function SleepLogCard({ item, compact, onEdit, onRemove, editingId }) {
   const { hours, note } = sleepLogDisplay(item);
   const displayHours = hours ?? sleepHoursFromLog(item);
   const when = logWhenLabel(item.created_at);
 
   return (
-    <article className={["habitos-sleep-card", compact ? "compact" : "", sleepQualityClass(displayHours)]
-      .filter(Boolean)
-      .join(" ")}>
+    <article
+      className={[
+        "habitos-sleep-card",
+        compact ? "compact" : "",
+        sleepQualityClass(displayHours),
+        editingId === item.id ? "editing" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <header className="habitos-sleep-head">
         <p className="habitos-sleep-kicker">Sueño</p>
         <time className="habitos-sleep-when" dateTime={item.created_at}>
@@ -57,9 +64,9 @@ export function SleepLogCard({ item, compact, onEdit, onRemove }) {
   );
 }
 
-function HealthLogRow({ item }) {
+function HealthLogRow({ item, onEdit, onRemove, editingId }) {
   return (
-    <li className="habitos-health-row">
+    <li className={["habitos-health-row", editingId === item.id ? "editing" : ""].filter(Boolean).join(" ")}>
       <span className="habitos-health-kind">{habitKindLabel(item.habit_kind)}</span>
       <div className="habitos-health-body">
         <p className="habitos-health-title">{item.title}</p>
@@ -68,11 +75,25 @@ function HealthLogRow({ item }) {
         )}
       </div>
       <time className="private habitos-health-when">{logWhenLabel(item.created_at)}</time>
+      {(onEdit || onRemove) && (
+        <span className="habitos-health-actions">
+          {onEdit && (
+            <button type="button" className="link" onClick={() => onEdit(item)}>
+              <Icon name="editar" /> Cambiar
+            </button>
+          )}
+          {onRemove && (
+            <button type="button" className="link danger" onClick={() => onRemove(item)}>
+              <Icon name="borrar" /> Borrar
+            </button>
+          )}
+        </span>
+      )}
     </li>
   );
 }
 
-export default function HabitRegistro({ items, startEdit, askRemove }) {
+export default function HabitRegistro({ items, startEdit, askRemove, editingId }) {
   const sleeps = sleepLogs(items);
   const others = recentHabitLogs(items);
 
@@ -85,7 +106,7 @@ export default function HabitRegistro({ items, startEdit, askRemove }) {
         {sleeps.length > 0 ? (
           <div className="habitos-sleep-grid">
             {sleeps.map((item) => (
-              <SleepLogCard key={item.id} item={item} onEdit={startEdit} onRemove={askRemove} />
+              <SleepLogCard key={item.id} item={item} onEdit={startEdit} onRemove={askRemove} editingId={editingId} />
             ))}
           </div>
         ) : (
@@ -101,7 +122,7 @@ export default function HabitRegistro({ items, startEdit, askRemove }) {
         {others.length > 0 ? (
           <ul className="habitos-health-list">
             {others.map((item) => (
-              <HealthLogRow key={item.id} item={item} />
+              <HealthLogRow key={item.id} item={item} onEdit={startEdit} onRemove={askRemove} editingId={editingId} />
             ))}
           </ul>
         ) : (
