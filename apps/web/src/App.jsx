@@ -383,6 +383,23 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
           travel_role: draft.module === "viajes" ? draft.travel_role || "nota" : null,
           travel_place: draft.module === "viajes" ? draft.travel_place || null : null,
           travel_end: draft.module === "viajes" ? draft.travel_end || null : null,
+          travel_subtype: draft.module === "viajes" ? draft.travel_subtype || null : null,
+          travel_starts_at: draft.module === "viajes" ? draft.travel_starts_at || null : null,
+          travel_ends_at: draft.module === "viajes" ? draft.travel_ends_at || null : null,
+          travel_provider: draft.module === "viajes" ? draft.travel_provider || null : null,
+          travel_reference: draft.module === "viajes" ? draft.travel_reference || null : null,
+          travel_address: draft.module === "viajes" ? draft.travel_address || null : null,
+          travel_contact_name: draft.module === "viajes" ? draft.travel_contact_name || null : null,
+          travel_contact_phone: draft.module === "viajes" ? draft.travel_contact_phone || null : null,
+          travel_contact_email: draft.module === "viajes" ? draft.travel_contact_email || null : null,
+          travel_booking_status: draft.module === "viajes" ? draft.travel_booking_status || null : null,
+          travel_amount: draft.module === "viajes" ? draft.travel_amount ?? null : null,
+          travel_currency: draft.module === "viajes" ? draft.travel_currency || null : null,
+          travel_payment_status: draft.module === "viajes" ? draft.travel_payment_status || null : null,
+          travel_quantity: draft.module === "viajes" ? draft.travel_quantity ?? null : null,
+          travel_url: draft.module === "viajes" ? draft.travel_url || null : null,
+          travel_notes: draft.module === "viajes" ? draft.travel_notes || null : null,
+          travel_budget: draft.module === "viajes" ? draft.travel_budget ?? null : null,
         };
         if (draft.module === "habitos") {
           patch.habit_role = draft.habit_role || "routine";

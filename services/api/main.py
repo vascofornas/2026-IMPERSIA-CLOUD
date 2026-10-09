@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from decimal import Decimal
 from zoneinfo import ZoneInfo
 import hashlib
 import hmac
@@ -202,7 +203,27 @@ class ConfirmIn(BaseModel):
     time_known: bool = False
 
 
-class ItemPatch(BaseModel):
+class TravelDetailFields(BaseModel):
+    travel_subtype: str | None = Field(default=None, max_length=80)
+    travel_starts_at: str | None = None
+    travel_ends_at: str | None = None
+    travel_provider: str | None = Field(default=None, max_length=200)
+    travel_reference: str | None = Field(default=None, max_length=120)
+    travel_address: str | None = Field(default=None, max_length=300)
+    travel_contact_name: str | None = Field(default=None, max_length=160)
+    travel_contact_phone: str | None = Field(default=None, max_length=80)
+    travel_contact_email: str | None = Field(default=None, max_length=254)
+    travel_booking_status: str | None = None
+    travel_amount: Decimal | None = Field(default=None, ge=0)
+    travel_currency: str | None = Field(default=None, min_length=3, max_length=3)
+    travel_payment_status: str | None = None
+    travel_quantity: int | None = Field(default=None, ge=1, le=999)
+    travel_url: str | None = Field(default=None, max_length=1000)
+    travel_notes: str | None = Field(default=None, max_length=5000)
+    travel_budget: Decimal | None = Field(default=None, ge=0)
+
+
+class ItemPatch(TravelDetailFields):
     module: str
     title: str = Field(min_length=1, max_length=200)
     starts_at: str | None = None
@@ -247,14 +268,14 @@ class HealthControlIn(BaseModel):
     alert_minutes_before: int | None = None
 
 
-class TravelTripIn(BaseModel):
+class TravelTripIn(TravelDetailFields):
     title: str = Field(min_length=1, max_length=200)
     travel_place: str | None = None
     starts_at: str | None = None
     travel_end: str | None = None
 
 
-class TravelPieceIn(BaseModel):
+class TravelPieceIn(TravelDetailFields):
     travel_role: str
     title: str = Field(min_length=1, max_length=200)
     travel_place: str | None = None
@@ -1032,6 +1053,16 @@ def _viajes_suggestion(**fields) -> dict:
     }
 
 
+def _save_travel_details(cur, item_id: str, body: TravelDetailFields, *, partial: bool = False) -> None:
+    existing = travel.fetch_details(cur, [item_id]).get(str(item_id), {}) if partial else None
+    fields_set = set(body.model_fields_set) if partial else None
+    try:
+        payload = travel.normalize_detail_payload(body.model_dump(), existing=existing, fields_set=fields_set)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    travel.upsert_details(cur, item_id, payload)
+
+
 @app.post("/travel-trips", status_code=201)
 def create_travel_trip(body: TravelTripIn, request: Request):
     user_id = current_user(request)
@@ -1047,8 +1078,10 @@ def create_travel_trip(body: TravelTripIn, request: Request):
                 travel_trip_id=None,
             )
             row = _insert_item(cur, user_id, None, suggestion)
+            _save_travel_details(cur, str(row["id"]), body)
+            item = _fetch_item(cur, str(row["id"]), user_id)
         conn.commit()
-    return _public_item(row)
+    return item
 
 
 @app.post("/travel-trips/{trip_id}/pieces", status_code=201)
@@ -1077,8 +1110,10 @@ def create_travel_piece(trip_id: str, body: TravelPieceIn, request: Request):
                 travel_end=None,
             )
             row = _insert_item(cur, user_id, None, suggestion)
+            _save_travel_details(cur, str(row["id"]), body)
+            item = _fetch_item(cur, str(row["id"]), user_id)
         conn.commit()
-    return _public_item(row)
+    return item
 
 
 @app.post("/captures/{capture_id}/confirm", status_code=201)
@@ -1325,6 +1360,10 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
             item = cur.fetchone()
             if item:
                 cur.execute("DELETE FROM item_exceptions WHERE item_id = %s", (item_id,))
+                if body.module == "viajes":
+                    _save_travel_details(cur, item_id, body, partial=True)
+                else:
+                    cur.execute("DELETE FROM travel_item_details WHERE item_id = %s", (item_id,))
                 item = _fetch_item(cur, item_id, user_id)
                 archive.maybe_learn_from_patch(cur, user_id, raw_text=raw_text, before=before, after=item)
         conn.commit()
@@ -1507,7 +1546,11 @@ def list_items(request: Request, limit: int = 500):
                 (user_id, cap),
             )
             rows = cur.fetchall()
-            exceptions = _fetch_exceptions(cur, user_id, [str(row["id"]) for row in rows])
+            item_ids = [str(row["id"]) for row in rows]
+            exceptions = _fetch_exceptions(cur, user_id, item_ids)
+            travel_details = travel.fetch_details(cur, item_ids)
+            for row in rows:
+                row.update(travel_details.get(str(row["id"]), {}))
     return [_public_item(row, exceptions.get(str(row["id"]), [])) for row in rows]
 
 
@@ -1568,6 +1611,9 @@ def _fetch_item(cur, item_id: str, user_id: str) -> dict | None:
     row = cur.fetchone()
     if not row:
         return None
+    details = travel.fetch_details(cur, [item_id]).get(str(item_id))
+    if details:
+        row.update(details)
     exceptions = _fetch_exceptions(cur, user_id, [item_id])
     return _public_item(row, exceptions.get(item_id, []))
 
@@ -1640,6 +1686,7 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         "habit_notes": row.get("habit_notes"),
         "health_control_id": str(row["health_control_id"]) if row.get("health_control_id") else None,
         **travel.public_travel_fields(row),
+        **travel.public_detail_fields(row),
         "shopping_list_id": str(row["shopping_list_id"]) if row.get("shopping_list_id") else None,
         "status": row.get("status") or "open",
         "privacy": row["privacy"],

@@ -8,6 +8,67 @@ export const TRAVEL_ROLE_OPTIONS = [
 
 export const CHECKLIST_ROLES = new Set(["plan", "equipaje", "experiencia"]);
 
+export const TRAVEL_SUBTYPES = {
+  reserva: [
+    ["vuelo", "Vuelo"],
+    ["alojamiento", "Alojamiento"],
+    ["tren", "Tren"],
+    ["bus", "Autobús"],
+    ["coche", "Coche de alquiler"],
+    ["ferry", "Ferry"],
+    ["restaurante", "Restaurante"],
+    ["otro", "Otra reserva"],
+  ],
+  plan: [
+    ["ruta", "Ruta"],
+    ["visita", "Visita"],
+    ["traslado", "Traslado"],
+    ["comida", "Comida"],
+    ["gestion", "Gestión pendiente"],
+    ["otro", "Otro"],
+  ],
+  experiencia: [
+    ["excursion", "Excursión"],
+    ["museo", "Museo"],
+    ["tour", "Tour"],
+    ["gastronomia", "Gastronomía"],
+    ["espectaculo", "Espectáculo"],
+    ["bienestar", "Bienestar"],
+    ["otro", "Otra experiencia"],
+  ],
+  equipaje: [
+    ["ropa", "Ropa"],
+    ["calzado", "Calzado"],
+    ["higiene", "Higiene"],
+    ["documentos", "Documentos"],
+    ["tecnologia", "Tecnología"],
+    ["salud", "Salud"],
+    ["otro", "Otro"],
+  ],
+  nota: [
+    ["direccion", "Dirección"],
+    ["contacto", "Contacto"],
+    ["recordatorio", "Recordatorio"],
+    ["otro", "Otra nota"],
+  ],
+};
+
+export const BOOKING_STATUS_OPTIONS = [
+  ["idea", "Por decidir"],
+  ["pending", "Pendiente de confirmar"],
+  ["confirmed", "Confirmado"],
+  ["cancelled", "Cancelado"],
+];
+
+export const PAYMENT_STATUS_OPTIONS = [
+  ["pending", "Pendiente de pago"],
+  ["partial", "Pagado en parte"],
+  ["paid", "Pagado"],
+  ["refunded", "Reembolsado"],
+];
+
+export const CURRENCY_OPTIONS = ["EUR", "USD", "GBP", "CHF"];
+
 const ROLE_LABELS = {
   trip: "Viaje",
   reserva: "Reservas",
@@ -19,6 +80,14 @@ const ROLE_LABELS = {
 
 export function travelRoleLabel(role) {
   return ROLE_LABELS[role] || role || "Viaje";
+}
+
+export function travelSubtypeLabel(role, subtype) {
+  return TRAVEL_SUBTYPES[role]?.find(([value]) => value === subtype)?.[1] || subtype || "";
+}
+
+export function travelStatusLabel(options, value) {
+  return options.find(([key]) => key === value)?.[1] || value || "";
 }
 
 export function isTravelItem(item) {

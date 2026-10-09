@@ -2716,13 +2716,24 @@ button.link.secondary {
   color: var(--muted);
 }
 
+.viajes-budget-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: -2px 0 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--viajes) 8%, var(--bg));
+  font-size: 0.88rem;
+}
+
 .viajes-detail-help {
   margin: 0 0 16px;
 }
 
 .viajes-sections {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
@@ -2732,10 +2743,6 @@ button.link.secondary {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--bg);
-}
-
-.viajes-role-block:last-child {
-  grid-column: 1 / -1;
 }
 
 .viajes-role-head {
@@ -2772,18 +2779,22 @@ button.link.secondary {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .viajes-piece {
-  display: grid;
-  grid-template-columns: 1.6rem 1fr auto;
-  gap: 8px;
-  align-items: center;
-  padding: 8px 10px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
   border-radius: 8px;
   border: 1px solid var(--line);
-  background: var(--bg);
+  background: color-mix(in srgb, var(--viajes) 2%, var(--bg));
+}
+
+.viajes-piece.done {
+  opacity: 0.72;
 }
 
 .viajes-piece.done .viajes-piece-title {
@@ -2791,7 +2802,15 @@ button.link.secondary {
   color: var(--muted);
 }
 
+.viajes-piece-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
 .viajes-check {
+  flex: 0 0 auto;
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 6px;
@@ -2802,16 +2821,57 @@ button.link.secondary {
   color: var(--viajes);
 }
 
-.viajes-check-placeholder {
-  width: 1.5rem;
+.viajes-piece-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
 }
 
 .viajes-piece-title {
+  font-weight: 650;
   font-size: 0.95rem;
   line-height: 1.35;
 }
 
+.viajes-piece-badge {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--viajes) 10%, var(--bg));
+  color: color-mix(in srgb, var(--viajes) 80%, var(--text));
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.viajes-piece-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.viajes-piece-contact,
+.viajes-piece-notes {
+  margin: 7px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.viajes-piece-notes {
+  white-space: pre-wrap;
+}
+
+.viajes-piece-link {
+  display: inline-block;
+  margin-top: 7px;
+  font-size: 0.82rem;
+}
+
 .viajes-piece-actions {
+  flex: 0 0 auto;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -2843,6 +2903,62 @@ button.link.secondary {
 .viajes-piece-place {
   flex: 1 1 12rem;
   min-width: 0;
+}
+
+.viajes-add-detail {
+  flex: 1 0 100%;
+  width: 100%;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.viajes-detail-example {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+}
+
+.travel-detail-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.viajes-detail > .travel-detail-form {
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--viajes) 35%, var(--line));
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.travel-detail-form fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.travel-detail-form legend {
+  padding: 0 6px;
+  color: var(--viajes);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.travel-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.travel-field-wide {
+  grid-column: 1 / -1;
+}
+
+.travel-money-grid {
+  grid-template-columns: minmax(0, 1.4fr) minmax(6rem, 0.6fr) minmax(0, 1fr);
 }
 
 .viajes-edit-form {
@@ -2900,12 +3016,24 @@ button.link.secondary {
     grid-template-columns: 1fr;
   }
 
-  .viajes-role-block:last-child {
+  .viajes-edit-form,
+  .viajes-edit-dates,
+  .travel-form-grid,
+  .travel-money-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .travel-field-wide {
     grid-column: auto;
   }
 
-  .viajes-edit-form,
-  .viajes-edit-dates {
-    grid-template-columns: 1fr;
+  .viajes-piece {
+    flex-direction: column;
+  }
+
+  .viajes-piece-actions {
+    width: 100%;
+    justify-content: flex-start;
+    padding-left: 34px;
   }
 }

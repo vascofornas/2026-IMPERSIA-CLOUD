@@ -1,13 +1,17 @@
 import { useMemo, useState } from "react";
 import { Icon } from "./icons.jsx";
+import TravelDetailForm from "./TravelDetailForm.jsx";
 import {
+  BOOKING_STATUS_OPTIONS,
   CHECKLIST_ROLES,
   orphanTravelPieces,
+  PAYMENT_STATUS_OPTIONS,
   piecesForTrip,
+  travelStatusLabel,
+  travelSubtypeLabel,
   travelTrips,
   tripIsUpcoming,
   tripRangeLabel,
-  TRAVEL_ROLE_OPTIONS,
 } from "./travel.js";
 
 const TRAVEL_SECTIONS = [
@@ -55,6 +59,8 @@ function AddTripForm({ createTrip, onCreated, setError }) {
   const [place, setPlace] = useState("");
   const [starts, setStarts] = useState("");
   const [ends, setEnds] = useState("");
+  const [budget, setBudget] = useState("");
+  const [currency, setCurrency] = useState("EUR");
 
   async function submit(e) {
     e.preventDefault();
@@ -66,6 +72,8 @@ function AddTripForm({ createTrip, onCreated, setError }) {
         travel_place: place.trim() || null,
         starts_at: starts || null,
         travel_end: ends || null,
+        travel_budget: budget === "" ? null : Number(budget),
+        travel_currency: currency,
       });
       onCreated(item);
       setOpen(false);
@@ -73,6 +81,8 @@ function AddTripForm({ createTrip, onCreated, setError }) {
       setPlace("");
       setStarts("");
       setEnds("");
+      setBudget("");
+      setCurrency("EUR");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -108,6 +118,19 @@ function AddTripForm({ createTrip, onCreated, setError }) {
         Vuelta (opcional)
         <input type="date" value={ends} onChange={(e) => setEnds(e.target.value)} />
       </label>
+      <label>
+        Presupuesto (opcional)
+        <input type="number" min="0" step="0.01" value={budget} onChange={(e) => setBudget(e.target.value)} />
+      </label>
+      <label>
+        Moneda
+        <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
+          <option>EUR</option>
+          <option>USD</option>
+          <option>GBP</option>
+          <option>CHF</option>
+        </select>
+      </label>
       <div className="viajes-form-actions">
         <button type="submit" className="primary" disabled={busy}>
           Crear
@@ -123,23 +146,14 @@ function AddTripForm({ createTrip, onCreated, setError }) {
 function AddPieceForm({ tripId, role, addLabel, placeholder, createPiece, onCreated, setError }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [title, setTitle] = useState("");
-  const [place, setPlace] = useState("");
 
-  async function submit(e) {
-    e.preventDefault();
+  async function submit(payload) {
     setBusy(true);
     setError("");
     try {
-      const item = await createPiece(tripId, {
-        travel_role: role,
-        title: title.trim(),
-        travel_place: place.trim() || null,
-      });
+      const item = await createPiece(tripId, payload);
       onCreated(item);
       setOpen(false);
-      setTitle("");
-      setPlace("");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -156,22 +170,15 @@ function AddPieceForm({ tripId, role, addLabel, placeholder, createPiece, onCrea
   }
 
   return (
-    <form className="viajes-form viajes-form-inline" onSubmit={submit}>
-      <label className="viajes-piece-input">
-        Qué quieres guardar
-        <input type="text" required autoFocus placeholder={placeholder} value={title} onChange={(e) => setTitle(e.target.value)} />
-      </label>
-      <label className="viajes-piece-place">
-        Lugar o proveedor (opcional)
-        <input type="text" placeholder="Ej.: Taüll, Renfe, Hotel…" value={place} onChange={(e) => setPlace(e.target.value)} />
-      </label>
-      <button type="submit" className="primary" disabled={busy}>
-        Guardar
-      </button>
-      <button type="button" className="secondary" onClick={() => setOpen(false)} disabled={busy}>
-        Cancelar
-      </button>
-    </form>
+    <div className="viajes-add-detail">
+      <p className="private viajes-detail-example">{placeholder}</p>
+      <TravelDetailForm
+        role={role}
+        busy={busy}
+        onSubmit={submit}
+        onCancel={() => setOpen(false)}
+      />
+    </div>
   );
 }
 
@@ -179,8 +186,7 @@ function dateInputValue(value) {
   return typeof value === "string" ? value.slice(0, 10) : "";
 }
 
-function TravelEditForm({ editing, setEditing, saveEdit }) {
-  const isTrip = editing.travel_role === "trip";
+function TripEditForm({ editing, setEditing, saveEdit }) {
 
   function submit(e) {
     e.preventDefault();
@@ -189,30 +195,19 @@ function TravelEditForm({ editing, setEditing, saveEdit }) {
 
   return (
     <form className="viajes-edit-form" onSubmit={submit}>
-      <h4>{isTrip ? "Editar viaje" : "Editar contenido"}</h4>
-      {!isTrip && (
-        <label>
-          Apartado
-          <select value={editing.travel_role || "nota"} onChange={(e) => setEditing({ ...editing, travel_role: e.target.value })}>
-            {TRAVEL_ROLE_OPTIONS.map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-        </label>
-      )}
+      <h4>Editar viaje</h4>
       <label>
         Título
         <input required value={editing.title || ""} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
       </label>
       <label>
-        {isTrip ? "Destino (opcional)" : "Lugar o proveedor (opcional)"}
+        Destino (opcional)
         <input
           value={editing.travel_place || ""}
           onChange={(e) => setEditing({ ...editing, travel_place: e.target.value })}
         />
       </label>
-      {isTrip && (
-        <div className="viajes-edit-dates">
+      <div className="viajes-edit-dates">
           <label>
             Ida (opcional)
             <input
@@ -229,8 +224,26 @@ function TravelEditForm({ editing, setEditing, saveEdit }) {
               onChange={(e) => setEditing({ ...editing, travel_end: e.target.value || null })}
             />
           </label>
-        </div>
-      )}
+      </div>
+      <label>
+        Presupuesto (opcional)
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={editing.travel_budget ?? ""}
+          onChange={(e) => setEditing({ ...editing, travel_budget: e.target.value })}
+        />
+      </label>
+      <label>
+        Moneda
+        <select value={editing.travel_currency || "EUR"} onChange={(e) => setEditing({ ...editing, travel_currency: e.target.value })}>
+          <option>EUR</option>
+          <option>USD</option>
+          <option>GBP</option>
+          <option>CHF</option>
+        </select>
+      </label>
       <div className="viajes-form-actions">
         <button type="submit" className="primary">Guardar cambios</button>
         <button type="button" className="secondary" onClick={() => setEditing(null)}>Cancelar</button>
@@ -239,32 +252,88 @@ function TravelEditForm({ editing, setEditing, saveEdit }) {
   );
 }
 
+function formatTravelDateTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString("es-ES", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatTravelSchedule(item) {
+  const start = formatTravelDateTime(item.travel_starts_at);
+  const end = formatTravelDateTime(item.travel_ends_at);
+  if (start && end) return `${start} — ${end}`;
+  return start || end;
+}
+
+function formatMoney(amount, currency = "EUR") {
+  const value = Number(amount);
+  if (!Number.isFinite(value)) return "";
+  return new Intl.NumberFormat("es-ES", { style: "currency", currency }).format(value);
+}
+
 function PieceRow({ item, onToggleStatus, startEdit, askRemove }) {
   const checklist = CHECKLIST_ROLES.has(item.travel_role);
   const done = item.status === "done";
+  const schedule = formatTravelSchedule(item);
+  const subtype = travelSubtypeLabel(item.travel_role, item.travel_subtype);
+  const booking = travelStatusLabel(BOOKING_STATUS_OPTIONS, item.travel_booking_status);
+  const payment = travelStatusLabel(PAYMENT_STATUS_OPTIONS, item.travel_payment_status);
+  const amount = item.travel_amount !== null && item.travel_amount !== undefined
+    ? formatMoney(item.travel_amount, item.travel_currency || "EUR")
+    : "";
+  const contact = [item.travel_contact_name, item.travel_contact_phone, item.travel_contact_email].filter(Boolean).join(" · ");
+
   return (
     <li className={["viajes-piece", done ? "done" : ""].filter(Boolean).join(" ")}>
-      {checklist ? (
-        <button
-          type="button"
-          className="viajes-check"
-          aria-label={done ? "Marcar pendiente" : "Marcar hecho"}
-          onClick={() => onToggleStatus(item)}
-        >
-          {done ? "✓" : "○"}
-        </button>
-      ) : (
-        <span className="viajes-check-placeholder" aria-hidden />
-      )}
-      <span className="viajes-piece-title">{item.title}</span>
-      <span className="viajes-piece-actions">
+      <div className="viajes-piece-main">
+        {checklist && (
+          <button
+            type="button"
+            className="viajes-check"
+            aria-label={done ? "Marcar pendiente" : "Marcar hecho"}
+            onClick={() => onToggleStatus(item)}
+          >
+            {done ? "✓" : "○"}
+          </button>
+        )}
+        <div>
+          <div className="viajes-piece-title-row">
+            <span className="viajes-piece-title">{item.title}</span>
+            {subtype && <span className="viajes-piece-badge">{subtype}</span>}
+          </div>
+          <div className="viajes-piece-facts">
+            {schedule && <span>{schedule}</span>}
+            {item.travel_provider && <span><strong>Proveedor:</strong> {item.travel_provider}</span>}
+            {item.travel_reference && <span><strong>Localizador:</strong> {item.travel_reference}</span>}
+            {(item.travel_address || item.travel_place) && <span>{item.travel_address || item.travel_place}</span>}
+            {item.travel_quantity && <span>Cantidad: {item.travel_quantity}</span>}
+            {booking && <span>{booking}</span>}
+            {amount && <span><strong>{amount}</strong></span>}
+            {payment && <span>{payment}</span>}
+          </div>
+          {contact && <p className="viajes-piece-contact"><strong>Contacto:</strong> {contact}</p>}
+          {item.travel_notes && <p className="viajes-piece-notes">{item.travel_notes}</p>}
+          {item.travel_url && (
+            <a className="viajes-piece-link" href={item.travel_url} target="_blank" rel="noreferrer">
+              Abrir enlace
+            </a>
+          )}
+        </div>
+      </div>
+      <div className="viajes-piece-actions">
         <button type="button" className="link" onClick={() => startEdit(item)}>
           <Icon name="editar" /> Cambiar
         </button>
         <button type="button" className="link danger" onClick={() => askRemove(item)}>
           <Icon name="borrar" /> Borrar
         </button>
-      </span>
+      </div>
     </li>
   );
 }
@@ -284,6 +353,21 @@ function TripDetail({
 }) {
   const pieces = piecesForTrip(items, trip.id);
   const pending = pieces.filter((p) => CHECKLIST_ROLES.has(p.travel_role) && p.status !== "done").length;
+  const totals = pieces.reduce((sum, piece) => {
+    const amount = Number(piece.travel_amount);
+    if (!Number.isFinite(amount)) return sum;
+    const currency = piece.travel_currency || "EUR";
+    sum[currency] = (sum[currency] || 0) + amount;
+    return sum;
+  }, {});
+  const totalLabels = Object.entries(totals).map(([currency, amount]) => formatMoney(amount, currency));
+  const budgetCurrency = trip.travel_currency || "EUR";
+  const budget = trip.travel_budget !== null && trip.travel_budget !== undefined
+    ? formatMoney(trip.travel_budget, budgetCurrency)
+    : "";
+  const spentInBudgetCurrency = totals[budgetCurrency] !== undefined
+    ? formatMoney(totals[budgetCurrency], budgetCurrency)
+    : "";
 
   return (
     <article className="viajes-detail">
@@ -304,13 +388,34 @@ function TripDetail({
           <Icon name="editar" /> Editar viaje
         </button>
       </header>
+      {(budget || totalLabels.length > 0) && (
+        <div className="viajes-budget-summary">
+          {budget && <span><strong>Presupuesto:</strong> {budget}</span>}
+          {spentInBudgetCurrency && <span><strong>Registrado:</strong> {spentInBudgetCurrency}</span>}
+          {!spentInBudgetCurrency && totalLabels.length > 0 && <span><strong>Registrado:</strong> {totalLabels.join(" · ")}</span>}
+        </div>
+      )}
       {editing?.module === "viajes" && (editing.id === trip.id || pieces.some((piece) => piece.id === editing.id)) && (
-        <TravelEditForm editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
+        editing.id === trip.id ? (
+          <TripEditForm editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
+        ) : (
+          <TravelDetailForm
+            key={editing.id}
+            role={editing.travel_role || "nota"}
+            initial={editing}
+            allowRoleChange
+            submitLabel="Guardar cambios"
+            onSubmit={(payload) => saveEdit(payload)}
+            onCancel={() => setEditing(null)}
+          />
+        )
       )}
       <p className="private viajes-detail-help">Guarda cada cosa en su apartado. Pulsa «Añadir» en la sección que necesites.</p>
       <div className="viajes-sections">
         {TRAVEL_SECTIONS.map((section) => {
-          const sectionItems = pieces.filter((item) => item.travel_role === section.role);
+          const sectionItems = pieces
+            .filter((item) => item.travel_role === section.role)
+            .sort((a, b) => String(a.travel_starts_at || "").localeCompare(String(b.travel_starts_at || "")));
           return (
             <section key={section.role} className="viajes-role-block">
               <div className="viajes-role-head">

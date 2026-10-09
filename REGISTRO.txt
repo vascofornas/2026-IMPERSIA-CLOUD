@@ -820,3 +820,6 @@ Viajes: ficha reorganizada para que se entienda cómo usarla. Con un solo viaje 
 
 9 de octubre de 2026, 22:15
 Viajes: añadida edición específica. «Editar viaje» cambia título, destino, ida y vuelta; «Cambiar» en reservas, itinerario, experiencias, equipaje y notas corrige título y lugar/proveedor o mueve el contenido de apartado. Al crear contenido también se puede indicar lugar o proveedor. main.py, App.jsx, ViajesBoard.jsx, styles.css y docs/08-viajes.md. Build web y validación Python correctos; despliegue API y web.
+
+9 de octubre de 2026, 22:45
+Viajes v1.5: fichas completas para Reservas, Itinerario, Experiencias, Equipaje y Notas. Incluyen tipos, fechas y horas, proveedor, localizador, dirección, confirmación, importes y moneda, pagos, contactos, cantidad, enlaces y notas según el apartado. Tarjetas detalladas, presupuesto del viaje y suma de gastos por moneda. Migración 018 (travel_item_details), API compatible con fichas antiguas, TravelDetailForm.jsx, ViajesBoard.jsx, travel.js, styles.css y docs/08-viajes.md. Archivos reales quedan para R2/S3; esta entrega usa enlaces. Build web, py_compile y persistencia SQL validados; despliegue API/web y prueba integral.

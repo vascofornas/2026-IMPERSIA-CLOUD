@@ -10,6 +10,31 @@ MADRID = ZoneInfo("Europe/Madrid")
 
 TRAVEL_ROLES = frozenset({"trip", "reserva", "plan", "equipaje", "nota", "experiencia"})
 CHECKLIST_ROLES = frozenset({"plan", "equipaje", "experiencia"})
+BOOKING_STATUSES = frozenset({"idea", "pending", "confirmed", "cancelled"})
+PAYMENT_STATUSES = frozenset({"pending", "partial", "paid", "refunded"})
+
+TRAVEL_DETAIL_FIELDS = (
+    "travel_subtype",
+    "travel_starts_at",
+    "travel_ends_at",
+    "travel_provider",
+    "travel_reference",
+    "travel_address",
+    "travel_contact_name",
+    "travel_contact_phone",
+    "travel_contact_email",
+    "travel_booking_status",
+    "travel_amount",
+    "travel_currency",
+    "travel_payment_status",
+    "travel_quantity",
+    "travel_url",
+    "travel_notes",
+    "travel_budget",
+)
+
+DETAIL_DATE_FIELDS = frozenset({"travel_starts_at", "travel_ends_at"})
+DETAIL_NUMBER_FIELDS = frozenset({"travel_amount", "travel_quantity", "travel_budget"})
 
 ROLE_LABELS = {
     "trip": "Viaje",
@@ -170,3 +195,78 @@ def public_travel_fields(row: dict) -> dict:
         "travel_place": row.get("travel_place"),
         "travel_end": end.isoformat() if hasattr(end, "isoformat") else (str(end) if end else None),
     }
+
+
+def _parse_detail_datetime(value):
+    if value is None or value == "":
+        return None
+    if isinstance(value, datetime):
+        return value
+    parsed = datetime.fromisoformat(str(value).strip())
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=MADRID)
+
+
+def normalize_detail_payload(data: dict, *, existing: dict | None = None, fields_set: set[str] | None = None) -> dict:
+    current = existing or {}
+    payload = {}
+    for field in TRAVEL_DETAIL_FIELDS:
+        if fields_set is not None and field not in fields_set:
+            payload[field] = current.get(field)
+            continue
+        value = data.get(field)
+        if field in DETAIL_DATE_FIELDS:
+            value = _parse_detail_datetime(value)
+        elif field not in DETAIL_NUMBER_FIELDS and isinstance(value, str):
+            value = value.strip() or None
+        payload[field] = value
+
+    currency = payload.get("travel_currency")
+    payload["travel_currency"] = str(currency).upper()[:3] if currency else None
+    booking = payload.get("travel_booking_status")
+    if booking and booking not in BOOKING_STATUSES:
+        raise ValueError("Estado de reserva no válido")
+    payment = payload.get("travel_payment_status")
+    if payment and payment not in PAYMENT_STATUSES:
+        raise ValueError("Estado de pago no válido")
+    return payload
+
+
+def fetch_details(cur, item_ids: list[str]) -> dict[str, dict]:
+    if not item_ids:
+        return {}
+    cur.execute(
+        f"""
+        SELECT item_id, {", ".join(TRAVEL_DETAIL_FIELDS)}
+        FROM travel_item_details
+        WHERE item_id = ANY(%s::uuid[])
+        """,
+        (item_ids,),
+    )
+    return {str(row["item_id"]): dict(row) for row in cur.fetchall()}
+
+
+def upsert_details(cur, item_id: str, payload: dict) -> None:
+    fields = ", ".join(TRAVEL_DETAIL_FIELDS)
+    placeholders = ", ".join(["%s"] * len(TRAVEL_DETAIL_FIELDS))
+    updates = ", ".join(f"{field} = EXCLUDED.{field}" for field in TRAVEL_DETAIL_FIELDS)
+    cur.execute(
+        f"""
+        INSERT INTO travel_item_details (item_id, {fields})
+        VALUES (%s, {placeholders})
+        ON CONFLICT (item_id) DO UPDATE
+        SET {updates}, updated_at = now()
+        """,
+        (item_id, *(payload.get(field) for field in TRAVEL_DETAIL_FIELDS)),
+    )
+
+
+def public_detail_fields(row: dict) -> dict:
+    result = {}
+    for field in TRAVEL_DETAIL_FIELDS:
+        value = row.get(field)
+        if field in DETAIL_DATE_FIELDS and value is not None:
+            value = value.isoformat() if hasattr(value, "isoformat") else str(value)
+        elif field in {"travel_amount", "travel_budget"} and value is not None:
+            value = str(value)
+        result[field] = value
+    return result
