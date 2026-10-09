@@ -22,6 +22,7 @@ from admin_events import router as admin_events_router
 from admin_llm import router as admin_llm_router
 import archive
 import dedup
+import health_controls
 from classify import (
     HABIT_KINDS,
     HABIT_ROLES,
@@ -69,7 +70,7 @@ ITEM_SELECT = """
     leisure_kind, leisure_with, leisure_name, leisure_place, leisure_notes,
     reminder_kind, reminder_place, reminder_notes,
     casa_kind, casa_place, casa_notes, supply_kind,
-    habit_role, habit_kind, habit_notes,
+    habit_role, habit_kind, habit_notes, health_control_id,
     shopping_list_id, status, privacy, created_at
 """
 
@@ -217,6 +218,15 @@ class ItemPatch(BaseModel):
     habit_kind: str | None = None
     habit_notes: str | None = None
     repeats: str | None = None
+
+
+class HealthReadingIn(BaseModel):
+    systolic: int | None = None
+    diastolic: int | None = None
+    mg_dl: int | None = None
+    kg: float | None = None
+    taken: bool | None = True
+    note: str | None = None
 
 
 class StatusIn(BaseModel):
@@ -780,9 +790,18 @@ def create_capture(body: CaptureIn, request: Request):
             capture_id = str(cur.fetchone()["id"])
             list_row = None
             created = []
+            created_controls = []
             batch_seen: set[tuple] = set()
             deduped = 0
             for suggestion in suggestions:
+                if suggestion.get("health_control"):
+                    row = health_controls.insert_control(
+                        cur, user_id, capture_id, suggestion["health_control"]
+                    )
+                    today = datetime.now(ZoneInfo("Europe/Madrid")).date()
+                    done = health_controls.logs_for_day(cur, user_id, str(row["id"]), today)
+                    created_controls.append(health_controls.public_control(row, done_today=done))
+                    continue
                 shopping_list_id = None
                 casa_place = None
                 title_override = None
@@ -835,7 +854,56 @@ def create_capture(body: CaptureIn, request: Request):
             "source": primary.get("source"),
         },
     )
-    return {"items": created, "deduped": deduped}
+    return {"items": created, "health_controls": created_controls, "deduped": deduped}
+
+
+@app.get("/health-controls")
+def list_health_controls(request: Request):
+    user_id = current_user(request)
+    today = datetime.now(ZoneInfo("Europe/Madrid")).date()
+    with db() as conn:
+        with conn.cursor() as cur:
+            rows = health_controls.list_controls(cur, user_id)
+            out = []
+            for row in rows:
+                cid = str(row["id"])
+                done = health_controls.logs_for_day(cur, user_id, cid, today)
+                out.append(health_controls.public_control(row, done_today=done))
+    return out
+
+
+@app.post("/health-controls/{control_id}/readings", status_code=201)
+def create_health_reading(control_id: str, body: HealthReadingIn, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, user_id, kind, title, repeats, reminder_time, alert_minutes_before, status, created_at
+                FROM health_controls
+                WHERE id = %s AND user_id = %s AND status = 'active'
+                """,
+                (control_id, user_id),
+            )
+            control = cur.fetchone()
+            if not control:
+                raise HTTPException(status_code=404, detail="No encontramos ese control de salud")
+            control = dict(control)
+            kind = control["kind"]
+            payload = body.model_dump()
+            if kind == "presion":
+                if body.systolic is None or body.diastolic is None:
+                    raise HTTPException(status_code=422, detail="Indica sistólica y diastólica")
+            elif kind == "glucosa":
+                if body.mg_dl is None:
+                    raise HTTPException(status_code=422, detail="Indica la glucosa en mg/dL")
+            elif kind == "peso":
+                if body.kg is None:
+                    raise HTTPException(status_code=422, detail="Indica el peso en kg")
+            row = health_controls.insert_reading(cur, user_id, control, payload)
+            item = _fetch_item(cur, str(row["id"]), user_id)
+        conn.commit()
+    return item
 
 
 @app.post("/captures/{capture_id}/confirm", status_code=201)
@@ -1381,6 +1449,7 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         "habit_role": row.get("habit_role"),
         "habit_kind": row.get("habit_kind"),
         "habit_notes": row.get("habit_notes"),
+        "health_control_id": str(row["health_control_id"]) if row.get("health_control_id") else None,
         "shopping_list_id": str(row["shopping_list_id"]) if row.get("shopping_list_id") else None,
         "status": row.get("status") or "open",
         "privacy": row["privacy"],

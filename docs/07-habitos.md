@@ -153,6 +153,18 @@ Wearables, rachas largas, correlaciones (sueño vs síntomas). No bloquear v1.
 
 **v1.2 (hecho):** `HABIT_KINDS` ampliado; reglas en `classify.py`; etiquetas y resumen mensual por subtipo en Registro; edición manual del tipo en el panel de log. Pendiente: mini gráficas presión/glucosa/peso.
 
+### Controles de salud (v1.3 — plan activo)
+
+**Tipos permitidos (lista cerrada):** `presion`, `glucosa`, `medicacion`, `peso`. Fuera: diagnósticos, recetas, informes hospitalarios.
+
+**Usuario — tres pasos (visible en pantalla):**
+
+1. **Entrada una vez:** «Quiero controlarme la tensión cada día a las 8» (IA/reglas crean un *control*, no un apunte suelto).
+2. **Cada día:** en **Hoy** y **Bienestar → Controles de salud**, botón *Registrar ahora* (números o confirmar pastilla).
+3. **Registro:** historial del mes (mismos logs `habit_role=log`, ligados al control).
+
+**Datos:** tabla `health_controls`; lecturas en `items` con `health_control_id`. API: `GET /health-controls`, `POST /health-controls/{id}/readings`.
+
 ### Fuera de alcance
 
 Informes PDF para el sistema sanitario, recetas electrónicas, interacciones entre fármacos, compartir con terceros, pestaña «Salud» aparte del módulo habitos.

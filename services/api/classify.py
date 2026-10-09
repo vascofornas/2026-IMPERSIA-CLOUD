@@ -135,6 +135,25 @@ def classify(text: str) -> dict:
     )
     if casa:
         module = "casa"
+    hc_spec = parse_health_control_setup(raw, low)
+    if hc_spec:
+        alert = hc_spec.get("alert_minutes_before")
+        return _classify_result(
+            "habitos",
+            hc_spec["title"],
+            starts,
+            True,
+            hc_spec.get("repeats", "daily"),
+            alert,
+            None,
+            medical_fields={},
+            family_fields={},
+            leisure_fields={},
+            reminder_fields={},
+            casa_fields={},
+            habit_fields={},
+            health_control=hc_spec,
+        )
     alert = _alert_minutes_before(low, time_known)
     if medical and alert == 15:
         alert = 30
@@ -282,9 +301,10 @@ def _classify_result(
     reminder_fields: dict,
     casa_fields: dict,
     habit_fields: dict | None = None,
+    health_control: dict | None = None,
 ) -> dict:
     habit = habit_fields or {}
-    return {
+    out = {
         "axis": MODULES[module],
         "module": module,
         "kind": legacy_kind(module),
@@ -320,6 +340,9 @@ def _classify_result(
         "habit_notes": habit.get("habit_notes"),
         "source": "rules",
     }
+    if health_control:
+        out["health_control"] = health_control
+    return out
 
 
 def legacy_kind(module: str) -> str:
@@ -501,6 +524,58 @@ def _habit_log_notes(low: str, kind: str) -> str | None:
             val = m.group(1).replace(",", ".")
             return f"{val} kg"
     return None
+
+
+def parse_health_control_setup(raw: str, low: str) -> dict | None:
+    """Plan de control (Entrada una vez), no una lectura suelta."""
+    if re.search(r"\b\d{2,3}\s*/\s*\d{2,3}\b", low):
+        return None
+    if re.search(r"\b(?:glucosa|az[uú]car)\s+\d{2,3}\b", low):
+        return None
+    if re.search(r"\bpeso\s+\d", low):
+        return None
+    setup = re.search(
+        r"\b("
+        r"controlarme|controlar(?:me)?|quiero control|necesito control|"
+        r"seguir(?:me)?(?: la| el)?|medirme (?:la |el )?|"
+        r"cada d[ií]a (?:medir|tomar|controlar|pesarme)|"
+        r"recordar(?:me)? (?:para|de) (?:medir|tomar|pesarme)"
+        r")\b",
+        low,
+    )
+    if not setup and not re.search(r"\bcontrol de (?:la |el )?(?:tensi[oó]n|glucosa|peso|medicaci[oó]n)\b", low):
+        return None
+    kind = None
+    if re.search(r"tensi[oó]n|presi[oó]n arterial|\bpa\b", low):
+        kind = "presion"
+    elif re.search(r"glucosa|az[uú]car(?: en sangre)?", low):
+        kind = "glucosa"
+    elif re.search(r"medicaci[oó]n|pastilla|pastillas|tomar (?:la|el|mis)", low):
+        kind = "medicacion"
+    elif re.search(r"\bpeso\b|pesarme", low):
+        kind = "peso"
+    if not kind:
+        return None
+    titles = {
+        "presion": "Control de tensión arterial",
+        "glucosa": "Control de glucosa",
+        "medicacion": "Control de medicación",
+        "peso": "Control de peso",
+    }
+    title = titles[kind]
+    hour, minute = _clock(low)
+    reminder_time = f"{hour:02d}:{minute:02d}" if hour is not None else "08:00"
+    repeats = "daily"
+    if kind == "peso" or re.search(r"\b(?:domingo|semanal|cada semana)\b", low):
+        repeats = "weekly"
+    alert = _alert_minutes_before(low, hour is not None)
+    return {
+        "kind": kind,
+        "title": title,
+        "repeats": repeats,
+        "reminder_time": reminder_time,
+        "alert_minutes_before": alert,
+    }
 
 
 def habit_meta(raw: str, low: str) -> dict:

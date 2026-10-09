@@ -1,4 +1,5 @@
 import HabitRegistro, { HoySleepSnippet } from "./HabitRegistro.jsx";
+import HealthControlsPanel, { HoyHealthControls } from "./HealthControlsPanel.jsx";
 import HabitTracker from "./HabitTracker.jsx";
 import { isHabitRoutine, latestSleepLog, routinesForToday } from "./habitos.js";
 
@@ -10,6 +11,10 @@ function openHabitRoutines(items) {
 
 export function HoyBienestar({
   items,
+  healthControls,
+  registerReading,
+  onHealthReadingSaved,
+  setError,
   todayStart,
   expandItems,
   endOfDay,
@@ -21,7 +26,8 @@ export function HoyBienestar({
   const dueToday = routinesForToday(items, todayStart, expandItems, endOfDay);
   const sleep = latestSleepLog(items);
   const hasRoutines = items.some(isHabitRoutine);
-  if (!dueToday.length && !sleep && !hasRoutines) return null;
+  const hasControls = (healthControls?.length || 0) > 0;
+  if (!dueToday.length && !sleep && !hasRoutines && !hasControls) return null;
 
   return (
     <div className="hoy-bienestar">
@@ -53,12 +59,22 @@ export function HoyBienestar({
         <p className="hoy-empty hoy-empty-inline">Hoy no toca ninguna rutina guardada.</p>
       ) : null}
       {sleep && <HoySleepSnippet items={items} />}
+      <HoyHealthControls
+        controls={healthControls}
+        registerReading={registerReading}
+        onReadingSaved={onHealthReadingSaved}
+        setError={setError}
+      />
     </div>
   );
 }
 
 export default function HabitosBoard({
   items,
+  healthControls,
+  registerReading,
+  onHealthReadingSaved,
+  setError,
   todayStart,
   expandItems,
   endOfDay,
@@ -69,11 +85,11 @@ export default function HabitosBoard({
 }) {
   const openRoutines = openHabitRoutines(items);
 
-  if (!items.some((item) => item.module === "habitos")) {
+  if (!items.some((item) => item.module === "habitos") && !(healthControls?.length > 0)) {
     return (
       <p className="private">
-        Todavía no hay rutinas ni registros aquí. Apúntalo en Entrada: «Cada mañana medito 10 min» o «Anoche dormí 7
-        horas».
+        Todavía no hay rutinas ni registros aquí. Apúntalo en Entrada: «Cada mañana medito 10 min», «Quiero controlarme
+        la tensión cada día a las 8» o «Anoche dormí 7 horas».
       </p>
     );
   }
@@ -104,6 +120,13 @@ export default function HabitosBoard({
           </div>
         </section>
       )}
+
+      <HealthControlsPanel
+        controls={healthControls}
+        registerReading={registerReading}
+        onReadingSaved={onHealthReadingSaved}
+        setError={setError}
+      />
 
       <section className="habitos-section habitos-section-registro">
         <h2>Registro</h2>

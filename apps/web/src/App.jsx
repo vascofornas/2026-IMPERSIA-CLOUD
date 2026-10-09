@@ -21,6 +21,7 @@ import {
 import { CASA_KIND, casaEventLine, groupCasaItems, isCasaItem, SUPPLY_KIND } from "./casa.js";
 import HabitEditPanel, { editorFromRepeats, HabitLogEditPanel } from "./HabitEditPanel.jsx";
 import HabitosBoard, { HoyBienestar } from "./HabitosBoard.jsx";
+import { controlCreatedNotice, pendingControls } from "./healthControls.js";
 import { hasHoyBienestarContent, isHabitRoutine } from "./habitos.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
 import { trackScreen } from "./events.js";
@@ -63,7 +64,11 @@ function applyLook(look) {
 
 function normalizeCaptureResult(result) {
   if (result && Array.isArray(result.items)) {
-    return { items: result.items, deduped: Number(result.deduped) || 0 };
+    return {
+      items: result.items,
+      health_controls: result.health_controls || [],
+      deduped: Number(result.deduped) || 0,
+    };
   }
   if (Array.isArray(result)) {
     return { items: result, deduped: 0 };
@@ -184,6 +189,7 @@ function Auth({ onEnter }) {
 function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLeave }) {
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
+  const [healthControls, setHealthControls] = useState([]);
   const [googleEvents, setGoogleEvents] = useState([]);
   const [editing, setEditing] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
@@ -242,6 +248,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
       setError("Google no ha dado permiso para leer el calendario. En su pantalla hay que aceptar ver el calendario.");
     }
     call("/items").then(setItems).catch((err) => setError(err.message));
+    call("/health-controls").then(setHealthControls).catch(() => setHealthControls([]));
   }, []);
 
   useEffect(() => {
@@ -256,6 +263,21 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
     }
     call("/google/events").then(setGoogleEvents).catch((err) => setError(err.message));
   }, [googleEmail]);
+
+  async function registerHealthReading(controlId, body) {
+    return call(`/health-controls/${controlId}/readings`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  }
+
+  function onHealthReadingSaved(item, controlId) {
+    setItems((prev) => [item, ...prev.filter((row) => row.id !== item.id)]);
+    setHealthControls((prev) =>
+      prev.map((c) => (c.id === controlId ? { ...c, done_today: true } : c)),
+    );
+    setNotice("Registro guardado. Lo verás abajo en Registro del mes.");
+  }
 
   async function archive() {
     if (archiving || !text.trim()) return;
@@ -275,9 +297,18 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
         else next = [item, ...next];
       }
       setItems(next);
+      const newControls = result.health_controls || [];
+      if (newControls.length) {
+        setHealthControls((prev) => {
+          const ids = new Set(prev.map((c) => c.id));
+          const mergedControls = [...newControls.filter((c) => !ids.has(c.id)), ...prev];
+          return mergedControls;
+        });
+        setNotice(controlCreatedNotice(newControls));
+      }
       setText("");
       const merged = deduped > 0 || fresh.some((item) => item.dedupe_action === "merged");
-      if (merged) {
+      if (merged && !newControls.length) {
         setNotice("Ya lo tenías guardado. No se ha creado un duplicado en Agenda ni en el calendario.");
       }
       checkAlerts(next);
@@ -619,10 +650,15 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
           </header>
           <div className="panes hoy-panes">
             <div className="hoy-column">
-              {hasHoyBienestarContent(items, todayStart, expandItems, endOfDay) && (
+              {(hasHoyBienestarContent(items, todayStart, expandItems, endOfDay) ||
+                pendingControls(healthControls).length > 0) && (
                 <section className="hoy-zone hoy-zone-bienestar" aria-labelledby="hoy-bienestar-heading">
                   <HoyBienestar
                     items={items}
+                    healthControls={healthControls}
+                    registerReading={registerHealthReading}
+                    onHealthReadingSaved={onHealthReadingSaved}
+                    setError={setError}
                     todayStart={todayStart}
                     expandItems={expandItems}
                     endOfDay={endOfDay}
@@ -710,6 +746,10 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
             <div className="module-habitos">
               <HabitosBoard
                 items={items}
+                healthControls={healthControls}
+                registerReading={registerHealthReading}
+                onHealthReadingSaved={onHealthReadingSaved}
+                setError={setError}
                 todayStart={todayStart}
                 expandItems={expandItems}
                 endOfDay={endOfDay}

@@ -86,6 +86,7 @@ Reglas:
 - Plan con amigos/pareja (cena, concierto, quedar) → agenda.ocio.
 - Cada lunes/día + yoga, gimnasio, meditar, correr → habitos (no ocio).
 - habit_role: routine (repetición) | log (sueño, medicación tomada, tensión, glucosa, peso, síntoma). habit_kind: rutina|ejercicio|meditacion|lectura|sueno|medicacion|presion|glucosa|peso|sintoma|salud|otro.
+- health_control (objeto, solo si piden PLAN de control, no una lectura): kind presion|glucosa|medicacion|peso, title, repeats daily|weekly, reminder_time HH:MM, alert_minutes_before opcional. Ej.: «Quiero controlarme la tensión cada día a las 8» → health_control, sin habit log.
 - «Anoche dormí N horas», peso, tensión → habitos log (no diario si es dato).
 - Comida o reunión de empresa/trabajo con fecha → reuniones.
 - Cita médica → agenda.medica.
@@ -221,6 +222,23 @@ def _sync_module_fields(out: dict) -> None:
 def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
     """Capa determinista tras reglas o IA: corrige casos frecuentes del eje A."""
     low = raw.lower()
+    from classify import parse_health_control_setup
+
+    hc = parse_health_control_setup(raw, low)
+    if hc:
+        result = dict(out)
+        result["module"] = "habitos"
+        result["axis"] = "personal"
+        result["kind"] = legacy_kind("habitos")
+        result["title"] = hc["title"]
+        result["health_control"] = hc
+        result["habit_role"] = None
+        result["habit_kind"] = None
+        for key in TEMPORAL_KEYS:
+            if baseline.get(key) is not None:
+                result[key] = baseline.get(key)
+        return result
+
     result = dict(out)
     result["title"] = entry_title(raw)
     for key in TEMPORAL_KEYS:

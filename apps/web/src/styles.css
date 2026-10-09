@@ -2034,6 +2034,120 @@ button.link.secondary {
   line-height: 1.45;
 }
 
+.habitos-controls-guide {
+  margin: 0 0 18px;
+  max-width: 40rem;
+}
+
+.habitos-controls-guide-lead {
+  margin: 0 0 8px;
+}
+
+.habitos-controls-steps {
+  margin: 0 0 10px;
+  padding-left: 1.25rem;
+  line-height: 1.5;
+}
+
+.habitos-controls-steps li + li {
+  margin-top: 6px;
+}
+
+.habitos-controls-disclaimer {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.habitos-control-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.habitos-control-grid-compact {
+  gap: 10px;
+}
+
+.habitos-control-card {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--habitos) 22%, var(--border));
+  background: color-mix(in srgb, var(--habitos) 6%, var(--surface));
+}
+
+.habitos-control-card.done {
+  opacity: 0.88;
+}
+
+.habitos-control-kind {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--habitos);
+}
+
+.habitos-control-title {
+  margin: 4px 0 2px;
+  font-size: 1.05rem;
+}
+
+.habitos-control-when {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+}
+
+.habitos-control-register {
+  width: 100%;
+  max-width: 16rem;
+}
+
+.habitos-control-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.habitos-control-fields {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.habitos-control-fields label,
+.habitos-control-form > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.88rem;
+  min-width: 6rem;
+}
+
+.habitos-control-form-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.habitos-control-done-msg {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.hoy-health-controls {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--habitos) 18%, var(--border));
+}
+
+.hoy-health-controls-lead {
+  margin: 0 0 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
 .habitos-section-registro .habitos-subheading:first-of-type {
   margin-top: 4px;
 }
