@@ -24,7 +24,9 @@ import HabitosBoard, { HoyBienestar } from "./HabitosBoard.jsx";
 import { hasHoyBienestarContent, isHabitRoutine } from "./habitos.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
 import { trackScreen } from "./events.js";
-import RepeatEditFields from "./RepeatEditFields.jsx";
+import ItemEditForm from "./ItemEditForm.jsx";
+import { dayLabel } from "./itemEditHelpers.js";
+import { isSeriesEdit } from "./seriesEdit.js";
 import {
   collapseRepeatingSeries,
   nextOccurrenceWhenLabel,
@@ -35,16 +37,6 @@ import {
 import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
-
-const ALERT_OPTIONS = [
-  { value: "", label: "Sin aviso" },
-  { value: "0", label: "A la hora" },
-  { value: "5", label: "5 minutos antes" },
-  { value: "15", label: "15 minutos antes" },
-  { value: "30", label: "30 minutos antes" },
-  { value: "60", label: "1 hora antes" },
-  { value: "1440", label: "1 día antes" },
-];
 
 const LOOKS = [
   { id: "claro", name: "Claro", note: "Gris claro y verde" },
@@ -195,7 +187,6 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
   const [googleEvents, setGoogleEvents] = useState([]);
   const [editing, setEditing] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
-  const [pendingAction, setPendingAction] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [error, setError] = useState("");
@@ -209,6 +200,11 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
       const habitPanel = document.getElementById("habitos-edit-anchor");
       if (habitPanel) {
         habitPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      const seriesPanel = document.getElementById("series-edit-anchor");
+      if (seriesPanel) {
+        seriesPanel.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
       document.querySelector("main.content .card.editor")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -355,6 +351,11 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
       }
       setItems(items.map((row) => (row.id === item.id ? item : row)));
       setEditing(null);
+      if (draft.editScope === "all" && isSeriesEdit(draft)) {
+        setNotice("Serie actualizada: el cambio vale para todos los días de la repetición.");
+      } else if (draft.editScope === "one") {
+        setNotice("Cambio guardado solo para ese día.");
+      }
     } catch (err) {
       setError(err.message);
     }
@@ -439,22 +440,17 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
     return withTaskRepeatFields(withHabitEditFields({ ...base, ...extra }));
   }
 
+  function resolveBaseItem(item) {
+    return items.find((entry) => entry.id === item.id) || baseItem(item);
+  }
+
   function startEdit(item) {
-    if (item.repeats && item.occurrenceKey) {
-      setPendingAction({ item, mode: "edit" });
-      return;
-    }
-    const base = items.find((entry) => entry.id === item.id) || baseItem(item);
-    setEditing(prepareEditRow(base, { editScope: "all" }));
+    setNotice("");
+    setEditing(prepareEditRow(resolveBaseItem(item), { editScope: "all" }));
   }
 
-  async function saveHabitEdit(overrides) {
-    await saveEdit({ ...overrides, title: editing.title });
-  }
-
-  function beginEditOne(item) {
-    setPendingAction(null);
-    const base = items.find((entry) => entry.id === item.id) || baseItem(item);
+  function startEditOneDay(item) {
+    const base = resolveBaseItem(item);
     setEditing(
       prepareEditRow(base, {
         starts_at: item.starts_at,
@@ -465,15 +461,8 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
     );
   }
 
-  function beginEditAll(item) {
-    setPendingAction(null);
-    const base = items.find((entry) => entry.id === item.id) || baseItem(item);
-    setEditing(
-      prepareEditRow(base, {
-        editScope: "all",
-        anchorOccurrenceKey: item.occurrenceKey || null,
-      }),
-    );
+  async function saveHabitEdit(overrides) {
+    await saveEdit({ ...overrides, title: editing.title });
   }
 
   function askRemove(item) {
@@ -565,6 +554,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
       </aside>
       <main className="content">
       {error && <p className="error">{error}</p>}
+      {notice && <p className="notice" role="status">{notice}</p>}
       {editing?.module === "habitos" && editing?.habit_role === "log" && (
         <HabitLogEditPanel
           editing={editing}
@@ -572,6 +562,23 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
           onSave={saveHabitEdit}
           onCancel={() => setEditing(null)}
         />
+      )}
+      {isSeriesEdit(editing) && (
+        <article className="card editor series-edit-panel" id="series-edit-anchor">
+          <h3>Cambiar serie repetida</h3>
+          <p className="private series-edit-lead">
+            En tu cuenta hay <strong>una sola entrada</strong>; en Hoy y Agenda ves muchas fechas, pero es la misma serie.
+            Lo que guardes aquí se aplica a <strong>todos los días</strong> de la repetición. Si antes tocaste un solo día, esos
+            retoques se quitan al guardar la serie.
+          </p>
+          <ItemEditForm
+            editing={editing}
+            setEditing={setEditing}
+            saveEdit={saveEdit}
+            onCancel={() => setEditing(null)}
+            showRepeat
+          />
+        </article>
       )}
       {editing?.module === "habitos" && editing?.habit_role !== "log" && (
         <HabitEditPanel
@@ -600,7 +607,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
           </div>
           {notice && <p className="notice entrada-notice" role="status">{notice}</p>}
           <h2>Archivado</h2>
-          <ItemList items={items} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
+          <ItemList items={items} editing={editing} setEditing={setEditing} startEdit={startEdit} startEditOneDay={startEditOneDay} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
         </>
       )}
       {screen === "hoy" && (
@@ -632,7 +639,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
                   {todayItems.length > 0 && <span className="hoy-count">{todayItems.length}</span>}
                 </h2>
                 {todayItems.length ? (
-                  <ItemList items={todayItems} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
+                  <ItemList items={todayItems} editing={editing} setEditing={setEditing} startEdit={startEdit} startEditOneDay={startEditOneDay} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
                 ) : (
                   <p className="hoy-empty">Nada con fecha para hoy. Apúntalo en Entrada o mira Agenda.</p>
                 )}
@@ -649,6 +656,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
                   editing={editing}
                   setEditing={setEditing}
                   startEdit={startEdit}
+                  startEditOneDay={startEditOneDay}
                   saveEdit={saveEdit}
                   askRemove={askRemove}
                   onToggleStatus={toggleStatus}
@@ -677,6 +685,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
                 editing={editing}
                 setEditing={setEditing}
                 startEdit={startEdit}
+                startEditOneDay={startEditOneDay}
                 saveEdit={saveEdit}
                 askRemove={askRemove}
                 onToggleStatus={toggleStatus}
@@ -692,6 +701,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
               editing={editing}
               setEditing={setEditing}
               startEdit={startEdit}
+              startEditOneDay={startEditOneDay}
               saveEdit={saveEdit}
               askRemove={askRemove}
               onToggleStatus={toggleStatus}
@@ -714,7 +724,7 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
               <section>
                 <h2>Tuyo</h2>
                 {items.some((item) => item.module === current.id) ? (
-                  <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
+                  <ItemList items={items.filter((item) => item.module === current.id)} editing={editing} setEditing={setEditing} startEdit={startEdit} startEditOneDay={startEditOneDay} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
                 ) : (
                   <p className="private">Todavía no hay nada tuyo aquí. Escríbelo en Entrada.</p>
                 )}
@@ -803,15 +813,6 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
           onConfirm={confirmRemoveAll}
         />
       ))}
-      {pendingAction?.mode === "edit" && (
-        <RepeatScopeDialog
-          item={pendingAction.item}
-          mode="edit"
-          onCancel={() => setPendingAction(null)}
-          onOne={() => beginEditOne(pendingAction.item)}
-          onAll={() => beginEditAll(pendingAction.item)}
-        />
-      )}
     </div>
   );
 }
@@ -881,7 +882,7 @@ const CALENDAR_VIEWS = [
   { id: "mes", label: "Mes" },
 ];
 
-function CalendarBoard({ items, editing, setEditing, startEdit, saveEdit, askRemove }) {
+function CalendarBoard({ items, editing, setEditing, startEdit, startEditOneDay, saveEdit, askRemove, onToggleStatus }) {
   const today = new Date();
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   const [view, setView] = useState("mes");
@@ -945,8 +946,10 @@ function CalendarBoard({ items, editing, setEditing, startEdit, saveEdit, askRem
           editing={editing}
           setEditing={setEditing}
           startEdit={startEdit}
+          startEditOneDay={startEditOneDay}
           saveEdit={saveEdit}
           askRemove={askRemove}
+          onToggleStatus={onToggleStatus}
         />
       ) : (
         <div className={`month-grid ${view}`}>
@@ -974,7 +977,7 @@ function CalendarBoard({ items, editing, setEditing, startEdit, saveEdit, askRem
   );
 }
 
-function DayColumn({ items, editing, setEditing, startEdit, saveEdit, askRemove }) {
+function DayColumn({ items, editing, setEditing, startEdit, startEditOneDay, saveEdit, askRemove, onToggleStatus }) {
   if (!items.length) return <p className="private">Este día no hay nada con fecha.</p>;
   return (
     <ItemList
@@ -982,8 +985,10 @@ function DayColumn({ items, editing, setEditing, startEdit, saveEdit, askRemove 
       editing={editing}
       setEditing={setEditing}
       startEdit={startEdit}
+      startEditOneDay={startEditOneDay}
       saveEdit={saveEdit}
       askRemove={askRemove}
+      onToggleStatus={onToggleStatus}
     />
   );
 }
@@ -1106,6 +1111,7 @@ function CasaBoard({
   editing,
   setEditing,
   startEdit,
+  startEditOneDay,
   saveEdit,
   askRemove,
   onToggleStatus,
@@ -1120,7 +1126,7 @@ function CasaBoard({
   const otherDone = done.filter((group) => !["compra", "domestica"].includes(group.id) && group.items.length);
   const hasDone = otherDone.length > 0;
   const hasOther = otherPending.length > 0 || otherDone.length > 0 || domesticaPending.length || domesticaDone.length;
-  const listProps = { editing, setEditing, startEdit, saveEdit, askRemove, onToggleStatus };
+  const listProps = { editing, setEditing, startEdit, startEditOneDay, saveEdit, askRemove, onToggleStatus };
 
   return (
     <div className="casa-board">
@@ -1472,344 +1478,35 @@ function ShoppingChecklist({
   );
 }
 
-function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, onToggleStatus, repeatSeries }) {
+function ItemList({ items, editing, setEditing, startEdit, startEditOneDay, saveEdit, askRemove, onToggleStatus, repeatSeries }) {
+  const seriesId = isSeriesEdit(editing) ? editing.id : null;
   return (
     <div className="cards">
       {items.map((item) => (
-        <article className={[isEditingRow(item, editing) ? "card editor" : "card", item.status === "done" ? "done" : ""].filter(Boolean).join(" ")} key={item.occurrenceKey || item.id}>
+        <article
+          className={[
+            isEditingRow(item, editing) ? "card editor" : "card",
+            item.status === "done" ? "done" : "",
+            seriesId === item.id ? "series-editing" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          key={item.occurrenceKey || item.id}
+        >
           {isEditingRow(item, editing) ? (
             editing.module === "habitos" && editing.habit_role !== "log" ? (
               <p className="private">Edita el hábito en el panel de arriba.</p>
             ) : (
-            <>
-              {editing.editScope === "one" && <p className="private">Solo cambias {dayLabel(editing.starts_at)}.</p>}
-              <label>
-                Módulo
-                <select value={editing.module} onChange={(e) => setEditing({ ...editing, module: e.target.value })}>
-                  {AXES.map((axis) => (
-                    <optgroup key={axis.id} label={axis.name}>
-                      {axis.modules.map((mod) => (
-                        <option key={mod.id} value={mod.id}>{mod.label}</option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Título
-                <input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
-              </label>
-              <label>
-                Día
-                <input
-                  type="date"
-                  value={datePart(editing.starts_at)}
-                  disabled={editing.editScope === "one"}
-                  onChange={(e) => setEditing(withWhen(editing, e.target.value, timePart(editing)))}
-                />
-              </label>
-              <label>
-                Hora
-                <input
-                  type="time"
-                  value={editing.time_known ? timePart(editing) : ""}
-                  onChange={(e) => setEditing(withWhen(editing, datePart(editing.starts_at), e.target.value))}
-                />
-              </label>
-              {editing.editScope !== "one" && !isHabitRoutine(editing) && (
-                  <RepeatEditFields
-                    preset={editing.repeatPreset ?? taskRepeatEditorState(editing.repeats).preset}
-                    weekDays={editing.repeatWeekDays ?? taskRepeatEditorState(editing.repeats).weekDays}
-                    onPresetChange={(repeatPreset) => setEditing({ ...editing, repeatPreset })}
-                    onWeekDaysChange={(repeatWeekDays) => setEditing({ ...editing, repeatWeekDays, repeatPreset: "weekly_days" })}
-                  />
-                )}
-              {allowsAlertMinutes(editing) && editing.editScope !== "one" && (
-                <label>
-                  Aviso
-                  <select
-                    value={alertValue(editing)}
-                    onChange={(e) => setEditing({ ...editing, alert_minutes_before: parseAlert(e.target.value) })}
-                  >
-                    {ALERT_OPTIONS.map((option) => (
-                      <option key={option.value || "none"} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              {editing.module === "agenda" && editing.editScope !== "one" && (
-                <>
-                  <label>
-                    Tipo en Agenda
-                    <select
-                      value={editing.agenda_type || ""}
-                      onChange={(e) => {
-                        const agenda_type = e.target.value || null;
-                        setEditing({
-                          ...editing,
-                          agenda_type,
-                          medical_for: agenda_type === "medica" ? editing.medical_for || "self" : null,
-                          medical_name: agenda_type === "medica" ? editing.medical_name || "" : "",
-                          medical_place: agenda_type === "medica" ? editing.medical_place || "" : "",
-                          medical_notes: agenda_type === "medica" ? editing.medical_notes || "" : "",
-                          family_kind: agenda_type === "familiar" ? editing.family_kind || "cumpleanos" : null,
-                          family_for: agenda_type === "familiar" ? editing.family_for || "other" : null,
-                          family_name: agenda_type === "familiar" ? editing.family_name || "" : "",
-                          family_place: agenda_type === "familiar" ? editing.family_place || "" : "",
-                          family_notes: agenda_type === "familiar" ? editing.family_notes || "" : "",
-                          leisure_kind: agenda_type === "ocio" ? editing.leisure_kind || "cine" : null,
-                          leisure_with: agenda_type === "ocio" ? editing.leisure_with || "solo" : null,
-                          leisure_name: agenda_type === "ocio" ? editing.leisure_name || "" : "",
-                          leisure_place: agenda_type === "ocio" ? editing.leisure_place || "" : "",
-                          leisure_notes: agenda_type === "ocio" ? editing.leisure_notes || "" : "",
-                          reminder_kind: agenda_type === "recordatorio" ? editing.reminder_kind || "itv" : null,
-                          reminder_place: agenda_type === "recordatorio" ? editing.reminder_place || "" : "",
-                          reminder_notes: agenda_type === "recordatorio" ? editing.reminder_notes || "" : "",
-                        });
-                      }}
-                    >
-                      <option value="">Cita general</option>
-                      <option value="medica">Cita médica</option>
-                      <option value="familiar">Celebración</option>
-                      <option value="ocio">Ocio / plan</option>
-                      <option value="recordatorio">Recordatorio</option>
-                    </select>
-                  </label>
-                  {editing.agenda_type === "medica" && (
-                    <>
-                      <label>
-                        Para quién
-                        <select
-                          value={editing.medical_for || "self"}
-                          onChange={(e) => setEditing({ ...editing, medical_for: e.target.value })}
-                        >
-                          {MEDICAL_FOR.map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </select>
-                      </label>
-                      {editing.medical_for !== "self" && (
-                        <label>
-                          Nombre
-                          <input
-                            value={editing.medical_name || ""}
-                            placeholder="Luis, Ana…"
-                            onChange={(e) => setEditing({ ...editing, medical_name: e.target.value })}
-                          />
-                        </label>
-                      )}
-                      <label>
-                        Lugar
-                        <input
-                          value={editing.medical_place || ""}
-                          placeholder="Hospital, clínica, consulta…"
-                          onChange={(e) => setEditing({ ...editing, medical_place: e.target.value })}
-                        />
-                      </label>
-                      <label>
-                        Notas
-                        <textarea
-                          value={editing.medical_notes || ""}
-                          placeholder="Llevar analíticas, ayuno, documentación…"
-                          onChange={(e) => setEditing({ ...editing, medical_notes: e.target.value })}
-                        />
-                      </label>
-                    </>
-                  )}
-                  {editing.agenda_type === "familiar" && (
-                    <>
-                      <label>
-                        Tipo de evento
-                        <select
-                          value={editing.family_kind || "otro"}
-                          onChange={(e) => setEditing({ ...editing, family_kind: e.target.value })}
-                        >
-                          {FAMILY_KIND.map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        De quién es
-                        <select
-                          value={editing.family_for || "self"}
-                          onChange={(e) => setEditing({ ...editing, family_for: e.target.value })}
-                        >
-                          {CELEBRATION_FOR.map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </select>
-                      </label>
-                      {editing.family_for !== "self" && (
-                        <label>
-                          Nombre
-                          <input
-                            value={editing.family_name || ""}
-                            placeholder="Ana, Luis…"
-                            onChange={(e) => setEditing({ ...editing, family_name: e.target.value })}
-                          />
-                        </label>
-                      )}
-                      <label>
-                        Lugar
-                        <input
-                          value={editing.family_place || ""}
-                          placeholder="Casa, restaurante, pueblo…"
-                          onChange={(e) => setEditing({ ...editing, family_place: e.target.value })}
-                        />
-                      </label>
-                      <label>
-                        Notas
-                        <textarea
-                          value={editing.family_notes || ""}
-                          placeholder="Regalo, quién va, qué llevar…"
-                          onChange={(e) => setEditing({ ...editing, family_notes: e.target.value })}
-                        />
-                      </label>
-                    </>
-                  )}
-                  {editing.agenda_type === "ocio" && (
-                    <>
-                      <label>
-                        Tipo de plan
-                        <select
-                          value={editing.leisure_kind || "otro"}
-                          onChange={(e) => setEditing({ ...editing, leisure_kind: e.target.value })}
-                        >
-                          {LEISURE_KIND.map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        Con quién
-                        <select
-                          value={editing.leisure_with || "solo"}
-                          onChange={(e) => setEditing({ ...editing, leisure_with: e.target.value })}
-                        >
-                          {LEISURE_WITH.map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </select>
-                      </label>
-                      {(editing.leisure_with === "friends" || editing.leisure_with === "other") && (
-                        <label>
-                          Nombre
-                          <input
-                            value={editing.leisure_name || ""}
-                            placeholder="Ana, Luis…"
-                            onChange={(e) => setEditing({ ...editing, leisure_name: e.target.value })}
-                          />
-                        </label>
-                      )}
-                      <label>
-                        Lugar
-                        <input
-                          value={editing.leisure_place || ""}
-                          placeholder="Cine, bar, estadio…"
-                          onChange={(e) => setEditing({ ...editing, leisure_place: e.target.value })}
-                        />
-                      </label>
-                      <label>
-                        Notas
-                        <textarea
-                          value={editing.leisure_notes || ""}
-                          placeholder="Entradas, reserva, qué llevar…"
-                          onChange={(e) => setEditing({ ...editing, leisure_notes: e.target.value })}
-                        />
-                      </label>
-                    </>
-                  )}
-                  {editing.agenda_type === "recordatorio" && (
-                    <>
-                      <label>
-                        Tipo
-                        <select
-                          value={editing.reminder_kind || "otro"}
-                          onChange={(e) => setEditing({ ...editing, reminder_kind: e.target.value })}
-                        >
-                          {REMINDER_KIND.map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        Lugar o gestoría
-                        <input
-                          value={editing.reminder_place || ""}
-                          placeholder="ITV, aseguradora, banco…"
-                          onChange={(e) => setEditing({ ...editing, reminder_place: e.target.value })}
-                        />
-                      </label>
-                      <label>
-                        Notas
-                        <textarea
-                          value={editing.reminder_notes || ""}
-                          placeholder="Documentación, matrícula, referencia…"
-                          onChange={(e) => setEditing({ ...editing, reminder_notes: e.target.value })}
-                        />
-                      </label>
-                    </>
-                  )}
-                </>
-              )}
-              {editing.module === "casa" && (
-                <>
-                  <label>
-                    Tipo en Casa
-                    <select
-                      value={editing.casa_kind || "otro"}
-                      onChange={(e) => {
-                        const casa_kind = e.target.value;
-                        setEditing({
-                          ...editing,
-                          casa_kind,
-                          supply_kind: casa_kind === "suministro" ? editing.supply_kind || "luz" : null,
-                        });
-                      }}
-                    >
-                      {CASA_KIND.map(([value, label]) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                  </label>
-                  {editing.casa_kind === "suministro" && (
-                    <label>
-                      Suministro
-                      <select
-                        value={editing.supply_kind || "otro"}
-                        onChange={(e) => setEditing({ ...editing, supply_kind: e.target.value })}
-                      >
-                        {SUPPLY_KIND.map(([value, label]) => (
-                          <option key={value} value={value}>{label}</option>
-                        ))}
-                      </select>
-                    </label>
-                  )}
-                  <label>
-                    Dónde
-                    <input
-                      value={editing.casa_place || ""}
-                      placeholder={editing.casa_kind === "inventario" ? "Despensa, garaje…" : editing.casa_kind === "suministro" ? "Iberdrola, compañía…" : "Mercadona, cocina…"}
-                      onChange={(e) => setEditing({ ...editing, casa_place: e.target.value })}
-                    />
-                  </label>
-                  <label>
-                    Notas
-                    <textarea
-                      value={editing.casa_notes || ""}
-                      placeholder={editing.casa_kind === "inventario" ? "Cantidad, referencia…" : "Marca, detalle…"}
-                      onChange={(e) => setEditing({ ...editing, casa_notes: e.target.value })}
-                    />
-                  </label>
-                </>
-              )}
-              <div className="actions">
-                <button type="button" onClick={() => saveEdit()}>Guardar cambio</button>
-                <button type="button" className="secondary" onClick={() => setEditing(null)}>Cancelar</button>
-              </div>
-            </>
+              <ItemEditForm
+                editing={editing}
+                setEditing={setEditing}
+                saveEdit={saveEdit}
+                onCancel={() => setEditing(null)}
+                showRepeat={!isSeriesEdit(editing)}
+              />
             )
+          ) : seriesId === item.id ? (
+            <p className="private">Estás editando esta serie en el panel de arriba.</p>
           ) : (
             <>
               {item.starts_at && (
@@ -1882,7 +1579,14 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, 
                           <Icon name="editar" /> {item.status === "done" ? "Reabrir" : "Hecho"}
                         </button>
                       )}
-                      <button type="button" className="link" onClick={() => startEdit(item)}><Icon name="editar" /> Cambiar</button>
+                      <button type="button" className="link" onClick={() => startEdit(item)}>
+                        <Icon name="editar" /> {item.repeats ? "Cambiar serie" : "Cambiar"}
+                      </button>
+                      {item.repeats && item.occurrenceKey && startEditOneDay && (
+                        <button type="button" className="link secondary" onClick={() => startEditOneDay(item)}>
+                          Solo este día
+                        </button>
+                      )}
                       <button type="button" className="link danger" onClick={() => askRemove(item)}><Icon name="borrar" /> Borrar</button>
                     </span>
                   </>
@@ -1979,13 +1683,12 @@ function isEditingRow(item, editing) {
   if (editing.module === "habitos" && editing.habit_role !== "log" && isHabitRoutine(editing)) {
     return false;
   }
+  if (isSeriesEdit(editing)) return false;
   if (editing.editScope === "one") {
     return dayKey(item.starts_at) === editing.occurrenceDay;
   }
   if (editing.editScope === "all") {
-    if (!item.occurrenceKey) return true;
-    if (editing.anchorOccurrenceKey) return item.occurrenceKey === editing.anchorOccurrenceKey;
-    return false;
+    return !item.occurrenceKey;
   }
   return !item.occurrenceKey;
 }
@@ -2103,11 +1806,6 @@ function yearlyOccurrences(item, from, to) {
     year += 1;
   }
   return results;
-}
-
-function dayLabel(value) {
-  const raw = new Date(value).toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
-  return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
 function registeredLabel(value) {

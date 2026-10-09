@@ -748,3 +748,6 @@ Panel Cambiar hábito: radios de Repetición desalineados (input width 100% glob
 
 9 de octubre de 2026, 14:30
 Modesto: tareas «cada día» al Cambiar no permitían cambiar periodicidad. El editor no mostraba repetición ni enviaba repeats en PATCH (solo hábitos). RepeatEditFields.jsx + taskRepeatEditorState en repeats.js; saveEdit envía repeats al editar toda la serie. Despliegue web.
+
+9 de octubre de 2026, 14:45
+Modesto: edición repetidas incoherente (cambios no en todos los días). Modelo aclarado: una fila en BD, muchas fechas en pantalla. Cambiar serie → panel arriba (sin diálogo confuso); canonical item; repeats en PATCH; excepciones se borran al guardar serie; «Solo este día» aparte. ItemEditForm.jsx, seriesEdit.js. Despliegue web.
