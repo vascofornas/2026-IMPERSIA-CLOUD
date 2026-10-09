@@ -51,4 +51,12 @@ const draw = {
   editar: <><path {...common} d="M12 20h9" /><path {...common} d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" /></>,
   borrar: <><path {...common} d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path {...common} d="M10 11v6M14 11v6" /></>,
   aviso: <><path {...common} d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path {...common} d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></>,
+  repetir: (
+    <>
+      <path {...common} d="M17 2l3 3-3 3" />
+      <path {...common} d="M20 5H9a4 4 0 0 0-4 4v1" />
+      <path {...common} d="M7 22l-3-3 3-3" />
+      <path {...common} d="M4 19h11a4 4 0 0 0 4-4v-1" />
+    </>
+  ),
 };

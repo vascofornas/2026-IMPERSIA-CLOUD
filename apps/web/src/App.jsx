@@ -24,7 +24,7 @@ import HabitosBoard, { HoyBienestar } from "./HabitosBoard.jsx";
 import { hasHoyBienestarContent, isHabitRoutine } from "./habitos.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
 import { trackScreen } from "./events.js";
-import { repeatLabel } from "./repeats.js";
+import { collapseRepeatingSeries, nextOccurrenceWhenLabel, repeatLabel } from "./repeats.js";
 import { AXES, findModule, labelOf } from "./structure.js";
 
 const API = "https://api.impersia.cloud";
@@ -488,7 +488,12 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
     ...expandItems(datedItems, todayStart, endOfDay(todayStart)).filter((item) => !isHabitRoutine(item)),
     ...googleDated.filter((item) => dayKey(item.starts_at) === dayKey(todayStart)),
   ].sort(byDate);
-  const laterItems = [...expandItems(datedItems, tomorrow, horizon), ...googleDated.filter((item) => dayKey(item.starts_at) > dayKey(todayStart))].sort(byDate);
+  const laterItems = collapseRepeatingSeries(
+    [
+      ...expandItems(datedItems, tomorrow, horizon).filter((item) => !isHabitRoutine(item)),
+      ...googleDated.filter((item) => dayKey(item.starts_at) > dayKey(todayStart)),
+    ].sort(byDate),
+  );
 
   return (
     <div className="shell">
@@ -587,7 +592,16 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
                 {laterItems.length > 0 && <span className="hoy-count">{laterItems.length}</span>}
               </h2>
               {laterItems.length ? (
-                <ItemList items={laterItems} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
+                <ItemList
+                  items={laterItems}
+                  editing={editing}
+                  setEditing={setEditing}
+                  startEdit={startEdit}
+                  saveEdit={saveEdit}
+                  askRemove={askRemove}
+                  onToggleStatus={toggleStatus}
+                  repeatSeries
+                />
               ) : (
                 <p className="hoy-empty">Sin fechas en los próximos sesenta días.</p>
               )}
@@ -1406,7 +1420,7 @@ function ShoppingChecklist({
   );
 }
 
-function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, onToggleStatus }) {
+function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, onToggleStatus, repeatSeries }) {
   return (
     <div className="cards">
       {items.map((item) => (
@@ -1738,7 +1752,18 @@ function ItemList({ items, editing, setEditing, startEdit, saveEdit, askRemove, 
             )
           ) : (
             <>
-              {item.starts_at && <p className="when">{whenLabel(item)}</p>}
+              {item.starts_at && (
+                <p className="when">
+                  {repeatSeries && item.repeats ? nextOccurrenceWhenLabel(item) : whenLabel(item)}
+                </p>
+              )}
+              {repeatSeries && item.repeats && (
+                <p className="repeat-line">
+                  <span className="tag repeat">
+                    <Icon name="repetir" /> {repeatLabel(item.repeats, item.starts_at)}
+                  </span>
+                </p>
+              )}
               <p className="title">{item.title}</p>
               {isMedicalItem(item) && (
                 <p className="medical-line">

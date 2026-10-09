@@ -733,3 +733,6 @@ Modesto: entradas de resfriado fueron a Diario (regla por defecto). Criterio act
 
 9 de octubre de 2026, 13:15
 Refino pantalla Hoy: cabecera (kicker + fecha + lead), zonas en tarjeta (Bienestar / Para hoy / Próximos), contadores, vacíos claros. Bienestar en Hoy = rutinas que tocan hoy + sueño (sin rejilla 7 días; enlace Ver todo). Despliegue web.
+
+9 de octubre de 2026, 13:25
+Hoy → Próximos: series repetidas (p. ej. basura diaria) una sola fila; icono repetir + «Cada día»; «Próximo: fecha». Rutinas habitos fuera de Próximos. Despliegue web.

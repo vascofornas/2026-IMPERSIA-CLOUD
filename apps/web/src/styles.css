@@ -1151,6 +1151,21 @@ a.connect {
   resize: vertical;
 }
 
+.tag.repeat {
+  --chip: var(--muted);
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.repeat-line {
+  margin: 0 0 6px;
+}
+
+.tag.repeat .icon {
+  width: 14px;
+  height: 14px;
+}
+
 .tag.alert {
   --chip: var(--muted);
   background: color-mix(in srgb, var(--muted) 10%, var(--card));

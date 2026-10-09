@@ -34,3 +34,31 @@ export function repeatLabel(repeats, startsAt) {
   }
   return "";
 }
+
+/** Una fila por serie repetida (la primera aparición en la lista ya ordenada). */
+export function collapseRepeatingSeries(sortedItems) {
+  const seen = new Set();
+  const out = [];
+  for (const item of sortedItems) {
+    if (!item.repeats) {
+      out.push(item);
+      continue;
+    }
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    const { occurrenceKey, ...row } = item;
+    out.push(row);
+  }
+  return out;
+}
+
+export function nextOccurrenceWhenLabel(item) {
+  if (!item?.starts_at) return repeatLabel(item.repeats, item.starts_at);
+  const date = new Date(item.starts_at);
+  const day = date.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" });
+  if (item.time_known) {
+    const time = date.toLocaleTimeString("es-ES", { timeStyle: "short" });
+    return `Próximo: ${day}, ${time}`;
+  }
+  return `Próximo: ${day}`;
+}
