@@ -26,6 +26,7 @@ Piezas enlazadas con `travel_trip_id` al viaje padre (ítem `trip`).
 3. La ficha muestra siempre cinco apartados: **Reservas**, **Itinerario y por hacer**, **Experiencias**, **Equipaje** y **Notas**.
 4. Cada apartado tiene su propio botón «Añadir» y un ejemplo que explica qué se guarda allí. No hay que elegir el tipo en una lista.
 5. La lista lateral de viajes solo aparece cuando hay más de uno; con un único viaje se muestra directamente su ficha.
+6. **Editar viaje** cambia título, destino, ida y vuelta. **Cambiar** en cada contenido permite corregir su título, lugar o proveedor y moverlo a otro apartado.
 
 ## Desvíos
 

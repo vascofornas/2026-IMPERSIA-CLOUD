@@ -2840,6 +2840,35 @@ button.link.secondary {
   min-width: 0;
 }
 
+.viajes-piece-place {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.viajes-edit-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--viajes) 35%, var(--line));
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.viajes-edit-form h4,
+.viajes-edit-form .viajes-form-actions {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.viajes-edit-dates {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .viajes-form-title {
   margin: 0;
   font-size: 1rem;
@@ -2873,5 +2902,10 @@ button.link.secondary {
 
   .viajes-role-block:last-child {
     grid-column: auto;
+  }
+
+  .viajes-edit-form,
+  .viajes-edit-dates {
+    grid-template-columns: 1fr;
   }
 }

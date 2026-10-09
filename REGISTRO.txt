@@ -817,3 +817,6 @@ Viajes: corregido el error 500 al pulsar «Crear». El INSERT de items tenía un
 
 9 de octubre de 2026, 22:00
 Viajes: ficha reorganizada para que se entienda cómo usarla. Con un solo viaje ya no se repite en una lista lateral; aparecen siempre Reservas, Itinerario y por hacer, Experiencias, Equipaje y Notas, cada apartado con explicación, ejemplo y botón propio. ViajesBoard.jsx, styles.css y docs/08-viajes.md. Build web correcto y despliegue web.
+
+9 de octubre de 2026, 22:15
+Viajes: añadida edición específica. «Editar viaje» cambia título, destino, ida y vuelta; «Cambiar» en reservas, itinerario, experiencias, equipaje y notas corrige título y lugar/proveedor o mueve el contenido de apartado. Al crear contenido también se puede indicar lugar o proveedor. main.py, App.jsx, ViajesBoard.jsx, styles.css y docs/08-viajes.md. Build web y validación Python correctos; despliegue API y web.

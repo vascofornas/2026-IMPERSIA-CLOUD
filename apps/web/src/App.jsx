@@ -380,6 +380,9 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
           casa_place: draft.module === "casa" ? draft.casa_place || null : null,
           casa_notes: draft.module === "casa" ? draft.casa_notes || null : null,
           supply_kind: draft.module === "casa" && draft.casa_kind === "suministro" ? draft.supply_kind || "otro" : null,
+          travel_role: draft.module === "viajes" ? draft.travel_role || "nota" : null,
+          travel_place: draft.module === "viajes" ? draft.travel_place || null : null,
+          travel_end: draft.module === "viajes" ? draft.travel_end || null : null,
         };
         if (draft.module === "habitos") {
           patch.habit_role = draft.habit_role || "routine";
@@ -767,7 +770,10 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
                 setError={setError}
                 onItemCreated={onTravelItemCreated}
                 onToggleStatus={toggleStatus}
+                editing={editing}
+                setEditing={setEditing}
                 startEdit={startEdit}
+                saveEdit={saveEdit}
                 askRemove={askRemove}
               />
             </div>

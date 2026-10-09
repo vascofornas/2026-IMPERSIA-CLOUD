@@ -233,6 +233,9 @@ class ItemPatch(BaseModel):
     habit_role: str | None = None
     habit_kind: str | None = None
     habit_notes: str | None = None
+    travel_role: str | None = None
+    travel_place: str | None = None
+    travel_end: str | None = None
     repeats: str | None = None
 
 
@@ -1253,6 +1256,16 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
             repeats = before["repeats"]
             if "repeats" in body.model_fields_set:
                 repeats = body.repeats or None
+            if body.module == "viajes":
+                travel_role = (body.travel_role or before.get("travel_role") or "nota").strip().lower()
+                if travel_role not in travel.TRAVEL_ROLES:
+                    raise HTTPException(status_code=422, detail="Tipo de contenido de viaje no válido")
+                travel_place = (body.travel_place or "").strip() or None
+                travel_end = _parse_travel_end(body.travel_end)
+            else:
+                travel_role = None
+                travel_place = None
+                travel_end = None
             cur.execute(
                 f"""
                 UPDATE items
@@ -1263,7 +1276,8 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     leisure_with = %s, leisure_name = %s, leisure_place = %s, leisure_notes = %s,
                     reminder_kind = %s, reminder_place = %s, reminder_notes = %s,
                     casa_kind = %s, casa_place = %s, casa_notes = %s, supply_kind = %s,
-                    habit_role = %s, habit_kind = %s, habit_notes = %s
+                    habit_role = %s, habit_kind = %s, habit_notes = %s,
+                    travel_role = %s, travel_place = %s, travel_end = %s
                 WHERE id = %s AND user_id = %s
                 RETURNING {ITEM_SELECT}
                 """,
@@ -1301,6 +1315,9 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                     habit["habit_role"],
                     habit["habit_kind"],
                     habit["habit_notes"],
+                    travel_role,
+                    travel_place,
+                    travel_end,
                     item_id,
                     user_id,
                 ),

@@ -7,6 +7,7 @@ import {
   travelTrips,
   tripIsUpcoming,
   tripRangeLabel,
+  TRAVEL_ROLE_OPTIONS,
 } from "./travel.js";
 
 const TRAVEL_SECTIONS = [
@@ -123,16 +124,22 @@ function AddPieceForm({ tripId, role, addLabel, placeholder, createPiece, onCrea
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [title, setTitle] = useState("");
+  const [place, setPlace] = useState("");
 
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     setError("");
     try {
-      const item = await createPiece(tripId, { travel_role: role, title: title.trim() });
+      const item = await createPiece(tripId, {
+        travel_role: role,
+        title: title.trim(),
+        travel_place: place.trim() || null,
+      });
       onCreated(item);
       setOpen(false);
       setTitle("");
+      setPlace("");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -154,12 +161,80 @@ function AddPieceForm({ tripId, role, addLabel, placeholder, createPiece, onCrea
         Qué quieres guardar
         <input type="text" required autoFocus placeholder={placeholder} value={title} onChange={(e) => setTitle(e.target.value)} />
       </label>
+      <label className="viajes-piece-place">
+        Lugar o proveedor (opcional)
+        <input type="text" placeholder="Ej.: Taüll, Renfe, Hotel…" value={place} onChange={(e) => setPlace(e.target.value)} />
+      </label>
       <button type="submit" className="primary" disabled={busy}>
         Guardar
       </button>
       <button type="button" className="secondary" onClick={() => setOpen(false)} disabled={busy}>
         Cancelar
       </button>
+    </form>
+  );
+}
+
+function dateInputValue(value) {
+  return typeof value === "string" ? value.slice(0, 10) : "";
+}
+
+function TravelEditForm({ editing, setEditing, saveEdit }) {
+  const isTrip = editing.travel_role === "trip";
+
+  function submit(e) {
+    e.preventDefault();
+    saveEdit();
+  }
+
+  return (
+    <form className="viajes-edit-form" onSubmit={submit}>
+      <h4>{isTrip ? "Editar viaje" : "Editar contenido"}</h4>
+      {!isTrip && (
+        <label>
+          Apartado
+          <select value={editing.travel_role || "nota"} onChange={(e) => setEditing({ ...editing, travel_role: e.target.value })}>
+            {TRAVEL_ROLE_OPTIONS.map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </label>
+      )}
+      <label>
+        Título
+        <input required value={editing.title || ""} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+      </label>
+      <label>
+        {isTrip ? "Destino (opcional)" : "Lugar o proveedor (opcional)"}
+        <input
+          value={editing.travel_place || ""}
+          onChange={(e) => setEditing({ ...editing, travel_place: e.target.value })}
+        />
+      </label>
+      {isTrip && (
+        <div className="viajes-edit-dates">
+          <label>
+            Ida (opcional)
+            <input
+              type="date"
+              value={dateInputValue(editing.starts_at)}
+              onChange={(e) => setEditing({ ...editing, starts_at: e.target.value || null, time_known: false })}
+            />
+          </label>
+          <label>
+            Vuelta (opcional)
+            <input
+              type="date"
+              value={dateInputValue(editing.travel_end)}
+              onChange={(e) => setEditing({ ...editing, travel_end: e.target.value || null })}
+            />
+          </label>
+        </div>
+      )}
+      <div className="viajes-form-actions">
+        <button type="submit" className="primary">Guardar cambios</button>
+        <button type="button" className="secondary" onClick={() => setEditing(null)}>Cancelar</button>
+      </div>
     </form>
   );
 }
@@ -194,7 +269,19 @@ function PieceRow({ item, onToggleStatus, startEdit, askRemove }) {
   );
 }
 
-function TripDetail({ trip, items, createPiece, onPieceCreated, setError, onToggleStatus, startEdit, askRemove }) {
+function TripDetail({
+  trip,
+  items,
+  createPiece,
+  onPieceCreated,
+  setError,
+  onToggleStatus,
+  editing,
+  setEditing,
+  startEdit,
+  saveEdit,
+  askRemove,
+}) {
   const pieces = piecesForTrip(items, trip.id);
   const pending = pieces.filter((p) => CHECKLIST_ROLES.has(p.travel_role) && p.status !== "done").length;
 
@@ -213,7 +300,13 @@ function TripDetail({ trip, items, createPiece, onPieceCreated, setError, onTogg
             )}
           </p>
         </div>
+        <button type="button" className="link" onClick={() => startEdit(trip)}>
+          <Icon name="editar" /> Editar viaje
+        </button>
       </header>
+      {editing?.module === "viajes" && (editing.id === trip.id || pieces.some((piece) => piece.id === editing.id)) && (
+        <TravelEditForm editing={editing} setEditing={setEditing} saveEdit={saveEdit} />
+      )}
       <p className="private viajes-detail-help">Guarda cada cosa en su apartado. Pulsa «Añadir» en la sección que necesites.</p>
       <div className="viajes-sections">
         {TRAVEL_SECTIONS.map((section) => {
@@ -265,7 +358,10 @@ export default function ViajesBoard({
   setError,
   onItemCreated,
   onToggleStatus,
+  editing,
+  setEditing,
   startEdit,
+  saveEdit,
   askRemove,
 }) {
   const trips = travelTrips(items);
@@ -327,7 +423,10 @@ export default function ViajesBoard({
               onPieceCreated={handleCreated}
               setError={setError}
               onToggleStatus={onToggleStatus}
+              editing={editing}
+              setEditing={setEditing}
               startEdit={startEdit}
+              saveEdit={saveEdit}
               askRemove={askRemove}
             />
           ) : (
