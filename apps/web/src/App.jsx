@@ -21,6 +21,7 @@ import {
 import { CASA_KIND, casaEventLine, groupCasaItems, isCasaItem, SUPPLY_KIND } from "./casa.js";
 import HabitEditPanel, { editorFromRepeats, HabitLogEditPanel } from "./HabitEditPanel.jsx";
 import HabitosBoard, { HoyBienestar } from "./HabitosBoard.jsx";
+import ViajesBoard from "./ViajesBoard.jsx";
 import { pendingControls } from "./healthControls.js";
 import { hasHoyBienestarContent, isHabitRoutine } from "./habitos.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
@@ -275,6 +276,19 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
       method: "POST",
       body: JSON.stringify(body),
     });
+  }
+
+  async function createTravelTrip(body) {
+    return call("/travel-trips", { method: "POST", body: JSON.stringify(body) });
+  }
+
+  async function createTravelPiece(tripId, body) {
+    return call(`/travel-trips/${tripId}/pieces`, { method: "POST", body: JSON.stringify(body) });
+  }
+
+  function onTravelItemCreated(item) {
+    setItems((prev) => [item, ...prev.filter((row) => row.id !== item.id)]);
+    setNotice("Guardado en Viajes.");
   }
 
   function onHealthControlCreated(control) {
@@ -744,6 +758,19 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
               askRemove={askRemove}
               onToggleStatus={toggleStatus}
             />
+          ) : current.id === "viajes" ? (
+            <div className="module-viajes">
+              <ViajesBoard
+                items={items}
+                createTrip={createTravelTrip}
+                createPiece={createTravelPiece}
+                setError={setError}
+                onItemCreated={onTravelItemCreated}
+                onToggleStatus={toggleStatus}
+                startEdit={startEdit}
+                askRemove={askRemove}
+              />
+            </div>
           ) : current.id === "habitos" ? (
             <div className="module-habitos">
               <HabitosBoard

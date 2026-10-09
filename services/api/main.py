@@ -23,6 +23,7 @@ from admin_llm import router as admin_llm_router
 import archive
 import dedup
 import health_controls
+import travel
 from classify import (
     HABIT_KINDS,
     HABIT_ROLES,
@@ -85,6 +86,7 @@ ITEM_SELECT = """
     reminder_kind, reminder_place, reminder_notes,
     casa_kind, casa_place, casa_notes, supply_kind,
     habit_role, habit_kind, habit_notes, health_control_id,
+    travel_role, travel_trip_id, travel_place, travel_end,
     shopping_list_id, status, privacy, created_at
 """
 
@@ -240,6 +242,19 @@ class HealthControlIn(BaseModel):
     repeats: str = "daily"
     reminder_time: str = "08:00"
     alert_minutes_before: int | None = None
+
+
+class TravelTripIn(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    travel_place: str | None = None
+    starts_at: str | None = None
+    travel_end: str | None = None
+
+
+class TravelPieceIn(BaseModel):
+    travel_role: str
+    title: str = Field(min_length=1, max_length=200)
+    travel_place: str | None = None
 
 
 class HealthReadingIn(BaseModel):
@@ -657,7 +672,48 @@ def _public_shopping_list(row: dict) -> dict:
     }
 
 
+def _parse_travel_date(value: str | None):
+    if not value or not str(value).strip():
+        return None
+    raw = str(value).strip()[:10]
+    try:
+        from datetime import date as date_cls
+
+        parts = raw.split("-")
+        if len(parts) == 3:
+            d = date_cls(int(parts[0]), int(parts[1]), int(parts[2]))
+            return datetime(d.year, d.month, d.day, tzinfo=ZoneInfo("Europe/Madrid"))
+    except (ValueError, TypeError):
+        return None
+    return None
+
+
+def _parse_travel_end(value: str | None):
+    if not value or not str(value).strip():
+        return None
+    raw = str(value).strip()[:10]
+    try:
+        from datetime import date as date_cls
+
+        parts = raw.split("-")
+        if len(parts) == 3:
+            return date_cls(int(parts[0]), int(parts[1]), int(parts[2]))
+    except (ValueError, TypeError):
+        return None
+    return None
+
+
 def _insert_item(cur, user_id: str, capture_id: str, suggestion: dict, *, title: str | None = None, shopping_list_id: str | None = None, casa_place: str | None = None) -> dict:
+    sug = dict(suggestion)
+    if sug.get("module") == "viajes" and sug.get("travel_role") != "trip":
+        tid = travel.resolve_trip_id(cur, user_id, sug)
+        if tid:
+            sug["travel_trip_id"] = tid
+    travel_end = sug.get("travel_end")
+    if travel_end is not None and hasattr(travel_end, "isoformat") and not isinstance(travel_end, str):
+        pass
+    elif isinstance(travel_end, str):
+        travel_end = _parse_travel_end(travel_end)
     cur.execute(
         f"""
         INSERT INTO items
@@ -668,48 +724,53 @@ def _insert_item(cur, user_id: str, capture_id: str, suggestion: dict, *, title:
              reminder_kind, reminder_place, reminder_notes,
              casa_kind, casa_place, casa_notes, supply_kind,
              habit_role, habit_kind, habit_notes,
+             travel_role, travel_trip_id, travel_place, travel_end,
              shopping_list_id, privacy, archived_source)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private', %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private', %s)
         RETURNING {ITEM_SELECT}
         """,
         (
             user_id,
             capture_id,
-            suggestion["kind"],
-            suggestion["axis"],
-            suggestion["module"],
-            title or suggestion["title"],
-            suggestion["starts_at"],
-            suggestion.get("repeats"),
-            suggestion["time_known"],
-            suggestion.get("alert_minutes_before"),
-            suggestion.get("agenda_type"),
-            suggestion.get("medical_for"),
-            suggestion.get("medical_name"),
-            suggestion.get("medical_place"),
-            suggestion.get("medical_notes"),
-            suggestion.get("family_kind"),
-            suggestion.get("family_for"),
-            suggestion.get("family_name"),
-            suggestion.get("family_place"),
-            suggestion.get("family_notes"),
-            suggestion.get("leisure_kind"),
-            suggestion.get("leisure_with"),
-            suggestion.get("leisure_name"),
-            suggestion.get("leisure_place"),
-            suggestion.get("leisure_notes"),
-            suggestion.get("reminder_kind"),
-            suggestion.get("reminder_place"),
-            suggestion.get("reminder_notes"),
-            suggestion.get("casa_kind"),
-            casa_place if casa_place is not None else suggestion.get("casa_place"),
-            suggestion.get("casa_notes"),
-            suggestion.get("supply_kind"),
-            suggestion.get("habit_role"),
-            suggestion.get("habit_kind"),
-            suggestion.get("habit_notes"),
+            sug["kind"],
+            sug["axis"],
+            sug["module"],
+            title or sug["title"],
+            sug["starts_at"],
+            sug.get("repeats"),
+            sug["time_known"],
+            sug.get("alert_minutes_before"),
+            sug.get("agenda_type"),
+            sug.get("medical_for"),
+            sug.get("medical_name"),
+            sug.get("medical_place"),
+            sug.get("medical_notes"),
+            sug.get("family_kind"),
+            sug.get("family_for"),
+            sug.get("family_name"),
+            sug.get("family_place"),
+            sug.get("family_notes"),
+            sug.get("leisure_kind"),
+            sug.get("leisure_with"),
+            sug.get("leisure_name"),
+            sug.get("leisure_place"),
+            sug.get("leisure_notes"),
+            sug.get("reminder_kind"),
+            sug.get("reminder_place"),
+            sug.get("reminder_notes"),
+            sug.get("casa_kind"),
+            casa_place if casa_place is not None else sug.get("casa_place"),
+            sug.get("casa_notes"),
+            sug.get("supply_kind"),
+            sug.get("habit_role"),
+            sug.get("habit_kind"),
+            sug.get("habit_notes"),
+            sug.get("travel_role"),
+            sug.get("travel_trip_id"),
+            sug.get("travel_place"),
+            travel_end,
             shopping_list_id,
-            suggestion.get("source"),
+            sug.get("source"),
         ),
     )
     return cur.fetchone()
@@ -953,6 +1014,68 @@ def create_health_reading(control_id: str, body: HealthReadingIn, request: Reque
             item = _fetch_item(cur, str(row["id"]), user_id)
         conn.commit()
     return item
+
+
+def _viajes_suggestion(**fields) -> dict:
+    return {
+        "kind": "event",
+        "axis": "personal",
+        "module": "viajes",
+        "time_known": False,
+        "repeats": None,
+        "alert_minutes_before": None,
+        "source": "viajes_ui",
+        **fields,
+    }
+
+
+@app.post("/travel-trips", status_code=201)
+def create_travel_trip(body: TravelTripIn, request: Request):
+    user_id = current_user(request)
+    starts = _parse_travel_date(body.starts_at)
+    with db() as conn:
+        with conn.cursor() as cur:
+            suggestion = _viajes_suggestion(
+                title=body.title.strip(),
+                travel_role="trip",
+                travel_place=(body.travel_place or "").strip() or None,
+                starts_at=starts,
+                travel_end=_parse_travel_end(body.travel_end),
+                travel_trip_id=None,
+            )
+            row = _insert_item(cur, user_id, None, suggestion)
+        conn.commit()
+    return _public_item(row)
+
+
+@app.post("/travel-trips/{trip_id}/pieces", status_code=201)
+def create_travel_piece(trip_id: str, body: TravelPieceIn, request: Request):
+    user_id = current_user(request)
+    role = (body.travel_role or "nota").strip().lower()
+    if role not in travel.TRAVEL_ROLES or role == "trip":
+        raise HTTPException(status_code=422, detail="Tipo de pieza no válido")
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id FROM items
+                WHERE id = %s AND user_id = %s AND module = 'viajes' AND travel_role = 'trip'
+                """,
+                (trip_id, user_id),
+            )
+            if not cur.fetchone():
+                raise HTTPException(status_code=404, detail="Viaje no encontrado")
+            suggestion = _viajes_suggestion(
+                title=body.title.strip(),
+                travel_role=role,
+                travel_place=(body.travel_place or "").strip() or None,
+                travel_trip_id=trip_id,
+                starts_at=None,
+                travel_end=None,
+            )
+            row = _insert_item(cur, user_id, None, suggestion)
+        conn.commit()
+    return _public_item(row)
 
 
 @app.post("/captures/{capture_id}/confirm", status_code=201)
@@ -1499,6 +1622,7 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         "habit_kind": row.get("habit_kind"),
         "habit_notes": row.get("habit_notes"),
         "health_control_id": str(row["health_control_id"]) if row.get("health_control_id") else None,
+        **travel.public_travel_fields(row),
         "shopping_list_id": str(row["shopping_list_id"]) if row.get("shopping_list_id") else None,
         "status": row.get("status") or "open",
         "privacy": row["privacy"],

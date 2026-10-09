@@ -251,9 +251,17 @@ def classify(text: str) -> dict:
         repeats = None
     elif module == "habitos" and not repeats and _looks_like_habit_goal(low):
         repeats = "daily"
+    travel_fields = {}
+    title = entry_title(raw)
+    if module == "viajes":
+        from travel import travel_meta
+
+        travel_fields = travel_meta(raw, low)
+        if travel_fields.get("title_override"):
+            title = travel_fields["title_override"]
     return _classify_result(
         module,
-        entry_title(raw),
+        title,
         starts,
         time_known,
         repeats,
@@ -265,6 +273,7 @@ def classify(text: str) -> dict:
         reminder_fields={},
         casa_fields={},
         habit_fields=habit_fields,
+        travel_fields=travel_fields,
     )
 
 
@@ -283,8 +292,10 @@ def _classify_result(
     casa_fields: dict,
     habit_fields: dict | None = None,
     health_control: dict | None = None,
+    travel_fields: dict | None = None,
 ) -> dict:
     habit = habit_fields or {}
+    travel = travel_fields or {}
     out = {
         "axis": MODULES[module],
         "module": module,
@@ -319,6 +330,10 @@ def _classify_result(
         "habit_role": habit.get("habit_role"),
         "habit_kind": habit.get("habit_kind"),
         "habit_notes": habit.get("habit_notes"),
+        "travel_role": travel.get("travel_role"),
+        "travel_place": travel.get("travel_place"),
+        "travel_end": travel.get("travel_end"),
+        "travel_trip_id": travel.get("travel_trip_id"),
         "source": "rules",
     }
     if health_control:

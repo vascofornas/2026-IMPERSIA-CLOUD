@@ -805,3 +805,6 @@ Cierre documental eje A Bienestar v1 producción: docs/06-pruebas-eje-a.md (Agen
 
 9 de octubre de 2026, 21:10
 Entrada ya no archiva lecturas de controles (tensión, glucosa, peso, medicación, sueño): 422 con mensaje a Bienestar → Controles. classify, archive, main; textos Registro. Despliegue API + web.
+
+9 de octubre de 2026, 21:30
+Viajes v1: travel_role (trip, reserva, plan, equipaje, experiencia, nota), travel_trip_id, migración 017, travel.py, API /travel-trips, ViajesBoard, classify/archive. docs/08-viajes.md. Despliegue API + web + 017.

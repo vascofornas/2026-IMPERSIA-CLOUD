@@ -271,6 +271,12 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
         _apply_habit_fields(result, raw)
         return result
 
+    if result.get("module") == "viajes":
+        _clear_agenda_fields(result)
+        _clear_casa_fields(result)
+        _apply_travel_fields(result, raw)
+        return result
+
     if _is_personal_agenda_reminder(low) and result.get("module") == "agenda":
         result["agenda_type"] = "recordatorio"
         if not result.get("reminder_kind"):
@@ -403,6 +409,29 @@ def _apply_habit_fields(result: dict, raw: str) -> None:
     result["habit_kind"] = kind if kind in HABIT_KINDS else "otro"
     result["habit_notes"] = meta.get("habit_notes")
     if result["habit_role"] == "log":
+        result["repeats"] = None
+
+
+def _clear_travel_fields(result: dict) -> None:
+    result["travel_role"] = None
+    result["travel_trip_id"] = None
+    result["travel_place"] = None
+    result["travel_end"] = None
+
+
+def _apply_travel_fields(result: dict, raw: str) -> None:
+    from travel import TRAVEL_ROLES, travel_meta
+
+    _clear_habit_fields(result)
+    meta = travel_meta(raw, raw.lower())
+    role = meta.get("travel_role") or "nota"
+    result["travel_role"] = role if role in TRAVEL_ROLES else "nota"
+    result["travel_place"] = meta.get("travel_place")
+    result["travel_end"] = meta.get("travel_end")
+    result["travel_trip_id"] = None
+    if meta.get("title_override"):
+        result["title"] = meta["title_override"]
+    if result["travel_role"] == "trip":
         result["repeats"] = None
 
 
@@ -545,10 +574,18 @@ def _apply_llm_spec(baseline: dict, parsed: dict, title_raw: str) -> dict:
             out["habit_notes"] = str(val).strip()[:200]
         if not out.get("habit_role"):
             _apply_habit_fields(out, title_raw)
+        _clear_travel_fields(out)
+    elif module == "viajes":
+        _clear_agenda_fields(out)
+        _clear_casa_fields(out)
+        _clear_habit_fields(out)
+        out["agenda_type"] = None
+        _apply_travel_fields(out, title_raw)
     else:
         _clear_agenda_fields(out)
         _clear_casa_fields(out)
         _clear_habit_fields(out)
+        _clear_travel_fields(out)
         out["agenda_type"] = None
 
     return out
