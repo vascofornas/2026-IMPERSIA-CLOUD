@@ -21,7 +21,7 @@ import {
 import { CASA_KIND, casaEventLine, groupCasaItems, isCasaItem, SUPPLY_KIND } from "./casa.js";
 import HabitEditPanel, { editorFromRepeats } from "./HabitEditPanel.jsx";
 import HabitosBoard, { HoyBienestar } from "./HabitosBoard.jsx";
-import { isHabitRoutine } from "./habitos.js";
+import { hasHoyBienestarContent, isHabitRoutine } from "./habitos.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
 import { trackScreen } from "./events.js";
 import { repeatLabel } from "./repeats.js";
@@ -547,29 +547,53 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
         </>
       )}
       {screen === "hoy" && (
-        <>
-          <h1>{todayLine()}</h1>
+        <div className="screen-hoy">
+          <header className="hoy-header">
+            <p className="hoy-kicker">Hoy</p>
+            <h1 className="hoy-date">{todayLine()}</h1>
+            <p className="hoy-lead">Rutinas, citas y lo que viene en los próximos días.</p>
+          </header>
           <div className="panes hoy-panes">
-            <section>
-              <HoyBienestar
-                items={items}
-                todayStart={todayStart}
-                expandItems={expandItems}
-                endOfDay={endOfDay}
-                onMarkDone={habitMarkDone}
-                onEdit={startEdit}
-                askRemove={askRemove}
-                editingId={editing?.module === "habitos" ? editing.id : null}
-              />
-              <h2>Para hoy</h2>
-              {todayItems.length ? <ItemList items={todayItems} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} /> : <p className="private">Hoy no hay nada con fecha.</p>}
-            </section>
-            <section>
-              <h2>Próximos</h2>
-              {laterItems.length ? <ItemList items={laterItems} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} /> : <p className="private">No hay nada con fecha después de hoy.</p>}
+            <div className="hoy-column">
+              {hasHoyBienestarContent(items, todayStart, expandItems, endOfDay) && (
+                <section className="hoy-zone hoy-zone-bienestar" aria-labelledby="hoy-bienestar-heading">
+                  <HoyBienestar
+                    items={items}
+                    todayStart={todayStart}
+                    expandItems={expandItems}
+                    endOfDay={endOfDay}
+                    onMarkDone={habitMarkDone}
+                    onEdit={startEdit}
+                    askRemove={askRemove}
+                    editingId={editing?.module === "habitos" ? editing.id : null}
+                  />
+                </section>
+              )}
+              <section className="hoy-zone hoy-zone-agenda" aria-labelledby="hoy-para-heading">
+                <h2 id="hoy-para-heading">
+                  Para hoy
+                  {todayItems.length > 0 && <span className="hoy-count">{todayItems.length}</span>}
+                </h2>
+                {todayItems.length ? (
+                  <ItemList items={todayItems} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
+                ) : (
+                  <p className="hoy-empty">Nada con fecha para hoy. Apúntalo en Entrada o mira Agenda.</p>
+                )}
+              </section>
+            </div>
+            <section className="hoy-zone hoy-zone-later" aria-labelledby="hoy-proximos-heading">
+              <h2 id="hoy-proximos-heading">
+                Próximos
+                {laterItems.length > 0 && <span className="hoy-count">{laterItems.length}</span>}
+              </h2>
+              {laterItems.length ? (
+                <ItemList items={laterItems} editing={editing} setEditing={setEditing} startEdit={startEdit} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
+              ) : (
+                <p className="hoy-empty">Sin fechas en los próximos sesenta días.</p>
+              )}
             </section>
           </div>
-        </>
+        </div>
       )}
       {current && (
         <>

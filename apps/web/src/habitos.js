@@ -230,6 +230,13 @@ export function trackingWeek(item, todayStart, expandItems, endOfDay, days = 7) 
   return { days: out, dueCount, doneCount };
 }
 
+export function hasHoyBienestarContent(items, todayStart, expandItems, endOfDay) {
+  if (routinesForToday(items, todayStart, expandItems, endOfDay).length) return true;
+  if (latestSleepLog(items)) return true;
+  if (items.some(isHabitRoutine)) return true;
+  return false;
+}
+
 export function hasHabitContent(items, todayStart, expandItems, endOfDay) {
   const routines = routinesForToday(items, todayStart, expandItems, endOfDay);
   if (routines.length) return true;

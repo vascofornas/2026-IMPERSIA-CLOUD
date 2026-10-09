@@ -1264,6 +1264,168 @@ a.connect {
 }
 
 .habitos-board,
+/* —— Pantalla Hoy —— */
+.screen-hoy {
+  max-width: 56rem;
+}
+
+.hoy-header {
+  margin-bottom: 28px;
+}
+
+.hoy-kicker {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mark);
+}
+
+.hoy-date {
+  margin: 0 0 10px;
+  font-size: clamp(1.85rem, 4vw, 2.65rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  text-transform: capitalize;
+}
+
+.hoy-lead {
+  margin: 0;
+  max-width: 32rem;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.hoy-panes {
+  gap: 20px 40px;
+}
+
+.hoy-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hoy-zone {
+  padding: 18px 20px 20px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 4%, transparent);
+}
+
+.hoy-zone-bienestar {
+  border-color: color-mix(in srgb, #4d7c0f 22%, var(--line));
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, #4d7c0f 7%, var(--card)) 0%,
+    var(--card) 48%
+  );
+}
+
+.hoy-zone h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 1.15rem;
+  font-weight: 650;
+}
+
+.hoy-zone-bienestar .hoy-zone-head h2 {
+  margin: 0;
+  color: #4d7c0f;
+}
+
+.hoy-zone-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.hoy-zone-link {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #4d7c0f;
+  text-decoration: none;
+}
+
+.hoy-zone-link:hover {
+  text-decoration: underline;
+}
+
+.hoy-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--mark);
+  background: color-mix(in srgb, var(--mark) 12%, var(--card));
+}
+
+.hoy-empty {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  background: color-mix(in srgb, var(--bg) 60%, var(--card));
+}
+
+.hoy-empty-inline {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.hoy-zone .card:first-of-type {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.hoy-zone .card {
+  padding: 14px 0;
+}
+
+.hoy-zone .card .title {
+  font-size: 1.12rem;
+}
+
+.habitos-track-card.hoy-focus {
+  border: none;
+  box-shadow: none;
+  background: color-mix(in srgb, #4d7c0f 6%, transparent);
+  padding: 12px 14px;
+}
+
+.habitos-track-hoy-badge {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: #4d7c0f;
+  background: color-mix(in srgb, #4d7c0f 14%, var(--card));
+  border: 1px solid color-mix(in srgb, #4d7c0f 25%, var(--line));
+}
+
+.habitos-track-hoy-badge.done {
+  color: #fff;
+  background: #4d7c0f;
+  border-color: #4d7c0f;
+}
+
 .hoy-bienestar {
   --habitos: #4d7c0f;
 }

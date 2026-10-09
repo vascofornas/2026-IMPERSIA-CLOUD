@@ -730,3 +730,6 @@ Nombre visible del módulo habitos → «Bienestar y hábitos» (PDF / 07-habito
 
 9 de octubre de 2026, 13:00
 Modesto: entradas de resfriado fueron a Diario (regla por defecto). Criterio actualizado: síntomas físicos (resfriado, gripa, fiebre…) → habitos log salud; ánimo sin síntoma sigue en Diario. classify.py + 07-habitos. Despliegue API. Las dos ya archivadas: Cambiar módulo o re-apuntar.
+
+9 de octubre de 2026, 13:15
+Refino pantalla Hoy: cabecera (kicker + fecha + lead), zonas en tarjeta (Bienestar / Para hoy / Próximos), contadores, vacíos claros. Bienestar en Hoy = rutinas que tocan hoy + sueño (sin rejilla 7 días; enlace Ver todo). Despliegue web.

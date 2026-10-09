@@ -19,8 +19,10 @@ export default function HabitTracker({
   onMarkDone,
   editingId,
   compact,
+  hoyFocus,
 }) {
-  const { days, dueCount, doneCount } = trackingWeek(item, todayStart, expandItems, endOfDay);
+  const week = trackingWeek(item, todayStart, expandItems, endOfDay);
+  const { days, dueCount, doneCount } = week;
   const schedule = repeatLabel(item.repeats, item.starts_at);
   const kind = habitKindLabel(item.habit_kind);
 
@@ -28,7 +30,12 @@ export default function HabitTracker({
 
   return (
     <article
-      className={["habitos-track-card", compact ? "compact" : "", editingId === item.id ? "editing" : ""]
+      className={[
+        "habitos-track-card",
+        compact ? "compact" : "",
+        hoyFocus ? "hoy-focus" : "",
+        editingId === item.id ? "editing" : "",
+      ]
         .filter(Boolean)
         .join(" ")}
     >
@@ -42,13 +49,24 @@ export default function HabitTracker({
             </p>
           )}
         </div>
-        <div className="habitos-track-score" aria-label={`${doneCount} de ${dueCount} días cumplidos esta semana`}>
-          <span className="habitos-track-score-num">
-            {doneCount}/{dueCount || "—"}
-          </span>
-          <span className="private">esta semana</span>
-        </div>
+        {!hoyFocus && (
+          <div className="habitos-track-score" aria-label={`${doneCount} de ${dueCount} días cumplidos esta semana`}>
+            <span className="habitos-track-score-num">
+              {doneCount}/{dueCount || "—"}
+            </span>
+            <span className="private">esta semana</span>
+          </div>
+        )}
+        {hoyFocus && today && (
+          <div
+            className={["habitos-track-hoy-badge", today.done ? "done" : ""].filter(Boolean).join(" ")}
+            aria-label={today.done ? "Hecho hoy" : "Pendiente hoy"}
+          >
+            {today.done ? "Hecho" : "Pendiente"}
+          </div>
+        )}
       </header>
+      {!hoyFocus && (
       <div className="habitos-track-table" role="img" aria-label={`Seguimiento de ${item.title}`}>
         <div className="habitos-track-row habitos-track-labels">
           {days.map((day) => (
@@ -87,7 +105,8 @@ export default function HabitTracker({
           })}
         </div>
       </div>
-      {today?.due && onMarkDone && (
+      )}
+      {!hoyFocus && today?.due && onMarkDone && (
         <p className="habitos-track-today-hint private">
           {today.done ? "Hecho hoy." : "Hoy toca: pulsa la casilla de hoy o el botón."}
         </p>

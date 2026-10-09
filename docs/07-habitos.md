@@ -57,8 +57,8 @@ Estilo: `.habitos-board`, verde `#4d7c0f`, tarjetas con aire; iconografía del m
 
 ### Hoy (pantalla global)
 
-- Columna o bloque **Bienestar**: hero reducido + 2–3 checks pendientes + una línea de sueño anoche si hay registro.
-- Sigue habiendo **Para hoy** (citas con fecha) aparte: Agenda no se mezcla visualmente con rutinas.
+- Cabecera con la fecha y tres **zonas** en tarjeta: **Bienestar** (solo rutinas que tocan hoy + último sueño; enlace «Ver todo» al módulo), **Para hoy** (citas con fecha), **Próximos**.
+- En Bienestar no se repite la rejilla de 7 días; el seguimiento completo está en **Bienestar y hábitos**.
 
 ## Datos y archivado
 

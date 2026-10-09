@@ -1,6 +1,6 @@
 import HabitRegistro, { HoySleepSnippet } from "./HabitRegistro.jsx";
 import HabitTracker from "./HabitTracker.jsx";
-import { isHabitRoutine, latestSleepLog } from "./habitos.js";
+import { isHabitRoutine, latestSleepLog, routinesForToday } from "./habitos.js";
 
 function openHabitRoutines(items) {
   return items
@@ -18,16 +18,22 @@ export function HoyBienestar({
   askRemove,
   editingId,
 }) {
-  const routines = openHabitRoutines(items);
+  const dueToday = routinesForToday(items, todayStart, expandItems, endOfDay);
   const sleep = latestSleepLog(items);
-  if (!routines.length && !sleep) return null;
+  const hasRoutines = items.some(isHabitRoutine);
+  if (!dueToday.length && !sleep && !hasRoutines) return null;
 
   return (
-    <section className="hoy-bienestar">
-      <h2>Bienestar</h2>
-      {routines.length > 0 && (
+    <div className="hoy-bienestar">
+      <div className="hoy-zone-head">
+        <h2 id="hoy-bienestar-heading">Bienestar</h2>
+        <a className="hoy-zone-link" href="#habitos">
+          Ver todo
+        </a>
+      </div>
+      {dueToday.length > 0 ? (
         <div className="habitos-track-grid habitos-track-grid-compact">
-          {routines.map((item) => (
+          {dueToday.map((item) => (
             <HabitTracker
               key={item.id}
               item={item}
@@ -39,12 +45,15 @@ export function HoyBienestar({
               onMarkDone={onMarkDone}
               editingId={editingId}
               compact
+              hoyFocus
             />
           ))}
         </div>
-      )}
+      ) : hasRoutines ? (
+        <p className="hoy-empty hoy-empty-inline">Hoy no toca ninguna rutina guardada.</p>
+      ) : null}
       {sleep && <HoySleepSnippet items={items} />}
-    </section>
+    </div>
   );
 }
 
