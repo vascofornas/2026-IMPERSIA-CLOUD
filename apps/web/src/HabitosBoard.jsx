@@ -72,7 +72,9 @@ export function HoyBienestar({
 export default function HabitosBoard({
   items,
   healthControls,
+  createControl,
   registerReading,
+  onControlCreated,
   onHealthReadingSaved,
   setError,
   todayStart,
@@ -88,8 +90,8 @@ export default function HabitosBoard({
   if (!items.some((item) => item.module === "habitos") && !(healthControls?.length > 0)) {
     return (
       <p className="private">
-        Todavía no hay rutinas ni registros aquí. Apúntalo en Entrada: «Cada mañana medito 10 min», «Quiero controlarme
-        la tensión cada día a las 8» o «Anoche dormí 7 horas».
+        Todavía no hay rutinas ni registros aquí. En Entrada: «Cada mañana medito 10 min» o «Anoche dormí 7 horas». Los
+        controles de salud se añaden con <strong>Añadir control</strong> en esta pantalla.
       </p>
     );
   }
@@ -123,7 +125,9 @@ export default function HabitosBoard({
 
       <HealthControlsPanel
         controls={healthControls}
+        createControl={createControl}
         registerReading={registerReading}
+        onControlCreated={onControlCreated}
         onReadingSaved={onHealthReadingSaved}
         setError={setError}
       />

@@ -2034,6 +2034,43 @@ button.link.secondary {
   line-height: 1.45;
 }
 
+.habitos-controls-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.habitos-controls-head-row .habitos-subheading {
+  margin: 0;
+}
+
+.habitos-control-add-btn {
+  flex-shrink: 0;
+}
+
+.habitos-control-add {
+  margin: 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 28rem;
+}
+
+.habitos-control-add-title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+}
+
+.habitos-control-add label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.88rem;
+}
+
 .habitos-controls-guide {
   margin: 0 0 18px;
   max-width: 40rem;

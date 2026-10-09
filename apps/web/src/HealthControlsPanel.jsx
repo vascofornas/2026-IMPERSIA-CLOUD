@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { controlKindLabel, controlScheduleLabel, pendingControls } from "./healthControls.js";
+import {
+  CONTROL_DEFAULT_TITLE,
+  CONTROL_KIND_OPTIONS,
+  controlKindLabel,
+  controlScheduleLabel,
+  pendingControls,
+} from "./healthControls.js";
 
 function ReadingForm({ control, registerReading, onSaved, onError }) {
   const [open, setOpen] = useState(false);
@@ -72,7 +78,9 @@ function ReadingForm({ control, registerReading, onSaved, onError }) {
           <input type="text" inputMode="decimal" required value={kg} onChange={(e) => setKg(e.target.value)} />
         </label>
       )}
-      {control.kind === "medicacion" && <p className="private habitos-control-med-hint">Confirma que ya tomaste la dosis de hoy.</p>}
+      {control.kind === "medicacion" && (
+        <p className="private habitos-control-med-hint">Confirma que ya tomaste la dosis de hoy.</p>
+      )}
       <div className="habitos-control-form-actions">
         <button type="submit" className="primary" disabled={busy}>
           Guardar
@@ -106,31 +114,120 @@ function ControlCard({ control, registerReading, onSaved, onError }) {
   );
 }
 
+function AddControlForm({ createControl, onCreated, setError }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [kind, setKind] = useState("presion");
+  const [repeats, setRepeats] = useState("daily");
+  const [reminderTime, setReminderTime] = useState("08:00");
+  const [title, setTitle] = useState("");
+
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const control = await createControl({
+        kind,
+        repeats,
+        reminder_time: reminderTime,
+        title: title.trim() || CONTROL_DEFAULT_TITLE[kind],
+      });
+      onCreated(control);
+      setOpen(false);
+      setTitle("");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button type="button" className="secondary habitos-control-add-btn" onClick={() => setOpen(true)}>
+        + Añadir control
+      </button>
+    );
+  }
+
+  return (
+    <form className="habitos-control-add card editor" onSubmit={submit}>
+      <h4 className="habitos-control-add-title">Nuevo control de salud</h4>
+      <label>
+        Qué quieres controlar
+        <select value={kind} onChange={(e) => setKind(e.target.value)}>
+          {CONTROL_KIND_OPTIONS.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Nombre (opcional)
+        <input
+          type="text"
+          value={title}
+          placeholder={CONTROL_DEFAULT_TITLE[kind]}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </label>
+      <label>
+        Frecuencia
+        <select value={repeats} onChange={(e) => setRepeats(e.target.value)}>
+          <option value="daily">Cada día</option>
+          <option value="weekly">Cada domingo (peso u otro)</option>
+        </select>
+      </label>
+      <label>
+        Hora habitual
+        <input type="time" required value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} />
+      </label>
+      <div className="habitos-control-form-actions">
+        <button type="submit" className="primary" disabled={busy}>
+          Crear control
+        </button>
+        <button type="button" className="secondary" onClick={() => setOpen(false)} disabled={busy}>
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export function HealthControlsGuide() {
   return (
     <div className="habitos-controls-guide">
       <p className="habitos-controls-guide-lead">
-        <strong>Cómo funciona</strong> (tres pasos)
+        <strong>Cómo funciona</strong>
       </p>
       <ol className="habitos-controls-steps">
         <li>
-          <strong>Entrada, una sola vez:</strong> «Quiero controlarme la tensión cada día a las 8», «Quiero revisar mi
-          peso cada día a las 8» (o glucosa, medicación).
+          Pulsa <strong>Añadir control</strong>, elige tipo (tensión, glucosa, peso o medicación), frecuencia y hora.
         </li>
         <li>
-          <strong>Cada día, aquí:</strong> cuando toque, pulsa <em>Registrar ahora</em> y pon el dato (o confirma la
-          pastilla).
+          <strong>Cada día</strong> (o cada domingo, si lo elegiste) usa <em>Registrar ahora</em> en esta pantalla o en{" "}
+          <strong>Hoy</strong>.
         </li>
         <li>
-          <strong>Registro, abajo:</strong> revisa el mes entero. También puedes seguir apuntando en Entrada si prefieres.
+          En <strong>Registro</strong>, abajo, ves el historial del mes.
         </li>
       </ol>
-      <p className="private habitos-controls-disclaimer">Cuaderno personal. No sustituye al médico.</p>
+      <p className="private habitos-controls-disclaimer">Cuaderno personal. No sustituye al médico. No uses Entrada para crear el plan.</p>
     </div>
   );
 }
 
-export default function HealthControlsPanel({ controls, registerReading, onReadingSaved, setError, compact }) {
+export default function HealthControlsPanel({
+  controls,
+  createControl,
+  registerReading,
+  onControlCreated,
+  onReadingSaved,
+  setError,
+  compact,
+}) {
   const list = compact ? pendingControls(controls) : controls || [];
   if (!list.length && compact) return null;
 
@@ -140,13 +237,16 @@ export default function HealthControlsPanel({ controls, registerReading, onReadi
 
   return (
     <section className="habitos-section habitos-section-controls" aria-labelledby="habitos-controls-heading">
-      <h3 id="habitos-controls-heading" className="habitos-subheading">
-        Controles de salud
-      </h3>
+      <div className="habitos-controls-head-row">
+        <h3 id="habitos-controls-heading" className="habitos-subheading">
+          Controles de salud
+        </h3>
+        {!compact && <AddControlForm createControl={createControl} onCreated={onControlCreated} setError={setError} />}
+      </div>
       {!compact && <HealthControlsGuide />}
       {!list.length ? (
         <p className="private habitos-registro-empty">
-          Aún no tienes controles. Escríbelo en Entrada con «quiero controlarme…» y aparecerán aquí.
+          Todavía no tienes controles. Pulsa <strong>Añadir control</strong> arriba.
         </p>
       ) : (
         <div className="habitos-control-grid">

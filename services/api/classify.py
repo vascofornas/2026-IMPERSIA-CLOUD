@@ -135,25 +135,6 @@ def classify(text: str) -> dict:
     )
     if casa:
         module = "casa"
-    hc_spec = parse_health_control_setup(raw, low)
-    if hc_spec:
-        alert = hc_spec.get("alert_minutes_before")
-        return _classify_result(
-            "habitos",
-            hc_spec["title"],
-            starts,
-            True,
-            hc_spec.get("repeats", "daily"),
-            alert,
-            None,
-            medical_fields={},
-            family_fields={},
-            leisure_fields={},
-            reminder_fields={},
-            casa_fields={},
-            habit_fields={},
-            health_control=hc_spec,
-        )
     alert = _alert_minutes_before(low, time_known)
     if medical and alert == 15:
         alert = 30

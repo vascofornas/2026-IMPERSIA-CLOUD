@@ -220,6 +220,14 @@ class ItemPatch(BaseModel):
     repeats: str | None = None
 
 
+class HealthControlIn(BaseModel):
+    kind: str
+    title: str | None = None
+    repeats: str = "daily"
+    reminder_time: str = "08:00"
+    alert_minutes_before: int | None = None
+
+
 class HealthReadingIn(BaseModel):
     systolic: int | None = None
     diastolic: int | None = None
@@ -790,17 +798,10 @@ def create_capture(body: CaptureIn, request: Request):
             capture_id = str(cur.fetchone()["id"])
             list_row = None
             created = []
-            created_controls = []
             batch_seen: set[tuple] = set()
             deduped = 0
             for suggestion in suggestions:
                 if suggestion.get("health_control"):
-                    row = health_controls.insert_control(
-                        cur, user_id, capture_id, suggestion["health_control"]
-                    )
-                    today = datetime.now(ZoneInfo("Europe/Madrid")).date()
-                    done = health_controls.logs_for_day(cur, user_id, str(row["id"]), today)
-                    created_controls.append(health_controls.public_control(row, done_today=done))
                     continue
                 shopping_list_id = None
                 casa_place = None
@@ -854,7 +855,32 @@ def create_capture(body: CaptureIn, request: Request):
             "source": primary.get("source"),
         },
     )
-    return {"items": created, "health_controls": created_controls, "deduped": deduped}
+    return {"items": created, "deduped": deduped}
+
+
+@app.post("/health-controls", status_code=201)
+def create_health_control(body: HealthControlIn, request: Request):
+    user_id = current_user(request)
+    kind = body.kind.strip().lower()
+    if kind not in health_controls.CONTROL_KINDS:
+        raise HTTPException(status_code=422, detail="Tipo no permitido")
+    repeats = (body.repeats or "daily").strip().lower()
+    if repeats not in {"daily", "weekly"}:
+        raise HTTPException(status_code=422, detail="Frecuencia: daily o weekly")
+    spec = {
+        "kind": kind,
+        "title": body.title,
+        "repeats": repeats,
+        "reminder_time": body.reminder_time,
+        "alert_minutes_before": body.alert_minutes_before,
+    }
+    today = datetime.now(ZoneInfo("Europe/Madrid")).date()
+    with db() as conn:
+        with conn.cursor() as cur:
+            row = health_controls.insert_control(cur, user_id, None, spec)
+            done = health_controls.logs_for_day(cur, user_id, str(row["id"]), today)
+        conn.commit()
+    return health_controls.public_control(row, done_today=done)
 
 
 @app.get("/health-controls")

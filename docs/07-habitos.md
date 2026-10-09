@@ -157,13 +157,13 @@ Wearables, rachas largas, correlaciones (sueño vs síntomas). No bloquear v1.
 
 **Tipos permitidos (lista cerrada):** `presion`, `glucosa`, `medicacion`, `peso`. Fuera: diagnósticos, recetas, informes hospitalarios.
 
-**Usuario — tres pasos (visible en pantalla):**
+**Usuario (sin Entrada para el plan):**
 
-1. **Entrada una vez:** «Quiero controlarme la tensión cada día a las 8» (IA/reglas crean un *control*, no un apunte suelto).
-2. **Cada día:** en **Hoy** y **Bienestar → Controles de salud**, botón *Registrar ahora* (números o confirmar pastilla).
-3. **Registro:** historial del mes (mismos logs `habit_role=log`, ligados al control).
+1. **Bienestar → Añadir control:** tipo, frecuencia (cada día / domingos), hora.
+2. **Registrar ahora** en Bienestar o **Hoy** cuando toque.
+3. **Registro:** historial del mes. Entrada solo para apuntes sueltos («Tensión 120/80»), no para crear el plan.
 
-**Datos:** tabla `health_controls`; lecturas en `items` con `health_control_id`. API: `GET /health-controls`, `POST /health-controls/{id}/readings`.
+**Datos:** `health_controls`; lecturas en `items.health_control_id`. API: `POST/GET /health-controls`, `POST …/readings`.
 
 ### Fuera de alcance
 

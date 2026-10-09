@@ -21,7 +21,7 @@ import {
 import { CASA_KIND, casaEventLine, groupCasaItems, isCasaItem, SUPPLY_KIND } from "./casa.js";
 import HabitEditPanel, { editorFromRepeats, HabitLogEditPanel } from "./HabitEditPanel.jsx";
 import HabitosBoard, { HoyBienestar } from "./HabitosBoard.jsx";
-import { controlCreatedNotice, pendingControls } from "./healthControls.js";
+import { pendingControls } from "./healthControls.js";
 import { hasHoyBienestarContent, isHabitRoutine } from "./habitos.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
 import { trackScreen } from "./events.js";
@@ -66,7 +66,6 @@ function normalizeCaptureResult(result) {
   if (result && Array.isArray(result.items)) {
     return {
       items: result.items,
-      health_controls: result.health_controls || [],
       deduped: Number(result.deduped) || 0,
     };
   }
@@ -271,6 +270,18 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
     });
   }
 
+  async function createHealthControl(body) {
+    return call("/health-controls", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  }
+
+  function onHealthControlCreated(control) {
+    setHealthControls((prev) => [control, ...prev.filter((c) => c.id !== control.id)]);
+    setNotice("Control creado. Cuando toque, usa Registrar ahora aquí o en Hoy.");
+  }
+
   function onHealthReadingSaved(item, controlId) {
     setItems((prev) => [item, ...prev.filter((row) => row.id !== item.id)]);
     setHealthControls((prev) =>
@@ -297,18 +308,9 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
         else next = [item, ...next];
       }
       setItems(next);
-      const newControls = result.health_controls || [];
-      if (newControls.length) {
-        setHealthControls((prev) => {
-          const ids = new Set(prev.map((c) => c.id));
-          const mergedControls = [...newControls.filter((c) => !ids.has(c.id)), ...prev];
-          return mergedControls;
-        });
-        setNotice(controlCreatedNotice(newControls));
-      }
       setText("");
       const merged = deduped > 0 || fresh.some((item) => item.dedupe_action === "merged");
-      if (merged && !newControls.length) {
+      if (merged) {
         setNotice("Ya lo tenías guardado. No se ha creado un duplicado en Agenda ni en el calendario.");
       }
       checkAlerts(next);
@@ -747,7 +749,9 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
               <HabitosBoard
                 items={items}
                 healthControls={healthControls}
+                createControl={createHealthControl}
                 registerReading={registerHealthReading}
+                onControlCreated={onHealthControlCreated}
                 onHealthReadingSaved={onHealthReadingSaved}
                 setError={setError}
                 todayStart={todayStart}
