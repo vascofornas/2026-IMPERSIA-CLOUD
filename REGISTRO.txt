@@ -838,3 +838,6 @@ Diario personal v1: escritura libre y guiada, texto largo, fecha vivida, tipo, �
 
 10 de octubre de 2026, 00:20
 Diario: corregida la frontera con Agenda/Ocio. El modelo había confundido un recuerdo social con una cita; ahora un relato ya vivido, especialmente si expresa una emoción, permanece en Diario, mientras los compromisos futuros siguen en Agenda. Se suben archive.py y docs/09-diario.md por esta corrección y su regla de uso. La entrada original fue borrada por el usuario, por lo que no se recreó ni se modificaron sus datos.
+
+10 de octubre de 2026, 00:35
+Diario: añadida «Evolución del mes» debajo de los resúmenes. Muestra ánimo y energía declarados, actividad por tramos de siete días y etiquetas frecuentes, con selector de mes y adaptación móvil. Los días sin valoración quedan sin dato y no se interpretan como ánimo bajo. Se suben DiarioBoard.jsx, styles.css, el build web y docs/09-diario.md para incorporar y explicar esta vista descriptiva.

@@ -14,7 +14,10 @@ Octubre de 2026. Diario es el espacio privado para contar lo vivido, ordenar pen
 - Ficha resumida que se abre completa.
 - Edición y borrado desde la propia línea temporal.
 - Filtros por mes, ánimo, tipo y etiqueta.
+- Evolución mensual con ánimo y energía declarados, cantidad de entradas por tramos de siete días y etiquetas frecuentes.
 - El contenido no aparece en Hoy ni en Agenda.
+
+La evolución es descriptiva. No rellena los días sin valoración, no interpreta los datos y no presenta diagnósticos.
 
 ## Límites
 
