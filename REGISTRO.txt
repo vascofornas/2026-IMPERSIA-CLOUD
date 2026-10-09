@@ -767,6 +767,9 @@ Modesto no veía Registro: GET /items limitaba a 30 y los apuntes demo quedaban 
 9 de octubre de 2026, 17:25
 Modesto: «quiero revisar mi peso cada día a las 8» no creaba control (solo log). classify: revisar/comprobar/pesarme y quiero+cada; peso diario no forzado a semanal. Despliegue API + web.
 
+9 de octubre de 2026, 18:15
+Historial demo para controles activos (1 ago–8 oct 2026), sin tocar hoy: script seed_health_control_history.py (seed_control_backfill). Losartan, Amlodipino, B12, tensión.
+
 9 de octubre de 2026, 18:00
 Bienestar: layout dos columnas (Registro izquierda, Controles derecha sticky); textos Registro/salud alineados con controles sin Entrada. Despliegue web.
 
