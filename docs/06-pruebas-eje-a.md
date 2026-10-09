@@ -8,6 +8,8 @@
 
 **Diario (9 oct 2026):** escritura libre y guiada, texto largo, fecha vivida, ánimo, energía, etiquetas, filtros y línea temporal. Análisis semanal/mensual solo con consentimiento en Perfil. Casos frontera obligatorios: reflexión emocional → Diario; síntoma o medida física → Bienestar; acción pendiente → módulo operativo; idea desarrollable → Ideas. Detalle en [09-diario.md](09-diario.md).
 
+**Cierre Diario (9 oct 2026):** comprobar que la línea temporal agrupa por mes y día; las cuatro preguntas guiadas se guardan y editan; los días sin ánimo o energía no aparecen como valores bajos; un resumen borrado no reaparece al abrir Diario, pulsar Actualizar ni ejecutar el proceso periódico; otra cuenta no puede leer, editar o borrar entradas ni resúmenes ajenos.
+
 Frases cargadas con `services/api/scripts/seed_axis_a_entries.py` (archivado real con IA si está activa).
 
 ## Agenda y citas (20)

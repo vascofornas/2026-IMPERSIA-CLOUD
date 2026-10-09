@@ -16,6 +16,11 @@ function longDate(value) {
   return date.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
 
+function monthDate(value) {
+  const date = new Date(`${value}-01T12:00:00`);
+  return date.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+}
+
 function periodLabel(summary) {
   const start = new Date(`${summary.period_start}T12:00:00`);
   const end = new Date(`${summary.period_end}T12:00:00`);
@@ -210,7 +215,7 @@ function MonthEvolution({ entries }) {
   );
 }
 
-function JournalCard({ item, expanded, onExpand, onEdit, onDelete }) {
+function JournalCard({ item, expanded, onExpand, onEdit, onDelete, showDate = true }) {
   const content = item.journal_content || item.title;
   const preview = !expanded && content.length > 320 ? `${content.slice(0, 317)}…` : content;
   const tags = item.journal_tags || [];
@@ -218,7 +223,7 @@ function JournalCard({ item, expanded, onExpand, onEdit, onDelete }) {
     <article className="journal-entry-card">
       <div className="journal-entry-top">
         <div>
-          <p className="journal-entry-date">{longDate(entryDate(item))}</p>
+          {showDate && <p className="journal-entry-date">{longDate(entryDate(item))}</p>}
           <div className="journal-entry-labels">
             <span>{kindLabel(item.journal_kind)}</span>
             {item.journal_mood && <span>Ánimo {item.journal_mood}/5 · {MOOD_LABELS[item.journal_mood]}</span>}
@@ -234,12 +239,13 @@ function JournalCard({ item, expanded, onExpand, onEdit, onDelete }) {
       {expanded && (
         <div className="journal-guided-read">
           {item.journal_happened && <p><strong>Qué pasó</strong><br />{item.journal_happened}</p>}
+          {item.journal_feeling && <p><strong>Cómo me siento</strong><br />{item.journal_feeling}</p>}
           {item.journal_grateful && <p><strong>Qué agradezco</strong><br />{item.journal_grateful}</p>}
           {item.journal_need && <p><strong>Qué necesito</strong><br />{item.journal_need}</p>}
         </div>
       )}
       {tags.length > 0 && <div className="journal-tags">{tags.map((tag) => <span key={tag}>{tag}</span>)}</div>}
-      {(content.length > 320 || item.journal_happened || item.journal_grateful || item.journal_need) && (
+      {(content.length > 320 || item.journal_happened || item.journal_feeling || item.journal_grateful || item.journal_need) && (
         <button type="button" className="link journal-read-more" onClick={onExpand}>
           {expanded ? "Cerrar ficha" : "Leer completa"}
         </button>
@@ -301,6 +307,22 @@ export default function DiarioBoard({
     .filter((item) => !kind || (item.journal_kind || "entrada") === kind)
     .filter((item) => !tag || (item.journal_tags || []).includes(tag))
     .sort((a, b) => entryDate(b).localeCompare(entryDate(a)) || String(b.created_at).localeCompare(String(a.created_at)));
+  const groupedTimeline = filtered.reduce((result, item) => {
+    const day = entryDate(item);
+    const monthKey = day.slice(0, 7);
+    let monthGroup = result[result.length - 1];
+    if (!monthGroup || monthGroup.key !== monthKey) {
+      monthGroup = { key: monthKey, days: [] };
+      result.push(monthGroup);
+    }
+    let dayGroup = monthGroup.days[monthGroup.days.length - 1];
+    if (!dayGroup || dayGroup.key !== day) {
+      dayGroup = { key: day, items: [] };
+      monthGroup.days.push(dayGroup);
+    }
+    dayGroup.items.push(item);
+    return result;
+  }, []);
 
   async function saveNew(payload) {
     setBusy(true);
@@ -408,19 +430,32 @@ export default function DiarioBoard({
           </div>
         </div>
         {filtered.length ? (
-          <div className="journal-entry-list">
-            {filtered.map((item) => (
-              <JournalCard
-                key={item.id}
-                item={item}
-                expanded={expandedId === item.id}
-                onExpand={() => setExpandedId(expandedId === item.id ? null : item.id)}
-                onEdit={() => {
-                  setAdding(false);
-                  setEditing(item);
-                }}
-                onDelete={() => askRemove(item)}
-              />
+          <div className="journal-grouped-timeline">
+            {groupedTimeline.map((monthGroup) => (
+              <section className="journal-month-group" key={monthGroup.key}>
+                <h4>{monthDate(monthGroup.key)}</h4>
+                {monthGroup.days.map((dayGroup) => (
+                  <div className="journal-day-group" key={dayGroup.key}>
+                    <p className="journal-day-heading">{longDate(dayGroup.key)}</p>
+                    <div className="journal-entry-list">
+                      {dayGroup.items.map((item) => (
+                        <JournalCard
+                          key={item.id}
+                          item={item}
+                          showDate={false}
+                          expanded={expandedId === item.id}
+                          onExpand={() => setExpandedId(expandedId === item.id ? null : item.id)}
+                          onEdit={() => {
+                            setAdding(false);
+                            setEditing(item);
+                          }}
+                          onDelete={() => askRemove(item)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </section>
             ))}
           </div>
         ) : (

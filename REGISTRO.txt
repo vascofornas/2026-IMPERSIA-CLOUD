@@ -841,3 +841,6 @@ Diario: corregida la frontera con Agenda/Ocio. El modelo había confundido un re
 
 10 de octubre de 2026, 00:35
 Diario: añadida «Evolución del mes» debajo de los resúmenes. Muestra ánimo y energía declarados, actividad por tramos de siete días y etiquetas frecuentes, con selector de mes y adaptación móvil. Los días sin valoración quedan sin dato y no se interpretan como ánimo bajo. Se suben DiarioBoard.jsx, styles.css, el build web y docs/09-diario.md para incorporar y explicar esta vista descriptiva.
+
+10 de octubre de 2026, 01:05
+Diario, cierre funcional: la línea temporal queda agrupada por mes y día; la reflexión guiada añade «¿Cómo te sientes?» como texto opcional; borrar un resumen elimina su contenido y guarda solo el periodo descartado para que no reaparezca. Se suben migración 020, API, DiarioBoard.jsx, JournalEntryForm.jsx, styles.css, build web y documentación. El módulo queda alineado con el documento de producto y el plan de Diario completo.

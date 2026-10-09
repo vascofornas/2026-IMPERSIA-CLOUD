@@ -17,6 +17,7 @@ DETAIL_FIELDS = (
     "mood",
     "energy",
     "guided_happened",
+    "guided_feeling",
     "guided_grateful",
     "guided_need",
     "tags",
@@ -75,7 +76,7 @@ def normalize_payload(data: dict, *, existing: dict | None = None, fields_set: s
         payload[field] = int(value) if value not in (None, "") else None
         if payload[field] is not None and payload[field] not in range(1, 6):
             raise ValueError(f"{field} tiene que estar entre 1 y 5")
-    for field in ("guided_happened", "guided_grateful", "guided_need"):
+    for field in ("guided_happened", "guided_feeling", "guided_grateful", "guided_need"):
         value = payload.get(field)
         payload[field] = str(value).strip()[:10_000] or None if value is not None else None
     payload["tags"] = normalize_tags(payload.get("tags"))
@@ -88,7 +89,7 @@ def fetch_details(cur, item_ids: list[str]) -> dict[str, dict]:
     cur.execute(
         """
         SELECT item_id, content, journal_kind, occurred_on, mood, energy,
-               guided_happened, guided_grateful, guided_need, tags, updated_at
+               guided_happened, guided_feeling, guided_grateful, guided_need, tags, updated_at
         FROM journal_entries
         WHERE item_id = ANY(%s::uuid[])
         """,
@@ -102,8 +103,8 @@ def upsert_details(cur, item_id: str, payload: dict) -> None:
         """
         INSERT INTO journal_entries
             (item_id, content, journal_kind, occurred_on, mood, energy,
-             guided_happened, guided_grateful, guided_need, tags)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+             guided_happened, guided_feeling, guided_grateful, guided_need, tags)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (item_id) DO UPDATE
         SET content = EXCLUDED.content,
             journal_kind = EXCLUDED.journal_kind,
@@ -111,6 +112,7 @@ def upsert_details(cur, item_id: str, payload: dict) -> None:
             mood = EXCLUDED.mood,
             energy = EXCLUDED.energy,
             guided_happened = EXCLUDED.guided_happened,
+            guided_feeling = EXCLUDED.guided_feeling,
             guided_grateful = EXCLUDED.guided_grateful,
             guided_need = EXCLUDED.guided_need,
             tags = EXCLUDED.tags,
@@ -124,6 +126,7 @@ def upsert_details(cur, item_id: str, payload: dict) -> None:
             payload["mood"],
             payload["energy"],
             payload["guided_happened"],
+            payload["guided_feeling"],
             payload["guided_grateful"],
             payload["guided_need"],
             payload["tags"],
@@ -140,6 +143,7 @@ def public_fields(row: dict) -> dict:
         "journal_mood": row.get("mood"),
         "journal_energy": row.get("energy"),
         "journal_happened": row.get("guided_happened"),
+        "journal_feeling": row.get("guided_feeling"),
         "journal_grateful": row.get("guided_grateful"),
         "journal_need": row.get("guided_need"),
         "journal_tags": list(row.get("tags") or []),
@@ -181,7 +185,8 @@ def _period_entries(cur, user_id: str, start: date, end: date) -> list[dict]:
     cur.execute(
         """
         SELECT j.content, j.journal_kind, j.occurred_on, j.mood, j.energy,
-               j.guided_happened, j.guided_grateful, j.guided_need, j.tags, j.updated_at
+               j.guided_happened, j.guided_feeling, j.guided_grateful, j.guided_need,
+               j.tags, j.updated_at
         FROM journal_entries j
         JOIN items i ON i.id = j.item_id
         WHERE i.user_id = %s AND j.occurred_on BETWEEN %s AND %s
@@ -224,6 +229,16 @@ def list_summaries(cur, user_id: str, limit: int = 12) -> list[dict]:
 
 
 def generate_summary(cur, user_id: str, period_type: str, start: date, end: date) -> dict | None:
+    cur.execute(
+        """
+        SELECT 1
+        FROM journal_summary_dismissals
+        WHERE user_id = %s AND period_type = %s AND period_start = %s
+        """,
+        (user_id, period_type, start),
+    )
+    if cur.fetchone():
+        return None
     entries = _period_entries(cur, user_id, start, end)
     if len(entries) < 2:
         return None
@@ -251,6 +266,14 @@ def generate_summary(cur, user_id: str, period_type: str, start: date, end: date
             parts.append(f"Ánimo declarado: {row['mood']}/5")
         if row.get("energy"):
             parts.append(f"Energía declarada: {row['energy']}/5")
+        if row.get("guided_happened"):
+            parts.append(f"Qué pasó: {row['guided_happened']}")
+        if row.get("guided_feeling"):
+            parts.append(f"Cómo se siente: {row['guided_feeling']}")
+        if row.get("guided_grateful"):
+            parts.append(f"Qué agradece: {row['guided_grateful']}")
+        if row.get("guided_need"):
+            parts.append(f"Qué necesita: {row['guided_need']}")
         if row.get("tags"):
             parts.append(f"Etiquetas: {', '.join(row['tags'])}")
         excerpts.append("\n".join(parts))

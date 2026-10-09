@@ -5,12 +5,12 @@ Octubre de 2026. Diario es el espacio privado para contar lo vivido, ordenar pen
 ## Escritura
 
 - **Libre:** texto largo con fecha, tipo, ánimo, energía y etiquetas opcionales.
-- **Guiada:** mantiene un texto principal y añade tres preguntas opcionales: qué pasó, qué agradezco y qué necesito.
+- **Guiada:** mantiene un texto principal y añade cuatro preguntas opcionales: qué pasó, cómo me siento, qué agradezco y qué necesito.
 - También recibe reflexiones escritas en **Entrada**. El texto completo se conserva; el título es solo un extracto.
 
 ## Pantalla
 
-- Línea temporal por fecha vivida, no por fecha de creación.
+- Línea temporal agrupada por mes y día de la fecha vivida, no por fecha de creación.
 - Ficha resumida que se abre completa.
 - Edición y borrado desde la propia línea temporal.
 - Filtros por mes, ánimo, tipo y etiqueta.
@@ -37,7 +37,7 @@ Está desactivado por cuenta hasta aceptarlo en Perfil. Al activarlo:
 2. Solo envía al modelo las entradas del periodo concreto.
 3. Devuelve resumen, temas repetidos y hasta tres preguntas de reflexión.
 4. No diagnostica, no da consejos médicos y no presenta inferencias como hechos.
-5. Cada resumen se puede borrar y se regenera cuando cambian sus entradas.
+5. Cada resumen se actualiza cuando cambian sus entradas. Si la persona lo borra, no se vuelve a generar para ese periodo.
 
 El uso del modelo queda registrado como `journal_summary` en el control de costes existente.
 
@@ -45,7 +45,8 @@ El uso del modelo queda registrado como `journal_summary` en el control de coste
 
 - `journal_entries`: ficha 1:1 con `items`, texto completo y metadatos.
 - `journal_summaries`: derivados semanales y mensuales por cuenta.
+- `journal_summary_dismissals`: periodos cuyo resumen se borró; no conserva el contenido.
 - `users.journal_ai_enabled`: consentimiento del análisis.
-- Migración: `019_diario.sql`.
+- Migraciones: `019_diario.sql` y `020_diario_cierre.sql`.
 
 Las entradas antiguas que solo tienen título siguen apareciendo y se convierten en ficha completa al editarlas.

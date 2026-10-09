@@ -237,6 +237,7 @@ class JournalEntryIn(BaseModel):
     mood: int | None = Field(default=None, ge=1, le=5)
     energy: int | None = Field(default=None, ge=1, le=5)
     guided_happened: str | None = Field(default=None, max_length=10_000)
+    guided_feeling: str | None = Field(default=None, max_length=10_000)
     guided_grateful: str | None = Field(default=None, max_length=10_000)
     guided_need: str | None = Field(default=None, max_length=10_000)
     tags: list[str] = Field(default_factory=list, max_length=12)
@@ -249,6 +250,7 @@ class JournalEntryPatch(BaseModel):
     mood: int | None = Field(default=None, ge=1, le=5)
     energy: int | None = Field(default=None, ge=1, le=5)
     guided_happened: str | None = Field(default=None, max_length=10_000)
+    guided_feeling: str | None = Field(default=None, max_length=10_000)
     guided_grateful: str | None = Field(default=None, max_length=10_000)
     guided_need: str | None = Field(default=None, max_length=10_000)
     tags: list[str] | None = Field(default=None, max_length=12)
@@ -1252,6 +1254,7 @@ def patch_journal_entry(item_id: str, body: JournalEntryPatch, request: Request)
                     "mood": None,
                     "energy": None,
                     "guided_happened": None,
+                    "guided_feeling": None,
                     "guided_grateful": None,
                     "guided_need": None,
                     "tags": [],
@@ -1326,10 +1329,23 @@ def delete_journal_summary(summary_id: str, request: Request):
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "DELETE FROM journal_summaries WHERE id = %s AND user_id = %s RETURNING id",
+                """
+                DELETE FROM journal_summaries
+                WHERE id = %s AND user_id = %s
+                RETURNING period_type, period_start
+                """,
                 (summary_id, user_id),
             )
             deleted = cur.fetchone()
+            if deleted:
+                cur.execute(
+                    """
+                    INSERT INTO journal_summary_dismissals (user_id, period_type, period_start)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (user_id, period_type, period_start) DO NOTHING
+                    """,
+                    (user_id, deleted["period_type"], deleted["period_start"]),
+                )
         conn.commit()
     if not deleted:
         raise HTTPException(status_code=404, detail="Resumen no encontrado")

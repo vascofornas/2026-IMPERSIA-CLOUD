@@ -29,6 +29,7 @@ function initialDraft(initial) {
     mood: initial?.journal_mood || "",
     energy: initial?.journal_energy || "",
     guided_happened: initial?.journal_happened || "",
+    guided_feeling: initial?.journal_feeling || "",
     guided_grateful: initial?.journal_grateful || "",
     guided_need: initial?.journal_need || "",
     tags: (initial?.journal_tags || []).join(", "),
@@ -37,7 +38,7 @@ function initialDraft(initial) {
 
 export default function JournalEntryForm({ initial = null, busy = false, onSubmit, onCancel }) {
   const [mode, setMode] = useState(
-    initial?.journal_happened || initial?.journal_grateful || initial?.journal_need ? "guided" : "free",
+    initial?.journal_happened || initial?.journal_feeling || initial?.journal_grateful || initial?.journal_need ? "guided" : "free",
   );
   const [draft, setDraft] = useState(() => initialDraft(initial));
 
@@ -54,6 +55,7 @@ export default function JournalEntryForm({ initial = null, busy = false, onSubmi
       mood: draft.mood === "" ? null : Number(draft.mood),
       energy: draft.energy === "" ? null : Number(draft.energy),
       guided_happened: mode === "guided" ? draft.guided_happened.trim() || null : null,
+      guided_feeling: mode === "guided" ? draft.guided_feeling.trim() || null : null,
       guided_grateful: mode === "guided" ? draft.guided_grateful.trim() || null : null,
       guided_need: mode === "guided" ? draft.guided_need.trim() || null : null,
       tags: draft.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
@@ -85,6 +87,10 @@ export default function JournalEntryForm({ initial = null, busy = false, onSubmi
           <label>
             ¿Qué pasó?
             <textarea rows="3" value={draft.guided_happened} onChange={(e) => set("guided_happened", e.target.value)} />
+          </label>
+          <label>
+            ¿Cómo te sientes?
+            <textarea rows="3" value={draft.guided_feeling} onChange={(e) => set("guided_feeling", e.target.value)} />
           </label>
           <label>
             ¿Qué agradeces?
