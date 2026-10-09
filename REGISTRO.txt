@@ -796,3 +796,6 @@ Registro: bloque «Medias del mes» (tensión, peso, glucosa, sueño) y media en
 
 9 de octubre de 2026, 20:00
 Avisos email controles de salud pendientes: alerts.py + tabla health_control_alert_deliveries (016), default alert_minutes_before 0, requiere alert_email en Perfil. docs/07-habitos, texto Perfil. Migración VPS + restart API (timer alerts ya activo).
+
+9 de octubre de 2026, 20:55
+Fix aviso email controles: ventana todo el día (no solo 5 min tras la hora); procesar controles aunque no haya entradas Agenda con aviso. Despliegue API + prueba send_alerts.

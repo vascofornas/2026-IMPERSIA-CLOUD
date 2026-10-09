@@ -58,23 +58,22 @@ def run_email_alerts(conn) -> int:
     from_dt = day_start(now)
     to_dt = end_of_day(from_dt + timedelta(days=1))
     rows = _fetch_candidates(conn)
-    if not rows:
-        return 0
-    item_ids = [str(row["item_id"]) for row in rows]
-    exceptions = _fetch_exceptions(conn, item_ids)
     sent = 0
-    for row in rows:
-        item = _item_row(row)
-        ex_list = exceptions.get(str(row["item_id"]), [])
-        for occ in expand_item(item, ex_list, from_dt, to_dt):
-            if not _should_send(item, occ, now):
-                continue
-            day = day_key(occ["starts_at"])
-            if _already_sent(conn, row["item_id"], day):
-                continue
-            if _send_email(row["email"], occ):
-                _mark_sent(conn, row["item_id"], day)
-                sent += 1
+    if rows:
+        item_ids = [str(row["item_id"]) for row in rows]
+        exceptions = _fetch_exceptions(conn, item_ids)
+        for row in rows:
+            item = _item_row(row)
+            ex_list = exceptions.get(str(row["item_id"]), [])
+            for occ in expand_item(item, ex_list, from_dt, to_dt):
+                if not _should_send(item, occ, now):
+                    continue
+                day = day_key(occ["starts_at"])
+                if _already_sent(conn, row["item_id"], day):
+                    continue
+                if _send_email(row["email"], occ):
+                    _mark_sent(conn, row["item_id"], day)
+                    sent += 1
     sent += _run_health_control_email_alerts(conn, now)
     conn.commit()
     return sent
@@ -134,7 +133,7 @@ def _run_health_control_email_alerts(conn, now: datetime) -> int:
             "time_known": True,
             "alert_minutes_before": alert_min,
         }
-        if not _should_send({}, occ, now):
+        if not _should_send_health_control(occ, now):
             continue
         day = day_key(reminder_at)
         if _health_control_already_sent(conn, cid, day):
@@ -375,6 +374,17 @@ def _should_send(item: dict, occ: dict, now: datetime) -> bool:
     if now < alert_at:
         return False
     if now > start + timedelta(minutes=5):
+        return False
+    return True
+
+
+def _should_send_health_control(occ: dict, now: datetime) -> bool:
+    """Tras la hora del control, avisa el mismo día mientras falte la lectura (un envío/día)."""
+    start = occ["starts_at"]
+    alert_at = start - timedelta(minutes=occ["alert_minutes_before"])
+    if now < alert_at:
+        return False
+    if now.date() != start.date():
         return False
     return True
 
