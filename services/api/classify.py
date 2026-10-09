@@ -334,6 +334,38 @@ HABIT_ROLES = {"routine", "log"}
 HABIT_KINDS = {"rutina", "ejercicio", "meditacion", "lectura", "sueno", "salud", "otro"}
 
 
+HEALTH_SYMPTOM_HINTS = (
+    "resfriado",
+    "constipado",
+    "gripe",
+    "gripa",
+    "catarro",
+    "fiebre",
+    "tos",
+    "dolor de",
+    "dolor en",
+    "migraña",
+    "migrana",
+    "mareo",
+    "mareos",
+    "enfermo",
+    "enferma",
+    "enfermedad",
+    "anginas",
+    "covid",
+    "garganta",
+    "mocos",
+)
+
+
+def looks_like_health_symptom(low: str) -> bool:
+    if any(word in low for word in HEALTH_SYMPTOM_HINTS):
+        return True
+    if re.search(r"\bmal\b", low) and any(w in low for w in ("cuerpo", "físico", "fisico", "estómago", "estomago", "cabeza")):
+        return True
+    return False
+
+
 def looks_like_habit_log(low: str) -> bool:
     if re.search(r"\banoche\b", low) and re.search(r"dorm", low):
         return True
@@ -342,6 +374,8 @@ def looks_like_habit_log(low: str) -> bool:
     if re.search(r"\bpeso\b", low) and re.search(r"\d", low):
         return True
     if "tensión" in low or "tension" in low:
+        return True
+    if looks_like_health_symptom(low):
         return True
     return False
 
@@ -372,9 +406,11 @@ def _habit_routine_kind(low: str) -> str:
 
 
 def _habit_log_kind(low: str) -> str:
-    if re.search(r"dorm", low):
+    if re.search(r"dorm", low) and not looks_like_health_symptom(low):
         return "sueno"
     if re.search(r"\bpeso\b", low) or "tensión" in low or "tension" in low:
+        return "salud"
+    if looks_like_health_symptom(low):
         return "salud"
     return "otro"
 

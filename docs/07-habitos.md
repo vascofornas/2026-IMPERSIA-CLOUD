@@ -12,7 +12,7 @@ Octubre 2026. Pantalla **distinta** de Agenda (calendario/citas) y Casa (logíst
 | **2. Seguimiento de hábitos** | Ver si **cumples** esas rutinas en el tiempo | (no suele ser una frase nueva; nace del check diario) | Bloque **Seguimiento**: últimos días / semana por hábito (v1 simple; rachas después) |
 | **3. Registro salud / sueño** | **Anotación puntual** de un día (dato o nota breve) | «Anoche dormí 6 horas», «Me desperté 3 veces», «Peso 72,4 hoy», «Tensión 120/80» | Bloque **Registro**: línea temporal reciente (sueño, salud) |
 
-No confundir con **Diario**: reflexión o ánimo («he dormido mal», «me siento agotado») → **diario**; **dato o registro explícito** de sueño/salud → **habitos** (registro).
+No confundir con **Diario**: reflexión de ánimo sin síntoma físico («me siento triste», «estoy agotado emocionalmente») → **diario**. **Registro** en habitos: sueño con dato o mención clara, peso/tensión, y **malestar físico** (resfriado, gripa, fiebre, dolor…) aunque sea en prosa.
 
 ## Desambiguación con Agenda y Casa
 
@@ -22,7 +22,8 @@ No confundir con **Diario**: reflexión o ánimo («he dormido mal», «me sient
 | Clase de yoga el lunes 14 | agenda · ocio |
 | Sacar basura cada noche | casa · doméstica |
 | Anoche 7 h de sueño | habitos · registro sueño |
-| Hoy estoy hecho polvo | diario |
+| Hoy estoy hecho polvo (ánimo, sin síntoma) | diario |
+| Me desperté con un resfriado fuerte | habitos · registro salud |
 
 ## Referencia visual (app bienestar — onboarding + dashboard)
 

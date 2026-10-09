@@ -727,3 +727,6 @@ Modesto: no veía bloque Salud. Producto (07-habitos): sueño y salud dentro de 
 
 9 de octubre de 2026, 12:50
 Nombre visible del módulo habitos → «Bienestar y hábitos» (PDF / 07-habitos). structure.js, avisos API, roadmap; id interno habitos sin cambio. Despliegue web + API.
+
+9 de octubre de 2026, 13:00
+Modesto: entradas de resfriado fueron a Diario (regla por defecto). Criterio actualizado: síntomas físicos (resfriado, gripa, fiebre…) → habitos log salud; ánimo sin síntoma sigue en Diario. classify.py + 07-habitos. Despliegue API. Las dos ya archivadas: Cambiar módulo o re-apuntar.
