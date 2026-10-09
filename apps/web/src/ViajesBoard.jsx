@@ -47,14 +47,15 @@ function AddTripForm({ createTrip, onCreated, setError }) {
   if (!open) {
     return (
       <button type="button" className="primary viajes-add-trip" onClick={() => setOpen(true)}>
-        + Nuevo viaje
+        + Viaje y experiencias
       </button>
     );
   }
 
   return (
     <form className="viajes-form card editor" onSubmit={submit}>
-      <h3 className="viajes-form-title">Nuevo viaje</h3>
+      <h3 className="viajes-form-title">Nuevo viaje y experiencias</h3>
+      <p className="private viajes-form-hint">Primero el viaje (destino y fechas). Después añades reservas, experiencias y equipaje dentro.</p>
       <label>
         Título
         <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Viaje a Lisboa" />
@@ -108,7 +109,7 @@ function AddPieceForm({ tripId, createPiece, onCreated, setError }) {
   if (!open) {
     return (
       <button type="button" className="secondary viajes-add-piece" onClick={() => setOpen(true)}>
-        + Añadir
+        + Reserva o experiencia
       </button>
     );
   }
