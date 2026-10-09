@@ -736,3 +736,6 @@ Refino pantalla Hoy: cabecera (kicker + fecha + lead), zonas en tarjeta (Bienest
 
 9 de octubre de 2026, 13:25
 Hoy → Próximos: series repetidas (p. ej. basura diaria) una sola fila; icono repetir + «Cada día»; «Próximo: fecha». Rutinas habitos fuera de Próximos. Despliegue web.
+
+9 de octubre de 2026, 13:55
+Modesto: con varias apariencias (data-look) algunos elementos de Bienestar/Hoy no se ven igual. styles.css: tokens --habitos/--habitos-on/--habitos-warn/--habitos-caution por tema; quitados verdes y blancos fijos en tarjetas, checks, sueño y etiqueta repetir; Tinta con verde legible; refuerzo Noche/Grafito (celdas off/miss, zona Bienestar en Hoy). Despliegue web.
