@@ -811,3 +811,6 @@ Viajes v1: travel_role (trip, reserva, plan, equipaje, experiencia, nota), trave
 
 9 de octubre de 2026, 21:35
 UI: módulo renombrado «Viajes y experiencias» (menú, h1, avisos email). structure.js, App.jsx, alerts.py. Despliegue web + API.
+
+9 de octubre de 2026, 21:45
+Viajes: corregido el error 500 al pulsar «Crear». El INSERT de items tenía un marcador de más (42 huecos para 41 valores); main.py queda alineado y validado. Despliegue API.

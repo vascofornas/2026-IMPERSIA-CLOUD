@@ -726,7 +726,7 @@ def _insert_item(cur, user_id: str, capture_id: str, suggestion: dict, *, title:
              habit_role, habit_kind, habit_notes,
              travel_role, travel_trip_id, travel_place, travel_end,
              shopping_list_id, privacy, archived_source)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private', %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'private', %s)
         RETURNING {ITEM_SELECT}
         """,
         (
