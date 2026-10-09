@@ -94,9 +94,23 @@ function scale(value, min, max, height) {
   return height - ((value - min) / (max - min)) * height;
 }
 
-export function chartGeometry(series, mode, width, height, padX, padY) {
-  const innerW = width - padX * 2;
-  const innerH = height - padY * 2;
+export function formatAxisValue(value, kind) {
+  if (kind === "peso") {
+    const n = Math.round(value * 10) / 10;
+    return Number.isInteger(n) ? String(n) : String(n).replace(".", ",");
+  }
+  return String(Math.round(value));
+}
+
+function yTicks(minY, maxY) {
+  const mid = (minY + maxY) / 2;
+  return [maxY, mid, minY];
+}
+
+export function chartGeometry(series, mode, width, height, margins, kind) {
+  const { left, right, top, bottom } = margins;
+  const plotW = width - left - right;
+  const plotH = height - top - bottom;
   const n = series.length;
   if (n < 2) return null;
 
@@ -106,30 +120,59 @@ export function chartGeometry(series, mode, width, height, padX, padY) {
     minY = Math.min(...series.map((p) => Math.min(p.systolic, p.diastolic))) - 4;
     maxY = Math.max(...series.map((p) => Math.max(p.systolic, p.diastolic))) + 4;
   } else {
-    minY = Math.min(...series.map((p) => p.value)) * 0.98;
-    maxY = Math.max(...series.map((p) => p.value)) * 1.02;
+    const span = Math.max(0.4, (Math.max(...series.map((p) => p.value)) - Math.min(...series.map((p) => p.value))) * 0.15);
+    minY = Math.min(...series.map((p) => p.value)) - span;
+    maxY = Math.max(...series.map((p) => p.value)) + span;
   }
 
-  const xAt = (i) => padX + (i / (n - 1)) * innerW;
+  const xAt = (i) => left + (i / (n - 1)) * plotW;
+  const yAt = (val) => top + scale(val, minY, maxY, plotH);
 
   const points = series.map((row, i) => {
     const x = xAt(i);
     if (mode === "pressure") {
       return {
         x,
-        sysY: padY + scale(row.systolic, minY, maxY, innerH),
-        diaY: padY + scale(row.diastolic, minY, maxY, innerH),
-        label: row.label,
+        sysY: yAt(row.systolic),
+        diaY: yAt(row.diastolic),
+        dayLabel: row.label,
       };
     }
     return {
       x,
-      y: padY + scale(row.value, minY, maxY, innerH),
-      label: row.label,
+      y: yAt(row.value),
+      dayLabel: row.label,
     };
   });
 
-  return { points, minY, maxY, mode, width, height };
+  const yAxisTicks = yTicks(minY, maxY).map((value) => ({
+    value,
+    label: formatAxisValue(value, kind === "pressure" ? "presion" : kind),
+    y: yAt(value),
+  }));
+
+  const xIndices = [...new Set([0, Math.floor((n - 1) / 2), n - 1])].sort((a, b) => a - b);
+  const xAxisTicks = xIndices.map((i) => ({
+    x: xAt(i),
+    label: String(series[i].label),
+  }));
+
+  return {
+    points,
+    minY,
+    maxY,
+    mode,
+    width,
+    height,
+    margins,
+    plotW,
+    plotH,
+    yAxisTicks,
+    xAxisTicks,
+    plotLeft: left,
+    plotTop: top,
+    plotBottom: top + plotH,
+  };
 }
 
 export function polylinePoints(points, key) {

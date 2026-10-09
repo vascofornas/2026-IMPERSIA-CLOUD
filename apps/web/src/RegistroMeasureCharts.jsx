@@ -1,11 +1,58 @@
 import { chartGeometry, polylinePoints, registroChartBlocks } from "./healthCharts.js";
 
+function ChartAxes({ geom }) {
+  const { plotLeft, plotTop, plotBottom, width, yAxisTicks, xAxisTicks } = geom;
+  return (
+    <>
+      {yAxisTicks.map((tick) => (
+        <g key={tick.value} className="habitos-chart-axis-y">
+          <line x1={plotLeft} y1={tick.y} x2={width - geom.margins.right} y2={tick.y} className="habitos-chart-grid-line" />
+          <text x={plotLeft - 6} y={tick.y} textAnchor="end" dominantBaseline="middle" className="habitos-chart-axis-text">
+            {tick.label}
+          </text>
+        </g>
+      ))}
+      <line
+        x1={plotLeft}
+        y1={plotTop}
+        x2={plotLeft}
+        y2={plotBottom}
+        className="habitos-chart-axis-line"
+      />
+      <line
+        x1={plotLeft}
+        y1={plotBottom}
+        x2={width - geom.margins.right}
+        y2={plotBottom}
+        className="habitos-chart-axis-line"
+      />
+      {xAxisTicks.map((tick) => (
+        <text
+          key={tick.label + tick.x}
+          x={tick.x}
+          y={plotBottom + 14}
+          textAnchor="middle"
+          className="habitos-chart-axis-text habitos-chart-axis-x"
+        >
+          {tick.label}
+        </text>
+      ))}
+    </>
+  );
+}
+
 function MeasureChart({ block }) {
   const width = 320;
-  const height = 100;
-  const padX = 8;
-  const padY = 10;
-  const geom = chartGeometry(block.series, block.mode === "pressure" ? "pressure" : "single", width, height, padX, padY);
+  const height = 118;
+  const margins = { left: 40, right: 10, top: 8, bottom: 22 };
+  const geom = chartGeometry(
+    block.series,
+    block.mode === "pressure" ? "pressure" : "single",
+    width,
+    height,
+    margins,
+    block.kind,
+  );
   if (!geom) return null;
 
   const last = block.series[block.series.length - 1];
@@ -17,15 +64,22 @@ function MeasureChart({ block }) {
     caption = `Última: ${String(last.value).replace(".", ",")}${unit} · ${caption}`;
   }
 
+  const yUnit =
+    block.kind === "presion" ? "mmHg" : block.kind === "glucosa" ? "mg/dL" : block.kind === "peso" ? "kg" : "";
+
   return (
     <figure className="habitos-measure-chart">
-      <figcaption className="habitos-measure-chart-title">{block.title}</figcaption>
+      <figcaption className="habitos-measure-chart-title">
+        {block.title}
+        {yUnit && <span className="private habitos-measure-chart-unit"> ({yUnit})</span>}
+      </figcaption>
       <svg
         className="habitos-measure-chart-svg"
         viewBox={`0 0 ${width} ${height}`}
         role="img"
         aria-label={`Gráfica de ${block.title} en el mes`}
       >
+        <ChartAxes geom={geom} />
         {geom.mode === "pressure" ? (
           <>
             <polyline className="habitos-chart-line habitos-chart-line-sys" fill="none" points={polylinePoints(geom.points, "sysY")} />
@@ -46,6 +100,7 @@ function MeasureChart({ block }) {
           </>
         )}
       </svg>
+      <p className="private habitos-measure-chart-axis-hint">Eje horizontal: día del mes</p>
       <p className="private habitos-measure-chart-legend">
         {block.mode === "pressure" ? (
           <>

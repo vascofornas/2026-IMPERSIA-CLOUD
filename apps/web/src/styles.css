@@ -1674,6 +1674,36 @@ button.link.secondary {
   display: block;
 }
 
+.habitos-chart-axis-text {
+  fill: var(--muted);
+  font-size: 9px;
+  font-family: inherit;
+}
+
+.habitos-chart-axis-x {
+  font-size: 8.5px;
+}
+
+.habitos-chart-axis-line {
+  stroke: color-mix(in srgb, var(--muted) 55%, var(--line));
+  stroke-width: 1;
+}
+
+.habitos-chart-grid-line {
+  stroke: color-mix(in srgb, var(--muted) 22%, var(--line));
+  stroke-width: 1;
+}
+
+.habitos-measure-chart-unit {
+  font-weight: 500;
+  font-size: 0.85em;
+}
+
+.habitos-measure-chart-axis-hint {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+}
+
 .habitos-chart-line {
   stroke: var(--habitos);
   stroke-width: 2;
