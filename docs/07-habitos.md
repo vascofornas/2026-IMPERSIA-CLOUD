@@ -90,6 +90,51 @@ El **seguimiento** no es un tercer ítem: son **marcas por día** sobre rutinas 
 **Registro:** anoche dormí 6 horas; peso 72,4 esta mañana; me desperté a las 3.  
 **No Hábitos:** clase pilates viernes 10:00 (Agenda); he dormido fatal (Diario).
 
+## Vista por periodo (salud y sueño)
+
+Pregunta de producto: «¿Cómo he estado de salud este mes?» No es Agenda ni Diario: son **registros puntuales** (`habit_role = log`) que, juntos, cuentan una historia en el tiempo.
+
+### Qué hay hoy (v0)
+
+- **Registro → Salud / Sueño**: lista de las **últimas ~8 entradas**, ordenadas por fecha.
+- Sirve para recordar lo reciente; **no** hay selector de mes ni resumen del periodo.
+
+### Principios
+
+1. **Un registro = un momento** (dormí 7 h, resfriado, peso 72,4). No inventar días sin dato.
+2. **Salud** (síntomas, peso, tensión, notas físicas) y **sueño** comparten la idea de «línea temporal», pero **bloques separados** en pantalla (como ahora).
+3. **Diario** sigue fuera: ánimo/reflexión sin síntoma físico no entra en esta vista.
+4. Tono **personal**, no clínico: ayuda a repasar, no a diagnosticar.
+
+### v1 — «Este mes» (web, oct 2026)
+
+Dentro de **Bienestar y hábitos → Registro**:
+
+| Elemento | Comportamiento |
+| --- | --- |
+| **Selector de periodo** | «Este mes» por defecto; flechas mes anterior / siguiente (calendario natural, no últimos 30 días sueltos). |
+| **Resumen arriba** | Una línea: p. ej. «12 apuntes · 4 de sueño · resfriado del 3 al 8 oct». Heurística simple sobre títulos/`habit_kind`, sin IA en v1. |
+| **Lista agrupada** | Entradas del mes agrupadas por **semana** (Semana del 7 oct…) o lista continua con fechas claras. |
+| **Vacío** | «Nada apuntado en octubre. Escríbelo en Entrada.» |
+| **Hoy** | Sin cambiar la lógica: último sueño + rutinas; enlace «Ver todo» al módulo con el mes actual ya seleccionado. |
+
+Implementación: filtrar ítems `habit_kind ∈ {sueno, salud, …}` por `created_at` (o día del registro) en el mes; sin API nueva si el cliente ya tiene todos los ítems.
+
+### v1.1 — Métricas que se repiten
+
+Cuando el archivado deja **número** en `habit_notes` (peso, horas de sueño, tensión):
+
+- **Sueño**: mini gráfica de barras o puntos **7–31 días** (horas por noche).
+- **Peso / tensión**: misma idea solo si hay **≥3** valores numéricos en el mes; si no, solo lista.
+
+### v2 (futuro, doc 07 ya apuntaba)
+
+Wearables, rachas largas, correlaciones (sueño vs síntomas). No bloquear v1.
+
+### Fuera de alcance
+
+Informes PDF, recordatorios médicos, compartir con terceros, pestaña «Salud» aparte del módulo habitos.
+
 ## Fuera de este bloque (futuro)
 
-Rachas largas, gráficos, wearables, círculos de accountability (Social), objetivos numéricos complejos.
+Rachas largas, gráficos avanzados, wearables, círculos de accountability (Social), objetivos numéricos complejos.

@@ -751,3 +751,6 @@ Modesto: tareas «cada día» al Cambiar no permitían cambiar periodicidad. El 
 
 9 de octubre de 2026, 14:45
 Modesto: edición repetidas incoherente (cambios no en todos los días). Modelo aclarado: una fila en BD, muchas fechas en pantalla. Cambiar serie → panel arriba (sin diálogo confuso); canonical item; repeats en PATCH; excepciones se borran al guardar serie; «Solo este día» aparte. ItemEditForm.jsx, seriesEdit.js. Despliegue web.
+
+9 de octubre de 2026, 15:00
+Vista salud/sueño por mes (07-habitos v1): selector mes, resumen (apuntes, media horas sueño), Sueño y Salud agrupados por semana. habitos.js + HabitRegistro.jsx. Despliegue web.

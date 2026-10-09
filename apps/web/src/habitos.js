@@ -129,6 +129,84 @@ export function groupRoutinesByFranja(routines) {
   return order.filter((id) => map.get(id).length).map((id) => ({ id, label: franjaLabel(id), items: map.get(id) }));
 }
 
+export function logRecordDate(item) {
+  const raw = item?.created_at || item?.starts_at;
+  if (!raw) return null;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+export function habitLogsInMonth(items, year, month, filter) {
+  return items
+    .filter((item) => {
+      if (!isHabitLog(item)) return false;
+      if (filter === "sueno" && item.habit_kind !== "sueno") return false;
+      if (filter === "health" && item.habit_kind === "sueno") return false;
+      const d = logRecordDate(item);
+      if (!d) return false;
+      return d.getFullYear() === year && d.getMonth() === month;
+    })
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+}
+
+export function monthLabel(year, month) {
+  const raw = new Date(year, month, 1).toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+export function shiftMonth(year, month, delta) {
+  const d = new Date(year, month + delta, 1);
+  return { year: d.getFullYear(), month: d.getMonth() };
+}
+
+function startOfWeekMonday(date) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const weekday = d.getDay();
+  const diff = weekday === 0 ? -6 : 1 - weekday;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function weekGroupLabel(weekStart) {
+  const end = new Date(weekStart);
+  end.setDate(end.getDate() + 6);
+  const from = weekStart.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+  const to = end.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+  return `Semana del ${from} al ${to}`;
+}
+
+export function groupLogsByWeek(items) {
+  const map = new Map();
+  for (const item of items) {
+    const d = logRecordDate(item);
+    if (!d) continue;
+    const weekStart = startOfWeekMonday(d);
+    const key = dayKeyFromDate(weekStart);
+    if (!map.has(key)) map.set(key, { start: weekStart, items: [] });
+    map.get(key).items.push(item);
+  }
+  return [...map.values()]
+    .sort((a, b) => b.start - a.start)
+    .map((block) => ({
+      label: weekGroupLabel(block.start),
+      items: block.items.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
+    }));
+}
+
+export function registroPeriodSummary(sleepEntries, healthEntries) {
+  const total = sleepEntries.length + healthEntries.length;
+  if (!total) return null;
+  const parts = [`${total} apunte${total === 1 ? "" : "s"}`];
+  if (sleepEntries.length) parts.push(`${sleepEntries.length} de sueño`);
+  if (healthEntries.length) parts.push(`${healthEntries.length} de salud`);
+  const hours = sleepEntries.map((item) => sleepHoursFromLog(item)).filter((h) => h != null);
+  if (hours.length >= 2) {
+    const avg = Math.round((hours.reduce((a, b) => a + b, 0) / hours.length) * 10) / 10;
+    parts.push(`media sueño ${String(avg).replace(".", ",")} h`);
+  }
+  return parts.join(" · ");
+}
+
 export function sleepLogs(items, limit = 8) {
   return items
     .filter((item) => isHabitLog(item) && item.habit_kind === "sueno")

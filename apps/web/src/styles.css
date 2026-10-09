@@ -1968,6 +1968,66 @@ button.link.secondary {
   line-height: 1.45;
 }
 
+.habitos-registro-month {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+
+.habitos-registro-month-label {
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  font-weight: 650;
+  font-size: 1rem;
+  text-transform: capitalize;
+}
+
+.habitos-registro-month-btn {
+  margin: 0;
+  min-width: 2.5rem;
+  padding: 8px 12px;
+}
+
+.habitos-registro-month-now {
+  font-weight: 500;
+}
+
+.habitos-registro-summary {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--habitos) 10%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--habitos) 22%, var(--line));
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.habitos-registro-summary-empty {
+  background: transparent;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+}
+
+.habitos-registro-week {
+  margin-bottom: 18px;
+}
+
+.habitos-registro-week-label {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .habitos-section-registro .habitos-subheading:first-of-type {
   margin-top: 4px;
 }
