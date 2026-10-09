@@ -38,7 +38,18 @@ Piezas enlazadas con `travel_trip_id` al viaje padre (ítem `trip`).
 
 La cabecera suma los importes por moneda y los compara con el presupuesto cuando coinciden. Las fichas antiguas de una sola línea siguen siendo válidas y se completan al editarlas.
 
-Los detalles viven en `travel_item_details`, relación 1:1 con `items`. Así no se añaden más columnas específicas a la tabla central. Las fechas detalladas son propias del dossier y no convierten automáticamente la ficha en una cita de Agenda.
+Los detalles viven en `travel_item_details`, relación 1:1 con `items`. Así no se añaden más columnas específicas a la tabla central.
+
+## Agenda interna
+
+La Agenda proyecta automáticamente los datos del dossier, sin crear copias:
+
+- El viaje aparece como evento de día completo desde la ida hasta la vuelta.
+- Reservas, elementos del itinerario y experiencias aparecen cuando tienen fecha de inicio.
+- Equipaje y notas no entran en el calendario.
+- Editar o borrar en Viajes actualiza la Agenda inmediatamente.
+
+Las tarjetas proyectadas son de lectura en Agenda y enlazan con la ficha del módulo para modificarlas.
 
 ## Desvíos
 

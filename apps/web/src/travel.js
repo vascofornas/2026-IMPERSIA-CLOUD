@@ -153,3 +153,45 @@ export function tripIsUpcoming(trip) {
   d.setHours(23, 59, 59, 999);
   return d >= new Date();
 }
+
+function localDayValue(date) {
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+export function travelCalendarItems(items) {
+  const calendarItems = [];
+  for (const item of items.filter(isTravelItem)) {
+    if (item.travel_role === "trip" && item.starts_at) {
+      const first = new Date(item.starts_at);
+      if (Number.isNaN(first.getTime())) continue;
+      first.setHours(0, 0, 0, 0);
+      const last = item.travel_end ? new Date(`${String(item.travel_end).slice(0, 10)}T12:00:00`) : new Date(first);
+      if (Number.isNaN(last.getTime())) continue;
+      last.setHours(0, 0, 0, 0);
+      const cursor = new Date(first);
+      while (cursor <= last) {
+        const day = localDayValue(cursor);
+        calendarItems.push({
+          ...item,
+          starts_at: day,
+          time_known: false,
+          source: "travel",
+          occurrenceKey: `travel-${item.id}-${day}`,
+        });
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      continue;
+    }
+    if (["reserva", "plan", "experiencia"].includes(item.travel_role) && item.travel_starts_at) {
+      calendarItems.push({
+        ...item,
+        starts_at: item.travel_starts_at,
+        time_known: String(item.travel_starts_at).includes("T"),
+        source: "travel",
+        occurrenceKey: `travel-${item.id}-${item.travel_starts_at}`,
+      });
+    }
+  }
+  return calendarItems;
+}

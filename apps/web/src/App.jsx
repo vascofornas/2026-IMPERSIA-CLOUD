@@ -37,6 +37,7 @@ import {
   taskRepeatsFromEditor,
 } from "./repeats.js";
 import { AXES, findModule, labelOf } from "./structure.js";
+import { travelCalendarItems } from "./travel.js";
 
 const API = "https://api.impersia.cloud";
 
@@ -753,7 +754,11 @@ function Home({ email, googleEmail, look, alertEmail, onLook, onAlertEmail, onLe
                 {googleEmail ? "Pedir permiso del calendario" : "Conectar Google Calendar"}
               </a>
               <CalendarBoard
-                items={[...items.filter((item) => item.starts_at), ...googleDated]}
+                items={[
+                  ...items.filter((item) => item.starts_at && item.module !== "viajes"),
+                  ...travelCalendarItems(items),
+                  ...googleDated,
+                ]}
                 editing={editing}
                 setEditing={setEditing}
                 startEdit={startEdit}
@@ -1658,9 +1663,20 @@ function ItemList({ items, editing, setEditing, startEdit, startEditOneDay, save
               )}
               {isCasaItem(item) && item.casa_place && <p className="private">{item.casa_place}</p>}
               {isCasaItem(item) && item.casa_notes && <p className="private">{item.casa_notes}</p>}
+              {item.source === "travel" && (item.travel_address || item.travel_place) && (
+                <p className="private">{item.travel_address || item.travel_place}</p>
+              )}
+              {item.source === "travel" && item.travel_notes && <p className="private">{item.travel_notes}</p>}
               <p className="meta">
                 {item.source === "google" ? (
                   <span className="tag m-google"><GoogleMark /> Google</span>
+                ) : item.source === "travel" ? (
+                  <>
+                    <span className="tag m-viajes"><Icon name="viajes" /> Viajes y experiencias</span>
+                    <span className="item-actions">
+                      <a className="link" href="#viajes">Abrir ficha</a>
+                    </span>
+                  </>
                 ) : (
                   <>
                     <span className={`tag m-${item.module}`}><Icon name={item.module} /> {labelOf(item.module)}</span>

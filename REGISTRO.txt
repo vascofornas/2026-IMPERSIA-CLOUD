@@ -826,3 +826,6 @@ Viajes v1.5: fichas completas para Reservas, Itinerario, Experiencias, Equipaje 
 
 9 de octubre de 2026, 23:00
 Viajes: primera pantalla simplificada como índice de tarjetas, una por viaje. Cada tarjeta muestra fechas, destino y cantidades de reservas, itinerario, experiencias y pendientes; «Abrir ficha completa» entra al dossier y «Todos los viajes» vuelve al índice. ViajesBoard.jsx, styles.css y docs/08-viajes.md. Build y despliegue web.
+
+9 de octubre de 2026, 23:15
+Agenda interna: proyección automática de Viajes sin duplicar datos. El viaje ocupa todos los días entre ida y vuelta; reservas, itinerario y experiencias con inicio aparecen con su hora. Equipaje y notas quedan fuera. Las tarjetas de Agenda son de lectura y abren la ficha de Viajes; editar o borrar el dossier actualiza el calendario. travel.js, App.jsx y docs/08-viajes.md. Build, prueba de proyección y despliegue web.
