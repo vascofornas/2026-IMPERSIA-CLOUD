@@ -856,3 +856,6 @@ Proyectos profesionales desplegado y verificado en producción, commit 60478da. 
 
 10 de octubre de 2026, 12:06
 Alta conversacional de proyectos. «Nuevo proyecto» deja de abrir un formulario y pasa a «Crear proyecto con Impersia»: el agente recibe la explicación inicial, propone plantilla y borrador, pregunta una cosa cada vez y mantiene una ficha visible que solo se guarda al confirmar. Las preguntas admiten texto, fecha, elección única o varias respuestas; los tipos de trabajo pasan a ser múltiples y el constructor incorpora campos de selección múltiple. Se suben migración 023, professional_guide.py, endpoint guiado, ProjectGuide.jsx, adaptación de formularios/fichas, estilos, build web y documentación. El formulario convencional permanece para editar una ficha ya creada.
+
+10 de octubre de 2026, 12:15
+Conversación de proyectos verificada en producción. La prueba recorrió plantilla, título, selección múltiple Web + Aplicación móvil, cliente, objetivo, fecha omitida, campos sectoriales y prioridad; la ficha final conservó ambos tipos. Una plantilla creada para la prueba guardó también un campo multiselección Web + Redes. Migración 023, recurso web y health correctos, sin errores del servicio. Cuenta y datos temporales eliminados.
