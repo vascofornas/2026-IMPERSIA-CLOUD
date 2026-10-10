@@ -4280,6 +4280,38 @@ button.link.secondary {
   font-size: .72rem;
 }
 
+.software-release-filter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+}
+
+.software-release-filter strong {
+  flex: 0 0 auto;
+  margin-right: 3px;
+  font-size: .78rem;
+}
+
+.software-release-filter button {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-color: var(--line);
+  background: transparent;
+  color: var(--ink);
+  font-size: .76rem;
+}
+
+.software-release-filter button.on {
+  border-color: var(--prof);
+  background: color-mix(in srgb, var(--prof) 10%, var(--bg));
+  color: var(--prof);
+}
+
 .software-panel {
   margin-top: 14px;
   padding: 18px;

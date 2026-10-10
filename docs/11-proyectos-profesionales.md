@@ -50,6 +50,8 @@ La parte superior resume tareas terminadas, bloqueos, hitos alcanzados y entrega
 
 Las relaciones disponibles son dependencia entre tareas, tarea → hito, tarea/hito → entregable y nota → pieza. Siempre se validan dentro del mismo proyecto y la misma cuenta. No hay asignaciones de equipo en esta versión.
 
+La gestión de versiones se concentra en los entregables de tipo release. Las tareas muestran la versión a la que contribuyen y el tablero se puede filtrar por release o por «Sin versión»; los hitos también muestran su entrega relacionada. Desde una tarjeta de release se abre directamente el trabajo incluido. Impersia gestiona alcance y progreso, no sustituye ramas, commits ni tags de Git.
+
 ## Entrada y fronteras
 
 - Trabajo con un resultado y partes relacionadas → Proyectos.

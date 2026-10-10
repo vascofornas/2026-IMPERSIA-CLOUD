@@ -868,3 +868,6 @@ Workspace profesional para proyectos Software. Se suben migración 024, professi
 
 10 de octubre de 2026, 13:05
 Workspace Software desplegado y probado de punta a punta. Proyecto con dos tareas, hito, release y nota de decisión; dependencias y vínculos tarea-hito-entregable; progreso del hito y release calculado hasta 100%; estados y orden actualizados; relación con otro proyecto y acceso desde otra cuenta bloqueados; borrado de nota limpió sus relaciones; un expediente Jurídico mantuvo la ficha general. Migración 024, JS, CSS y health correctos, sin errores recientes. Se eliminaron las dos cuentas y todos los datos temporales.
+
+10 de octubre de 2026, 19:38
+Gestión visual de versiones en el workspace Software. La versión pertenece al entregable/release, no se duplica en cada tarea o hito. Las tareas muestran su versión vinculada; el tablero filtra por release o por «Sin versión»; los hitos muestran la entrega relacionada y cada release abre el trabajo que contiene. Git conserva commits, ramas y tags. Se suben SoftwareProjectWorkspace.jsx, estilos, build web y docs/11.

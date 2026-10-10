@@ -24,6 +24,11 @@ function relationTargets(relations, itemId, relationType, byId) {
     .filter(Boolean);
 }
 
+function releaseName(item) {
+  const version = item.project_role_data?.version;
+  return version ? `v${version}` : item.title;
+}
+
 function TaskCard({ item, relations, byId, onMove, onEdit, onDelete }) {
   const dependencies = relationTargets(relations, item.id, "depends_on", byId);
   const milestones = relationTargets(relations, item.id, "supports_milestone", byId);
@@ -48,7 +53,7 @@ function TaskCard({ item, relations, byId, onMove, onEdit, onDelete }) {
       {(milestones.length > 0 || deliverables.length > 0) && (
         <div className="software-card-links">
           {milestones.map((row) => <span key={row.id}>Hito · {row.title}</span>)}
-          {deliverables.map((row) => <span key={row.id}>Entrega · {row.title}</span>)}
+          {deliverables.map((row) => <span key={row.id}>Versión · {releaseName(row)}</span>)}
         </div>
       )}
       <select
@@ -66,11 +71,11 @@ function TaskCard({ item, relations, byId, onMove, onEdit, onDelete }) {
   );
 }
 
-function TaskBoard({ tasks, relations, byId, onMove, onEdit, onDelete, onAdd }) {
+function TaskBoard({ tasks, relations, byId, onMove, onEdit, onDelete, onAdd, releaseLabel }) {
   return (
     <section className="software-panel">
       <div className="software-panel-heading">
-        <div><h3>Tablero de trabajo</h3><p>Arrastra las tarjetas o cambia su estado desde la propia tarea.</p></div>
+        <div><h3>Tablero de trabajo{releaseLabel ? ` · ${releaseLabel}` : ""}</h3><p>Arrastra las tarjetas o cambia su estado desde la propia tarea.</p></div>
         <button type="button" onClick={() => onAdd("task")}>+ Nueva tarea</button>
       </div>
       <div className="software-kanban">
@@ -136,7 +141,7 @@ function Milestones({ items, progress, relations, byId, onEdit, onDelete, onAdd 
   );
 }
 
-function Deliverables({ items, progress, relations, byId, project, onEdit, onDelete, onAdd }) {
+function Deliverables({ items, progress, relations, byId, project, onEdit, onDelete, onAdd, onShowWork }) {
   const deliverableTypes = project.professional_definition?.deliverables || [];
   const repository = project.project_custom_values?.repositorio;
   return (
@@ -163,6 +168,7 @@ function Deliverables({ items, progress, relations, byId, project, onEdit, onDel
                 <p className="private">{contributors.length ? `${stats.done} de ${contributors.length} piezas completadas` : "Sin piezas vinculadas"}</p>
                 <div className="software-card-links">{contributors.slice(0, 4).map((row) => <span key={row.id}>{row.title}</span>)}</div>
                 <div className="software-card-actions">
+                  <button type="button" className="link" onClick={() => onShowWork(item)}>Ver trabajo de esta versión</button>
                   {repository && <a className="link" href={repository} target="_blank" rel="noreferrer">Repositorio</a>}
                   <button type="button" className="link" onClick={() => onEdit(item)}><Icon name="editar" /> Editar</button>
                   <button type="button" className="link danger" onClick={() => onDelete(item)}><Icon name="borrar" /> Borrar</button>
@@ -218,6 +224,7 @@ export default function SoftwareProjectWorkspace({
   onMove,
 }) {
   const [panel, setPanel] = useState("tasks");
+  const [releaseFilter, setReleaseFilter] = useState("all");
   const grouped = useMemo(() => ({
     tasks: pieces.filter((item) => item.project_role === "task"),
     milestones: pieces.filter((item) => item.project_role === "milestone"),
@@ -227,6 +234,23 @@ export default function SoftwareProjectWorkspace({
   const byId = useMemo(() => Object.fromEntries(pieces.map((item) => [item.id, item])), [pieces]);
   const blocked = grouped.tasks.filter((item) => item.project_workflow_status === "blocked").length;
   const done = grouped.tasks.filter((item) => item.project_workflow_status === "done").length;
+  const filteredTasks = useMemo(() => {
+    if (releaseFilter === "all") return grouped.tasks;
+    return grouped.tasks.filter((item) => {
+      const linked = relations.some(
+        (relation) => relation.from_item_id === item.id
+          && relation.relation_type === "supports_deliverable"
+          && relation.to_item_id === releaseFilter,
+      );
+      if (releaseFilter === "unassigned") {
+        return !relations.some(
+          (relation) => relation.from_item_id === item.id && relation.relation_type === "supports_deliverable",
+        );
+      }
+      return linked;
+    });
+  }, [grouped.tasks, relations, releaseFilter]);
+  const selectedRelease = grouped.deliverables.find((item) => item.id === releaseFilter);
 
   return (
     <div className="software-workspace">
@@ -246,9 +270,21 @@ export default function SoftwareProjectWorkspace({
           <button type="button" key={key} className={panel === key ? "on" : ""} onClick={() => setPanel(key)}>{label}<span>{count}</span></button>
         ))}
       </nav>
-      {panel === "tasks" && <TaskBoard tasks={grouped.tasks} relations={relations} byId={byId} onMove={onMove} onEdit={onEdit} onDelete={onDelete} onAdd={onAdd} />}
+      {panel === "tasks" && grouped.deliverables.length > 0 && (
+        <div className="software-release-filter">
+          <strong>Versión objetivo</strong>
+          <button type="button" className={releaseFilter === "all" ? "on" : ""} onClick={() => setReleaseFilter("all")}>Todas</button>
+          <button type="button" className={releaseFilter === "unassigned" ? "on" : ""} onClick={() => setReleaseFilter("unassigned")}>Sin versión</button>
+          {grouped.deliverables.map((item) => (
+            <button type="button" key={item.id} className={releaseFilter === item.id ? "on" : ""} onClick={() => setReleaseFilter(item.id)}>
+              {releaseName(item)}
+            </button>
+          ))}
+        </div>
+      )}
+      {panel === "tasks" && <TaskBoard tasks={filteredTasks} relations={relations} byId={byId} onMove={onMove} onEdit={onEdit} onDelete={onDelete} onAdd={onAdd} releaseLabel={releaseFilter === "unassigned" ? "Sin versión" : selectedRelease ? releaseName(selectedRelease) : ""} />}
       {panel === "milestones" && <Milestones items={grouped.milestones} progress={progress.milestones || {}} relations={relations} byId={byId} onEdit={onEdit} onDelete={onDelete} onAdd={onAdd} />}
-      {panel === "deliverables" && <Deliverables items={grouped.deliverables} progress={progress.deliverables || {}} relations={relations} byId={byId} project={project} onEdit={onEdit} onDelete={onDelete} onAdd={onAdd} />}
+      {panel === "deliverables" && <Deliverables items={grouped.deliverables} progress={progress.deliverables || {}} relations={relations} byId={byId} project={project} onEdit={onEdit} onDelete={onDelete} onAdd={onAdd} onShowWork={(item) => { setReleaseFilter(item.id); setPanel("tasks"); }} />}
       {panel === "notes" && <Notes items={grouped.notes} relations={relations} byId={byId} onEdit={onEdit} onDelete={onDelete} onAdd={onAdd} />}
     </div>
   );
