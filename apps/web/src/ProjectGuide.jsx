@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const FIRST_QUESTION = {
   key: "project_idea",
@@ -111,10 +111,20 @@ export default function ProjectGuide({ templates, busy: creating, guideStep, onC
   const [messages, setMessages] = useState([{ role: "assistant", text: "Vamos a crear el proyecto juntos. No necesitas saber de antemano qué campos completar." }]);
   const [ready, setReady] = useState(false);
   const [thinking, setThinking] = useState(false);
+  const messagesRef = useRef(null);
 
   useEffect(() => {
     setAnswer(draftValue(draft, question?.key || ""));
   }, [question?.key]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const panel = messagesRef.current;
+    if (!panel) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      panel.scrollTo({ top: panel.scrollHeight, behavior: messages.length > 1 ? "smooth" : "auto" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [messages, thinking]);
 
   const canContinue = useMemo(() => {
     if (!question) return false;
@@ -171,7 +181,7 @@ export default function ProjectGuide({ templates, busy: creating, guideStep, onC
           </div>
           <button type="button" className="link" onClick={onCancel}>Cancelar</button>
         </div>
-        <div className="project-guide-messages" aria-live="polite">
+        <div ref={messagesRef} className="project-guide-messages" aria-live="polite">
           {messages.map((message, index) => (
             <p key={`${message.role}-${index}`} className={`project-guide-message ${message.role} ${message.question ? "question" : ""}`}>{message.text}</p>
           ))}

@@ -4097,8 +4097,10 @@ button.link.secondary {
   gap: 10px;
   min-height: 180px;
   max-height: 420px;
-  padding: 20px;
+  padding: 20px 20px 30px;
   overflow-y: auto;
+  scroll-padding-bottom: 30px;
+  overscroll-behavior: contain;
 }
 
 .project-guide-message {
@@ -4125,6 +4127,10 @@ button.link.secondary {
 .project-guide-message.thinking {
   color: var(--muted);
   font-style: italic;
+}
+
+.project-guide-message:last-child {
+  scroll-margin-bottom: 30px;
 }
 
 .project-guide-answer,

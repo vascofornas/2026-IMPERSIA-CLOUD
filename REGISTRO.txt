@@ -859,3 +859,6 @@ Alta conversacional de proyectos. «Nuevo proyecto» deja de abrir un formulario
 
 10 de octubre de 2026, 12:15
 Conversación de proyectos verificada en producción. La prueba recorrió plantilla, título, selección múltiple Web + Aplicación móvil, cliente, objetivo, fecha omitida, campos sectoriales y prioridad; la ficha final conservó ambos tipos. Una plantilla creada para la prueba guardó también un campo multiselección Web + Redes. Migración 023, recurso web y health correctos, sin errores del servicio. Cuenta y datos temporales eliminados.
+
+10 de octubre de 2026, 12:38
+Corregido el avance visual de la conversación al registrar un proyecto. El historial ahora baja automáticamente con cada respuesta del usuario, espera de la IA y pregunta nueva; además reserva espacio inferior para que el último mensaje no quede oculto por el bloque de respuesta. Se suben ProjectGuide.jsx, estilos y build web.
