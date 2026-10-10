@@ -14,6 +14,8 @@ El esqueleto de las pantallas ya está, con ejemplos. A partir de aquí se perfe
 2. **Profesional.** Proyectos, Reuniones, Segunda memoria, Ideas.
 3. **Social.** Muro, Listas y rutas, Círculos, Espacios.
 
+**Estado (octubre de 2026):** el eje Vida personal está completo en su versión actual. En Profesional, Proyectos y la base de plantillas sectoriales configurables están completos; siguen Reuniones, Segunda memoria e Ideas.
+
 El primero es Agenda. Junta lo que entra por Entrada con Google Calendar, si la persona lo conecta. Impersia lee ese calendario y lo muestra en Agenda y en Hoy, marcado como Google. Lo escrito en Entrada se queda en Impersia. Escribir de vuelta en Google llega cuando esta lectura ya se use. La vista de Agenda se abre en el mes. También se puede ver la semana o un solo día. Entra cualquier entrada con fecha, de cualquier eje, más Google. Cada cajón tiene su color y su icono. Google lleva su marca. Hoy sigue siendo la lista del día.
 
 Cuando un grupo necesita partes dentro, como un viaje, un proyecto o un hábito, Entrada decide si la frase abre algo nuevo o entra en lo que ya existe. Eso se hace al llegar a ese grupo.
@@ -100,15 +102,14 @@ Duración orientativa: 2 semanas.
 
 ## Después, un módulo cada vez
 
-Solo cuando la fase 6 esté en uso. Cada uno se construye sobre `items`, sin nueva arquitectura.
+Cada módulo se construye sobre `items` y el archivador común. Agenda, Casa, Hábitos, Viajes, Diario y Deseos ya forman el eje personal operativo. Proyectos inaugura el eje profesional con una arquitectura adaptable por sector descrita en [11-proyectos-profesionales.md](11-proyectos-profesionales.md).
 
-1. Diario (estado de ánimo, entrada del día) separado de la nota genérica.
-2. Deseos.
-3. Hábitos.
-4. Viajes.
-5. Segunda memoria, ya con `pgvector`.
-6. Casa y suministros.
-7. Muro de intenciones y perfil público.
+Orden siguiente:
+
+1. Reuniones, enlazadas con cliente y proyecto.
+2. Segunda memoria, con `pgvector`.
+3. Ideas, con promoción a proyecto.
+4. Módulos del eje Social.
 
 ## Qué no se adelanta
 

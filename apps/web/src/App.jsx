@@ -24,6 +24,8 @@ import HabitosBoard, { HoyBienestar } from "./HabitosBoard.jsx";
 import ViajesBoard from "./ViajesBoard.jsx";
 import DiarioBoard from "./DiarioBoard.jsx";
 import DeseosBoard from "./DeseosBoard.jsx";
+import ProfessionalTemplateBuilder from "./ProfessionalTemplateBuilder.jsx";
+import ProyectosBoard from "./ProyectosBoard.jsx";
 import { pendingControls } from "./healthControls.js";
 import { hasHoyBienestarContent, isHabitRoutine } from "./habitos.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
@@ -371,6 +373,72 @@ function Home({
     });
     setItems((prev) => prev.map((row) => row.id === item.id ? item : row));
     setNotice(status === "done" ? "Deseo marcado como cumplido." : "Deseo devuelto a pendientes.");
+    return item;
+  }
+
+  const loadProfessionalTemplates = useCallback(() => call("/professional-templates"), []);
+
+  async function createProfessionalTemplate(body) {
+    return call("/professional-templates", { method: "POST", body: JSON.stringify(body) });
+  }
+
+  async function updateProfessionalTemplate(templateId, body) {
+    const template = await call(`/professional-templates/${templateId}`, { method: "PATCH", body: JSON.stringify(body) });
+    setItems((current) => current.map((item) => item.professional_template_id === template.id
+      ? { ...item, professional_template_name: template.name, professional_terminology: template.terminology, professional_definition: template.definition }
+      : item));
+    return template;
+  }
+
+  async function cloneProfessionalTemplate(templateId) {
+    return call(`/professional-templates/${templateId}/clone`, { method: "POST", body: "{}" });
+  }
+
+  async function deleteProfessionalTemplate(templateId, replacementId) {
+    const query = replacementId ? `?replacement_template_id=${encodeURIComponent(replacementId)}` : "";
+    const result = await call(`/professional-templates/${templateId}${query}`, { method: "DELETE" });
+    if (replacementId) {
+      const fresh = await call("/items");
+      setItems(fresh);
+    }
+    return result;
+  }
+
+  async function setDefaultProfessionalTemplate(templateId) {
+    return call("/professional-profile/default", {
+      method: "PATCH",
+      body: JSON.stringify({ template_id: templateId }),
+    });
+  }
+
+  async function createProfessionalProject(body) {
+    const item = await call("/professional-projects", { method: "POST", body: JSON.stringify(body) });
+    setItems((current) => [item, ...current.filter((row) => row.id !== item.id)]);
+    setNotice("Proyecto profesional creado.");
+    return item;
+  }
+
+  async function createProfessionalPiece(projectId, body) {
+    const item = await call(`/professional-projects/${projectId}/pieces`, { method: "POST", body: JSON.stringify(body) });
+    setItems((current) => [item, ...current.filter((row) => row.id !== item.id)]);
+    setNotice("Contenido añadido al proyecto.");
+    return item;
+  }
+
+  async function updateProfessionalItem(itemId, body) {
+    const item = await call(`/professional-items/${itemId}`, { method: "PATCH", body: JSON.stringify(body) });
+    setItems((current) => current.map((row) => row.id === item.id ? item : row));
+    setNotice("Ficha profesional actualizada.");
+    return item;
+  }
+
+  async function updateProfessionalStatus(itemId, status) {
+    const item = await call(`/professional-items/${itemId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    setItems((current) => current.map((row) => row.id === item.id ? item : row));
+    setNotice(status === "done" ? "Marcado como completado." : "Marcado como pendiente.");
     return item;
   }
 
@@ -929,6 +997,19 @@ function Home({
                 setError={setError}
               />
             </div>
+          ) : current.id === "proyectos" ? (
+            <div className="module-proyectos">
+              <ProyectosBoard
+                items={items}
+                loadTemplates={loadProfessionalTemplates}
+                createProject={createProfessionalProject}
+                createPiece={createProfessionalPiece}
+                updateItem={updateProfessionalItem}
+                updateStatus={updateProfessionalStatus}
+                askRemove={askRemove}
+                setError={setError}
+              />
+            </div>
           ) : (
             <div className="panes">
               <section>
@@ -977,6 +1058,15 @@ function Home({
           <JournalAISetting
             enabled={journalAIEnabled}
             onChange={onJournalAI}
+            setError={setError}
+          />
+          <ProfessionalTemplateBuilder
+            loadTemplates={loadProfessionalTemplates}
+            createTemplate={createProfessionalTemplate}
+            updateTemplate={updateProfessionalTemplate}
+            cloneTemplate={cloneProfessionalTemplate}
+            deleteTemplate={deleteProfessionalTemplate}
+            setDefaultTemplate={setDefaultProfessionalTemplate}
             setError={setError}
           />
         </>

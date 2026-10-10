@@ -785,7 +785,7 @@ def _module(low: str) -> str:
         return "reuniones"
     if any(word in low for word in ("idea de", "emprend", "modelo de negocio")):
         return "ideas"
-    if any(word in low for word in ("resumen", "artículo", "articulo", "documentación", "documentacion", "apuntes")):
+    if any(word in low for word in ("resumen", "artículo", "articulo", "documentación", "documentacion", "apuntes", "nota sobre")):
         return "memoria"
     if any(word in low for word in ("proyecto", "hito", "entregable")):
         return "proyectos"

@@ -25,6 +25,7 @@ import archive
 import dedup
 import health_controls
 import journal
+import professional
 import travel
 import wishes
 from classify import (
@@ -285,6 +286,47 @@ class WishListIn(BaseModel):
 class WishListPatch(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=120)
     description: str | None = Field(default=None, max_length=1000)
+
+
+class ProfessionalTemplateIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    terminology: dict = Field(default_factory=dict)
+    definition: dict = Field(default_factory=dict)
+
+
+class ProfessionalDefaultIn(BaseModel):
+    template_id: str
+
+
+class ProfessionalTemplateDeleteIn(BaseModel):
+    replacement_template_id: str | None = None
+
+
+class ProjectDetailFields(BaseModel):
+    template_id: str | None = None
+    parent_project_id: str | None = None
+    project_role: str | None = None
+    work_type: str | None = None
+    deliverable_type: str | None = None
+    stage: str | None = None
+    priority: str | None = None
+    due_date: str | None = None
+    client_name: str | None = Field(default=None, max_length=240)
+    description: str | None = Field(default=None, max_length=5000)
+    custom_values: dict = Field(default_factory=dict)
+
+
+class ProfessionalProjectIn(ProjectDetailFields):
+    title: str = Field(min_length=1, max_length=200)
+
+
+class ProfessionalProjectPatch(ProjectDetailFields):
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    custom_values: dict | None = None
+
+
+class ProfessionalPieceIn(ProjectDetailFields):
+    title: str = Field(min_length=1, max_length=200)
 
 
 class ItemPatch(TravelDetailFields):
@@ -921,7 +963,7 @@ def _file_suggestion(
         row = dedup.merge_existing(cur, user_id, capture_id, suggestion, existing)
         item = (
             _fetch_item(cur, str(row["id"]), user_id)
-            if suggestion.get("module") == "deseos"
+            if suggestion.get("module") in {"deseos", "proyectos"}
             else _public_item(row)
         )
         item["dedupe_action"] = "merged"
@@ -966,6 +1008,45 @@ def _file_suggestion(
             }
         )
         wishes.upsert_details(cur, str(row["id"]), payload)
+        item = _fetch_item(cur, str(row["id"]), user_id)
+        return item, False
+    if suggestion.get("module") == "proyectos":
+        role = suggestion.get("project_role")
+        role = role if role in professional.PROJECT_ROLES else professional.infer_role(raw_text or title_val)
+        parent_id = None if role == "project" else professional.resolve_parent(
+            cur,
+            user_id,
+            f"{raw_text or title_val} {suggestion.get('project_hint') or ''}",
+        )
+        if role != "project" and not parent_id:
+            role = "project"
+        if parent_id:
+            parent = professional.fetch_details(cur, [parent_id]).get(parent_id)
+            template = professional.fetch_template(cur, user_id, str(parent["template_id"])) if parent else None
+        else:
+            template = None
+        template = template or professional.default_template(cur, user_id)
+        stage_keys = {entry["key"] for entry in template["definition"].get("stages", [])}
+        work_keys = {entry["key"] for entry in template["definition"].get("work_types", [])}
+        deliverable_keys = {entry["key"] for entry in template["definition"].get("deliverables", [])}
+        starts = suggestion.get("starts_at")
+        payload = professional.normalize_detail(
+            {
+                "template_id": str(template["id"]),
+                "parent_project_id": parent_id,
+                "project_role": role,
+                "work_type": suggestion.get("project_work_type") if suggestion.get("project_work_type") in work_keys else None,
+                "deliverable_type": suggestion.get("project_deliverable_type") if suggestion.get("project_deliverable_type") in deliverable_keys else None,
+                "stage": suggestion.get("project_stage") if suggestion.get("project_stage") in stage_keys else None,
+                "priority": suggestion.get("project_priority") or "media",
+                "due_date": starts.date().isoformat() if starts else None,
+                "client_name": suggestion.get("project_client_name"),
+                "description": suggestion.get("project_description"),
+                "custom_values": suggestion.get("project_custom_values") or {},
+            },
+            template,
+        )
+        professional.upsert_details(cur, str(row["id"]), payload)
         item = _fetch_item(cur, str(row["id"]), user_id)
         return item, False
     return _public_item(row), False
@@ -1191,6 +1272,342 @@ def patch_wish_status(item_id: str, body: StatusIn, request: Request):
             )
             if not cur.fetchone():
                 raise HTTPException(status_code=404, detail="Deseo no encontrado")
+            item = _fetch_item(cur, item_id, user_id)
+        conn.commit()
+    return item
+
+
+def _normalize_professional_template(body: ProfessionalTemplateIn) -> dict:
+    try:
+        return professional.normalize_template(body.name, body.terminology, body.definition)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/professional-templates")
+def get_professional_templates(request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            result = professional.list_templates(cur, user_id)
+        conn.commit()
+    return {"items": result}
+
+
+@app.post("/professional-templates", status_code=201)
+def create_professional_template(body: ProfessionalTemplateIn, request: Request):
+    user_id = current_user(request)
+    payload = _normalize_professional_template(body)
+    try:
+        with db() as conn:
+            with conn.cursor() as cur:
+                professional.ensure_templates(cur, user_id)
+                cur.execute(
+                    """
+                    INSERT INTO professional_templates (user_id, name, terminology, definition)
+                    VALUES (%s, %s, %s::jsonb, %s::jsonb)
+                    RETURNING id, name, terminology, definition, starter_key, false AS is_default
+                    """,
+                    (
+                        user_id,
+                        payload["name"],
+                        json.dumps(payload["terminology"], ensure_ascii=False),
+                        json.dumps(payload["definition"], ensure_ascii=False),
+                    ),
+                )
+                row = cur.fetchone()
+            conn.commit()
+    except psycopg.errors.UniqueViolation as exc:
+        raise HTTPException(status_code=409, detail="Ya existe una plantilla con ese nombre") from exc
+    return professional.public_template(row)
+
+
+@app.patch("/professional-templates/{template_id}")
+def patch_professional_template(template_id: str, body: ProfessionalTemplateIn, request: Request):
+    user_id = current_user(request)
+    payload = _normalize_professional_template(body)
+    try:
+        with db() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    UPDATE professional_templates
+                    SET name = %s, terminology = %s::jsonb, definition = %s::jsonb, updated_at = now()
+                    WHERE id = %s AND user_id = %s
+                    RETURNING id, name, terminology, definition, starter_key,
+                              (SELECT default_professional_template_id = professional_templates.id FROM users WHERE id = %s) AS is_default
+                    """,
+                    (
+                        payload["name"],
+                        json.dumps(payload["terminology"], ensure_ascii=False),
+                        json.dumps(payload["definition"], ensure_ascii=False),
+                        template_id,
+                        user_id,
+                        user_id,
+                    ),
+                )
+                row = cur.fetchone()
+                if row:
+                    professional.reconcile_template_details(cur, row)
+            conn.commit()
+    except psycopg.errors.UniqueViolation as exc:
+        raise HTTPException(status_code=409, detail="Ya existe una plantilla con ese nombre") from exc
+    if not row:
+        raise HTTPException(status_code=404, detail="Plantilla no encontrada")
+    return professional.public_template(row)
+
+
+@app.post("/professional-templates/{template_id}/clone", status_code=201)
+def clone_professional_template(template_id: str, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            source = professional.fetch_template(cur, user_id, template_id)
+            if not source:
+                raise HTTPException(status_code=404, detail="Plantilla no encontrada")
+            base_name = f"Copia de {source['name']}"[:110]
+            name = base_name
+            suffix = 2
+            while True:
+                cur.execute("SELECT 1 FROM professional_templates WHERE user_id = %s AND lower(name) = lower(%s)", (user_id, name))
+                if not cur.fetchone():
+                    break
+                name = f"{base_name} {suffix}"[:120]
+                suffix += 1
+            cur.execute(
+                """
+                INSERT INTO professional_templates (user_id, name, terminology, definition)
+                VALUES (%s, %s, %s::jsonb, %s::jsonb)
+                RETURNING id, name, terminology, definition, starter_key, false AS is_default
+                """,
+                (
+                    user_id,
+                    name,
+                    json.dumps(source["terminology"], ensure_ascii=False),
+                    json.dumps(source["definition"], ensure_ascii=False),
+                ),
+            )
+            row = cur.fetchone()
+        conn.commit()
+    return professional.public_template(row)
+
+
+@app.patch("/professional-profile/default")
+def set_default_professional_template(body: ProfessionalDefaultIn, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            template = professional.fetch_template(cur, user_id, body.template_id)
+            if not template:
+                raise HTTPException(status_code=404, detail="Plantilla no encontrada")
+            cur.execute(
+                "UPDATE users SET default_professional_template_id = %s WHERE id = %s",
+                (body.template_id, user_id),
+            )
+        conn.commit()
+    return {"ok": True, "template_id": body.template_id}
+
+
+@app.delete("/professional-templates/{template_id}")
+def delete_professional_template(
+    template_id: str,
+    request: Request,
+    replacement_template_id: str | None = None,
+):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            template = professional.fetch_template(cur, user_id, template_id)
+            if not template:
+                raise HTTPException(status_code=404, detail="Plantilla no encontrada")
+            cur.execute("SELECT count(*) AS total FROM project_details WHERE template_id = %s", (template_id,))
+            used = int(cur.fetchone()["total"])
+            replacement = None
+            if replacement_template_id:
+                replacement = professional.fetch_template(cur, user_id, replacement_template_id)
+                if not replacement or replacement_template_id == template_id:
+                    raise HTTPException(status_code=422, detail="Plantilla de sustitución no válida")
+            if (used or template["is_default"]) and not replacement:
+                raise HTTPException(status_code=409, detail="Elige otra plantilla para sustituirla")
+            if replacement:
+                cur.execute(
+                    "UPDATE project_details SET template_id = %s, updated_at = now() WHERE template_id = %s",
+                    (replacement_template_id, template_id),
+                )
+                professional.reconcile_template_details(cur, replacement)
+                cur.execute(
+                    """
+                    UPDATE users SET default_professional_template_id = %s
+                    WHERE id = %s AND default_professional_template_id = %s
+                    """,
+                    (replacement_template_id, user_id, template_id),
+                )
+            cur.execute("DELETE FROM professional_templates WHERE id = %s AND user_id = %s", (template_id, user_id))
+        conn.commit()
+    return {"ok": True, "moved": used}
+
+
+def _project_payload(
+    cur,
+    user_id: str,
+    body: ProjectDetailFields,
+    *,
+    existing: dict | None = None,
+    partial: bool = False,
+    forced_parent: str | None = None,
+) -> tuple[dict, dict]:
+    data = body.model_dump()
+    fields_set = set(body.model_fields_set) if partial else None
+    template_id = data.get("template_id")
+    if partial and "template_id" not in (fields_set or set()):
+        template_id = str(existing["template_id"]) if existing and existing.get("template_id") else None
+    if forced_parent:
+        owned_parent = professional.resolve_parent(cur, user_id, "", forced_parent)
+        if not owned_parent:
+            raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+        parent = professional.fetch_details(cur, [owned_parent]).get(owned_parent)
+        if not parent or parent.get("project_role") != "project":
+            raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+        template_id = str(parent["template_id"])
+        data["parent_project_id"] = owned_parent
+        if fields_set is not None:
+            fields_set.add("parent_project_id")
+    template = (
+        professional.fetch_template(cur, user_id, template_id)
+        if template_id
+        else professional.default_template(cur, user_id)
+    )
+    if not template:
+        raise HTTPException(status_code=422, detail="Plantilla profesional no válida")
+    data["template_id"] = str(template["id"])
+    if fields_set is not None:
+        fields_set.add("template_id")
+    try:
+        payload = professional.normalize_detail(data, template, existing=existing, fields_set=fields_set)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    if payload["parent_project_id"]:
+        parent_id = professional.resolve_parent(cur, user_id, "", payload["parent_project_id"])
+        if not parent_id:
+            raise HTTPException(status_code=422, detail="Proyecto padre no válido")
+        payload["parent_project_id"] = parent_id
+    return payload, template
+
+
+def _professional_suggestion(title: str, payload: dict, *, source: str) -> dict:
+    due = payload.get("due_date")
+    starts_at = _parse_travel_date(due.isoformat()) if due else None
+    return {
+        "kind": "note" if payload["project_role"] == "note" else "task",
+        "axis": "professional",
+        "module": "proyectos",
+        "title": title.strip(),
+        "starts_at": starts_at,
+        "repeats": None,
+        "time_known": False,
+        "alert_minutes_before": None,
+        "source": source,
+    }
+
+
+@app.post("/professional-projects", status_code=201)
+def create_professional_project(body: ProfessionalProjectIn, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            data = body.model_copy(update={"project_role": "project", "parent_project_id": None})
+            payload, _ = _project_payload(cur, user_id, data)
+            row = _insert_item(cur, user_id, None, _professional_suggestion(body.title, payload, source="proyectos_ui"))
+            professional.upsert_details(cur, str(row["id"]), payload)
+            item = _fetch_item(cur, str(row["id"]), user_id)
+        conn.commit()
+    return item
+
+
+@app.post("/professional-projects/{project_id}/pieces", status_code=201)
+def create_professional_piece(project_id: str, body: ProfessionalPieceIn, request: Request):
+    user_id = current_user(request)
+    role = body.project_role or "task"
+    if role == "project":
+        raise HTTPException(status_code=422, detail="Una pieza no puede ser otro proyecto")
+    with db() as conn:
+        with conn.cursor() as cur:
+            data = body.model_copy(update={"project_role": role})
+            payload, _ = _project_payload(cur, user_id, data, forced_parent=project_id)
+            row = _insert_item(cur, user_id, None, _professional_suggestion(body.title, payload, source="proyectos_ui"))
+            professional.upsert_details(cur, str(row["id"]), payload)
+            item = _fetch_item(cur, str(row["id"]), user_id)
+        conn.commit()
+    return item
+
+
+@app.patch("/professional-items/{item_id}")
+def patch_professional_item(item_id: str, body: ProfessionalProjectPatch, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, title FROM items WHERE id = %s AND user_id = %s AND module = 'proyectos'",
+                (item_id, user_id),
+            )
+            base = cur.fetchone()
+            if not base:
+                raise HTTPException(status_code=404, detail="Contenido profesional no encontrado")
+            existing = professional.fetch_details(cur, [item_id]).get(item_id)
+            if not existing:
+                template = professional.default_template(cur, user_id)
+                existing = {
+                    "template_id": template["id"],
+                    "parent_project_id": None,
+                    "project_role": "project",
+                    "work_type": None,
+                    "deliverable_type": None,
+                    "stage": None,
+                    "priority": "media",
+                    "due_date": None,
+                    "client_name": None,
+                    "description": None,
+                    "custom_values": {},
+                }
+            payload, _ = _project_payload(cur, user_id, body, existing=existing, partial=True)
+            title = (body.title or base["title"]).strip()
+            due = payload.get("due_date")
+            cur.execute(
+                """
+                UPDATE items SET title = %s, kind = %s, starts_at = %s, time_known = false
+                WHERE id = %s AND user_id = %s
+                """,
+                (
+                    title,
+                    "note" if payload["project_role"] == "note" else "task",
+                    _parse_travel_date(due.isoformat()) if due else None,
+                    item_id,
+                    user_id,
+                ),
+            )
+            professional.upsert_details(cur, item_id, payload)
+            item = _fetch_item(cur, item_id, user_id)
+        conn.commit()
+    return item
+
+
+@app.patch("/professional-items/{item_id}/status")
+def patch_professional_status(item_id: str, body: StatusIn, request: Request):
+    user_id = current_user(request)
+    if body.status not in {"open", "done"}:
+        raise HTTPException(status_code=422, detail="El estado debe ser pendiente o completado")
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE items SET status = %s
+                WHERE id = %s AND user_id = %s AND module = 'proyectos'
+                RETURNING id
+                """,
+                (body.status, item_id, user_id),
+            )
+            if not cur.fetchone():
+                raise HTTPException(status_code=404, detail="Contenido profesional no encontrado")
             item = _fetch_item(cur, item_id, user_id)
         conn.commit()
     return item
@@ -1867,6 +2284,23 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                         wishes.upsert_details(cur, item_id, payload)
                 else:
                     cur.execute("DELETE FROM wish_details WHERE item_id = %s", (item_id,))
+                if body.module == "proyectos":
+                    detail = professional.fetch_details(cur, [item_id]).get(item_id)
+                    if not detail:
+                        template = professional.default_template(cur, user_id)
+                        payload = professional.normalize_detail(
+                            {
+                                "template_id": str(template["id"]),
+                                "parent_project_id": None,
+                                "project_role": "project",
+                                "priority": "media",
+                                "custom_values": {},
+                            },
+                            template,
+                        )
+                        professional.upsert_details(cur, item_id, payload)
+                else:
+                    cur.execute("DELETE FROM project_details WHERE item_id = %s", (item_id,))
                 item = _fetch_item(cur, item_id, user_id)
                 archive.maybe_learn_from_patch(cur, user_id, raw_text=raw_text, before=before, after=item)
         conn.commit()
@@ -2015,6 +2449,18 @@ def delete_item(item_id: str, request: Request):
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(
+                """
+                DELETE FROM items child
+                USING project_details pd, items parent
+                WHERE pd.item_id = child.id
+                  AND pd.parent_project_id = parent.id
+                  AND parent.id = %s
+                  AND parent.user_id = %s
+                  AND child.user_id = %s
+                """,
+                (item_id, user_id, user_id),
+            )
+            cur.execute(
                 "DELETE FROM items WHERE id = %s AND user_id = %s RETURNING id",
                 (item_id, user_id),
             )
@@ -2054,10 +2500,12 @@ def list_items(request: Request, limit: int = 500):
             travel_details = travel.fetch_details(cur, item_ids)
             journal_details = journal.fetch_details(cur, item_ids)
             wish_details = wishes.fetch_details(cur, item_ids)
+            project_details = professional.fetch_details(cur, item_ids)
             for row in rows:
                 row.update(travel_details.get(str(row["id"]), {}))
                 row.update(journal_details.get(str(row["id"]), {}))
                 row.update(wish_details.get(str(row["id"]), {}))
+                row.update(project_details.get(str(row["id"]), {}))
     return [_public_item(row, exceptions.get(str(row["id"]), [])) for row in rows]
 
 
@@ -2127,6 +2575,9 @@ def _fetch_item(cur, item_id: str, user_id: str) -> dict | None:
     wish_detail = wishes.fetch_details(cur, [item_id]).get(str(item_id))
     if wish_detail:
         row.update(wish_detail)
+    project_detail = professional.fetch_details(cur, [item_id]).get(str(item_id))
+    if project_detail:
+        row.update(project_detail)
     exceptions = _fetch_exceptions(cur, user_id, [item_id])
     return _public_item(row, exceptions.get(item_id, []))
 
@@ -2202,6 +2653,7 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         **travel.public_detail_fields(row),
         **journal.public_fields(row),
         **wishes.public_fields(row),
+        **professional.public_fields(row),
         "shopping_list_id": str(row["shopping_list_id"]) if row.get("shopping_list_id") else None,
         "status": row.get("status") or "open",
         "privacy": row["privacy"],

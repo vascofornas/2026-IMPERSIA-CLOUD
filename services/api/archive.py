@@ -25,6 +25,7 @@ from classify import (
     split_compra_titles,
 )
 import llm
+import professional
 import wishes
 
 AGENDA_TYPES = {"medica", "familiar", "ocio", "recordatorio", "general"}
@@ -73,6 +74,7 @@ Responde SOLO JSON válido con una clave "items": lista de 1 a 4 objetos. Cada o
 - casa_kind: compra|inventario|domestica|mantenimiento|suministro|otro|null (solo si module=casa)
 - journal_kind: entrada|animo|reflexion|gratitud, mood y energy de 1 a 5, journal_tags como lista (solo si module=diario)
 - wish_kind: lugar|cosa|experiencia|otro; wish_reason, wish_place, wish_url, wish_estimated_price, wish_currency, wish_priority (baja|media|alta) y wish_notes (solo si module=deseos)
+- project_role: project|task|milestone|deliverable|note; project_hint, project_stage, project_priority (baja|media|alta), project_work_type, project_deliverable_type, project_client_name, project_description y project_custom_values (solo si module=proyectos)
 - family_kind, leisure_kind, reminder_kind, supply_kind cuando aplique
 - medical_for, medical_place, family_for, family_name, family_place, leisure_with, leisure_place, casa_place, casa_notes, reminder_notes, family_notes: texto o null
 - role (opcional): "task" | "birthday_event" — task = aviso/tarea con la fecha principal de la frase; birthday_event = cumpleaños anual en la fecha literal mencionada (9 nov…)
@@ -100,6 +102,9 @@ Reglas:
 - Aspiración sin fecha («quiero ir a Lisboa algún día», «me gustaría leer ese libro») → deseos.
 - Plan con fecha u hora → agenda; viaje ya organizado con fechas → viajes; compra que se quiere hacer ahora → casa.compra.
 - Algo ya vivido → diario, no deseos. En Deseos no inventes precio, lugar, motivo ni prioridad.
+- Trabajo con resultado y varias partes → proyectos. «Proyecto X» abre project; «avanzar Y de X» es task dentro de X; hito, entrega y nota usan su role.
+- Cita, llamada o acta profesional → reuniones. Conocimiento reutilizable → memoria. Posibilidad aún sin compromiso → ideas.
+- Si recibes una definición profesional, usa solo sus claves de fase, tipo y campos; no inventes campos ni valores.
 - Varios hechos distintos (p. ej. separados por «;», «y también», dos fechas con dos acciones) → varios objetos en items.
 - «Mañana pensar regalo… cumple 54 el 9 de noviembre» → UN item recordatorio (role task); fecha de noviembre en reminder_notes, NO segundo item salvo que pidan guardar el cumple anual.
 - Si piden explícitamente recordar el cumple cada año el 9 nov → segundo item familiar cumpleanos (role birthday_event)."""
@@ -335,6 +340,22 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
         result["time_known"] = False
         result["repeats"] = None
         result["alert_minutes_before"] = None
+        return result
+
+    if result.get("module") == "proyectos":
+        _clear_agenda_fields(result)
+        _clear_casa_fields(result)
+        _clear_habit_fields(result)
+        _clear_travel_fields(result)
+        role = result.get("project_role")
+        result["project_role"] = role if role in professional.PROJECT_ROLES else professional.infer_role(raw)
+        priority = result.get("project_priority")
+        result["project_priority"] = priority if priority in professional.PRIORITIES else "media"
+        for key in ("project_hint", "project_stage", "project_work_type", "project_deliverable_type", "project_client_name", "project_description"):
+            value = result.get(key)
+            result[key] = str(value).strip()[:5000] if value is not None and str(value).strip() else None
+        if not isinstance(result.get("project_custom_values"), dict):
+            result["project_custom_values"] = {}
         return result
 
     if _is_personal_agenda_reminder(low) and result.get("module") == "agenda":
@@ -701,6 +722,20 @@ def _apply_llm_spec(baseline: dict, parsed: dict, title_raw: str) -> dict:
         out["wish_currency"] = str(currency).strip().upper()[:3] if currency and len(str(currency).strip()) == 3 else None
         priority = parsed.get("wish_priority")
         out["wish_priority"] = priority if priority in wishes.WISH_PRIORITIES else fallback["priority"]
+    elif module == "proyectos":
+        _clear_agenda_fields(out)
+        _clear_casa_fields(out)
+        _clear_habit_fields(out)
+        _clear_travel_fields(out)
+        role = parsed.get("project_role")
+        out["project_role"] = role if role in professional.PROJECT_ROLES else professional.infer_role(title_raw)
+        for key in ("project_hint", "project_stage", "project_work_type", "project_deliverable_type", "project_client_name", "project_description"):
+            value = parsed.get(key)
+            out[key] = str(value).strip()[:5000] if value is not None and str(value).strip() else None
+        priority = parsed.get("project_priority")
+        out["project_priority"] = priority if priority in professional.PRIORITIES else "media"
+        custom = parsed.get("project_custom_values")
+        out["project_custom_values"] = custom if isinstance(custom, dict) else {}
     else:
         _clear_agenda_fields(out)
         _clear_casa_fields(out)
@@ -778,8 +813,33 @@ def _label_from_suggestion(suggestion: dict) -> dict:
         *CASA_FIELD_KEYS,
         "wish_kind",
         "wish_priority",
+        "project_role",
+        "project_stage",
+        "project_priority",
     )
     return {key: suggestion.get(key) for key in keys if suggestion.get(key) is not None}
+
+
+def _professional_context(cur, user_id: str, raw: str) -> str:
+    parent_id = professional.resolve_parent(cur, user_id, raw)
+    parent_title = None
+    template = None
+    if parent_id:
+        details = professional.fetch_details(cur, [parent_id]).get(parent_id)
+        if details:
+            template = professional.fetch_template(cur, user_id, str(details["template_id"]))
+        cur.execute("SELECT title FROM items WHERE id = %s AND user_id = %s", (parent_id, user_id))
+        row = cur.fetchone()
+        parent_title = row["title"] if row else None
+    if not template:
+        template = professional.default_template(cur, user_id)
+    payload = {
+        "proyecto_resuelto": parent_title,
+        "plantilla": template["name"],
+        "terminologia": template["terminology"],
+        "definicion": template["definition"],
+    }
+    return json.dumps(payload, ensure_ascii=False)[:12_000]
 
 
 def archive_items(
@@ -804,6 +864,8 @@ def archive_items(
 
     examples = fetch_examples(cur, user_id, raw)
     user_parts = [f'Frase: "{raw}"', f"Temporal (reglas, no cambies): {_temporal_hint(baseline)}"]
+    if baseline.get("module") == "proyectos":
+        user_parts.append(f"Contexto profesional permitido: {_professional_context(cur, user_id, raw)}")
     if examples:
         user_parts.append("Ejemplos de esta cuenta:")
         for row in examples:

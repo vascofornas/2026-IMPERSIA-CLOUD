@@ -122,7 +122,7 @@ Referencia para el prompt del modelo y para validación. **Subtipo** = variant p
 
 | Módulo | Subtipos | meta principal | Patrón de UI |
 | --- | --- | --- | --- |
-| **proyectos** | contenedor, tarea, hito, entrega | proyecto_nombre, deadline, prioridad | lista bajo proyecto (contenedor) |
+| **proyectos** | contenedor, tarea, hito, entrega, nota | plantilla, proyecto padre, fase, tipo, deadline, prioridad, campos sectoriales | tarjetas + ficha adaptable |
 | **reuniones** | cita, acta, seguimiento | participantes, lugar, enlace | agenda compartida + notas post |
 | **memoria** | apunte, lectura, guia, referencia | fuente, tags, embedding_id | búsqueda semántica (pgvector) |
 | **ideas** | borrador, propuesta, hipotesis | sin contenedor obligatorio | inbox ligero → promover a proyecto |
@@ -132,6 +132,9 @@ Referencia para el prompt del modelo y para validación. **Subtipo** = variant p
 - «Llamada con proveedor martes 11:00» → reuniones.cita (eje professional), no agenda personal.
 - «Nota sobre búsqueda semántica» → memoria; «Idea: Impersia entra por…» → ideas.
 - Si menciona **proyecto concreto** → attach/create contenedor proyectos.
+- Un proyecto nuevo usa la plantilla profesional predeterminada. Una pieza hereda siempre la plantilla de su proyecto padre.
+
+**Implementado (octubre de 2026):** Proyectos usa `project_details` sobre `items` y `professional_templates`; resuelve el padre dentro de la cuenta y solo aporta al modelo el proyecto resuelto y su definición. Véase [11-proyectos-profesionales.md](11-proyectos-profesionales.md).
 
 ### Social
 
