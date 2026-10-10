@@ -418,6 +418,10 @@ function Home({
     return item;
   }
 
+  async function guideProfessionalProject(body) {
+    return call("/professional-project-guide", { method: "POST", body: JSON.stringify(body) });
+  }
+
   async function createProfessionalPiece(projectId, body) {
     const item = await call(`/professional-projects/${projectId}/pieces`, { method: "POST", body: JSON.stringify(body) });
     setItems((current) => [item, ...current.filter((row) => row.id !== item.id)]);
@@ -1002,6 +1006,7 @@ function Home({
               <ProyectosBoard
                 items={items}
                 loadTemplates={loadProfessionalTemplates}
+                guideStep={guideProfessionalProject}
                 createProject={createProfessionalProject}
                 createPiece={createProfessionalPiece}
                 updateItem={updateProfessionalItem}

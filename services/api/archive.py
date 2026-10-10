@@ -74,7 +74,7 @@ Responde SOLO JSON válido con una clave "items": lista de 1 a 4 objetos. Cada o
 - casa_kind: compra|inventario|domestica|mantenimiento|suministro|otro|null (solo si module=casa)
 - journal_kind: entrada|animo|reflexion|gratitud, mood y energy de 1 a 5, journal_tags como lista (solo si module=diario)
 - wish_kind: lugar|cosa|experiencia|otro; wish_reason, wish_place, wish_url, wish_estimated_price, wish_currency, wish_priority (baja|media|alta) y wish_notes (solo si module=deseos)
-- project_role: project|task|milestone|deliverable|note; project_hint, project_stage, project_priority (baja|media|alta), project_work_type, project_deliverable_type, project_client_name, project_description y project_custom_values (solo si module=proyectos)
+- project_role: project|task|milestone|deliverable|note; project_hint, project_stage, project_priority (baja|media|alta), project_work_types (lista, admite varios), project_deliverable_type, project_client_name, project_description y project_custom_values (solo si module=proyectos)
 - family_kind, leisure_kind, reminder_kind, supply_kind cuando aplique
 - medical_for, medical_place, family_for, family_name, family_place, leisure_with, leisure_place, casa_place, casa_notes, reminder_notes, family_notes: texto o null
 - role (opcional): "task" | "birthday_event" — task = aviso/tarea con la fecha principal de la frase; birthday_event = cumpleaños anual en la fecha literal mencionada (9 nov…)
@@ -354,6 +354,8 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
         for key in ("project_hint", "project_stage", "project_work_type", "project_deliverable_type", "project_client_name", "project_description"):
             value = result.get(key)
             result[key] = str(value).strip()[:5000] if value is not None and str(value).strip() else None
+        if not isinstance(result.get("project_work_types"), list):
+            result["project_work_types"] = [result["project_work_type"]] if result.get("project_work_type") else []
         if not isinstance(result.get("project_custom_values"), dict):
             result["project_custom_values"] = {}
         return result
@@ -732,6 +734,8 @@ def _apply_llm_spec(baseline: dict, parsed: dict, title_raw: str) -> dict:
         for key in ("project_hint", "project_stage", "project_work_type", "project_deliverable_type", "project_client_name", "project_description"):
             value = parsed.get(key)
             out[key] = str(value).strip()[:5000] if value is not None and str(value).strip() else None
+        work_types = parsed.get("project_work_types")
+        out["project_work_types"] = [str(value).strip()[:120] for value in work_types if str(value).strip()] if isinstance(work_types, list) else []
         priority = parsed.get("project_priority")
         out["project_priority"] = priority if priority in professional.PRIORITIES else "media"
         custom = parsed.get("project_custom_values")

@@ -9,7 +9,7 @@ from datetime import date
 
 PROJECT_ROLES = frozenset({"project", "task", "milestone", "deliverable", "note"})
 PRIORITIES = frozenset({"baja", "media", "alta"})
-FIELD_TYPES = frozenset({"text", "number", "date", "select", "boolean", "url"})
+FIELD_TYPES = frozenset({"text", "number", "date", "select", "multiselect", "boolean", "url"})
 
 STARTERS = (
     {
@@ -75,6 +75,7 @@ DETAIL_FIELDS = (
     "parent_project_id",
     "project_role",
     "work_type",
+    "work_types",
     "deliverable_type",
     "stage",
     "priority",
@@ -139,7 +140,7 @@ def normalize_template(name: str, terminology: dict | None, definition: dict | N
         if not label or key in seen or field_type not in FIELD_TYPES:
             continue
         item = {"key": key, "label": label, "type": field_type, "required": bool(field.get("required"))}
-        if field_type == "select":
+        if field_type in {"select", "multiselect"}:
             item["options"] = [str(option).strip()[:120] for option in (field.get("options") or []) if str(option).strip()][:30]
         fields.append(item)
         seen.add(key)
@@ -282,6 +283,12 @@ def validate_custom_values(values, template: dict) -> dict:
             if str(value) not in options:
                 raise ValueError(f"Valor no válido para {field['label']}")
             value = str(value)
+        elif kind == "multiselect":
+            options = field.get("options") or []
+            selected = value if isinstance(value, list) else [value]
+            value = [str(item) for item in selected if str(item) in options]
+            if not value and field.get("required"):
+                raise ValueError(f"Completa {field['label']}")
         else:
             value = str(value).strip()[:2000]
         result[key] = value
@@ -309,10 +316,14 @@ def normalize_detail(data: dict, template: dict, *, existing: dict | None = None
         raise ValueError("Fase no válida para esta plantilla")
     payload["stage"] = stage
     work_types = {item["key"] for item in template["definition"].get("work_types", [])}
-    work_type = str(payload.get("work_type") or "").strip() or None
-    if work_type and work_type not in work_types:
+    selected_work_types = payload.get("work_types")
+    if not isinstance(selected_work_types, list):
+        selected_work_types = [payload.get("work_type")] if payload.get("work_type") else []
+    selected_work_types = list(dict.fromkeys(str(value).strip() for value in selected_work_types if str(value).strip()))
+    if any(value not in work_types for value in selected_work_types):
         raise ValueError("Tipo de trabajo no válido")
-    payload["work_type"] = work_type
+    payload["work_types"] = selected_work_types
+    payload["work_type"] = selected_work_types[0] if selected_work_types else None
     deliverables = {item["key"] for item in template["definition"].get("deliverables", [])}
     deliverable_type = str(payload.get("deliverable_type") or "").strip() or None
     if deliverable_type and deliverable_type not in deliverables:
@@ -342,6 +353,9 @@ def reconcile_template_details(cur, template: dict) -> None:
         UPDATE project_details
         SET stage = CASE WHEN stage = ANY(%s::text[]) THEN stage ELSE %s END,
             work_type = CASE WHEN work_type = ANY(%s::text[]) THEN work_type ELSE NULL END,
+            work_types = ARRAY(
+                SELECT value FROM unnest(work_types) AS value WHERE value = ANY(%s::text[])
+            ),
             deliverable_type = CASE
                 WHEN project_role = 'deliverable' AND deliverable_type = ANY(%s::text[])
                 THEN deliverable_type ELSE NULL
@@ -349,7 +363,7 @@ def reconcile_template_details(cur, template: dict) -> None:
             updated_at = now()
         WHERE template_id = %s
         """,
-        (stages, stages[0] if stages else None, work_types, deliverables, template["id"]),
+        (stages, stages[0] if stages else None, work_types, work_types, deliverables, template["id"]),
     )
 
 
@@ -359,7 +373,7 @@ def fetch_details(cur, item_ids: list[str]) -> dict[str, dict]:
     cur.execute(
         """
         SELECT pd.item_id, pd.template_id, pd.parent_project_id, pd.project_role,
-               pd.work_type, pd.deliverable_type, pd.stage, pd.priority, pd.due_date, pd.client_name,
+               pd.work_type, pd.work_types, pd.deliverable_type, pd.stage, pd.priority, pd.due_date, pd.client_name,
                pd.description, pd.custom_values, pt.name AS professional_template_name,
                pt.terminology AS professional_terminology,
                pt.definition AS professional_definition
@@ -376,14 +390,15 @@ def upsert_details(cur, item_id: str, payload: dict) -> None:
     cur.execute(
         """
         INSERT INTO project_details
-            (item_id, template_id, parent_project_id, project_role, work_type, deliverable_type, stage,
+            (item_id, template_id, parent_project_id, project_role, work_type, work_types, deliverable_type, stage,
              priority, due_date, client_name, description, custom_values)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
+        VALUES (%s, %s, %s, %s, %s, %s::text[], %s, %s, %s, %s, %s, %s, %s::jsonb)
         ON CONFLICT (item_id) DO UPDATE
         SET template_id = EXCLUDED.template_id,
             parent_project_id = EXCLUDED.parent_project_id,
             project_role = EXCLUDED.project_role,
             work_type = EXCLUDED.work_type,
+            work_types = EXCLUDED.work_types,
             deliverable_type = EXCLUDED.deliverable_type,
             stage = EXCLUDED.stage,
             priority = EXCLUDED.priority,
@@ -399,6 +414,7 @@ def upsert_details(cur, item_id: str, payload: dict) -> None:
             payload["parent_project_id"],
             payload["project_role"],
             payload["work_type"],
+            payload["work_types"],
             payload["deliverable_type"],
             payload["stage"],
             payload["priority"],
@@ -420,6 +436,7 @@ def public_fields(row: dict) -> dict:
         "project_parent_id": str(row["parent_project_id"]) if row.get("parent_project_id") else None,
         "project_role": row.get("project_role"),
         "project_work_type": row.get("work_type"),
+        "project_work_types": list(row.get("work_types") or ([row["work_type"]] if row.get("work_type") else [])),
         "project_deliverable_type": row.get("deliverable_type"),
         "project_stage": row.get("stage"),
         "project_priority": row.get("priority"),

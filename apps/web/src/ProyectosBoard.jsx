@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Icon } from "./icons.jsx";
 import ProjectForm from "./ProjectForm.jsx";
+import ProjectGuide from "./ProjectGuide.jsx";
 import ProjectPieceForm, { PROJECT_ROLES } from "./ProjectPieceForm.jsx";
 
 const ROLE_LABELS = Object.fromEntries(PROJECT_ROLES);
@@ -8,6 +9,11 @@ const PRIORITY_LABELS = { baja: "Baja", media: "Media", alta: "Alta" };
 
 function named(items, key) {
   return (items || []).find((item) => item.key === key)?.label || "";
+}
+
+function namedMany(items, keys, fallback) {
+  const values = keys?.length ? keys : fallback ? [fallback] : [];
+  return values.map((key) => named(items, key) || key).join(", ");
 }
 
 function projectItems(items) {
@@ -70,7 +76,7 @@ function PieceRow({ item, project, busy, onStatus, onEdit, onDelete }) {
   const definition = project.professional_definition || {};
   const subtype = item.project_role === "deliverable"
     ? named(definition.deliverables, item.project_deliverable_type)
-    : named(definition.work_types, item.project_work_type);
+    : namedMany(definition.work_types, item.project_work_types, item.project_work_type);
   return (
     <li className={`project-piece ${item.status === "done" ? "done" : ""}`}>
       <button
@@ -106,6 +112,7 @@ function PieceRow({ item, project, busy, onStatus, onEdit, onDelete }) {
 export default function ProyectosBoard({
   items,
   loadTemplates,
+  guideStep,
   createProject,
   createPiece,
   updateItem,
@@ -175,14 +182,16 @@ export default function ProyectosBoard({
             <h2>Trabajo profesional, a tu manera</h2>
             <p className="private">Cada tarjeta usa su propia plantilla sectorial. Abre una para ver toda la ficha y su trabajo relacionado.</p>
           </div>
-          {!addingProject && <button type="button" onClick={() => setAddingProject(true)}>+ Nuevo proyecto</button>}
+          {!addingProject && <button type="button" onClick={() => setAddingProject(true)}>Crear proyecto con Impersia</button>}
         </div>
         {addingProject && templates.length > 0 && (
-          <ProjectForm
+          <ProjectGuide
             templates={templates}
+            guideStep={guideStep}
             busy={busy}
+            setError={setError}
             onCancel={() => setAddingProject(false)}
-            onSubmit={(payload) => run(() => createProject(payload), (item) => {
+            onCreate={(payload) => run(() => createProject(payload), (item) => {
               setAddingProject(false);
               setSelectedId(item.id);
             })}
@@ -244,7 +253,7 @@ export default function ProyectosBoard({
 
       <section className="project-summary">
         <div><span>Fase</span><strong>{named(definition.stages, selected.project_stage) || "Sin fase"}</strong></div>
-        <div><span>Tipo</span><strong>{named(definition.work_types, selected.project_work_type) || "Sin indicar"}</strong></div>
+        <div><span>Tipos</span><strong>{namedMany(definition.work_types, selected.project_work_types, selected.project_work_type) || "Sin indicar"}</strong></div>
         <div><span>Prioridad</span><strong>{PRIORITY_LABELS[selected.project_priority] || "Media"}</strong></div>
         <div><span>Fecha objetivo</span><strong>{formatDate(selected.project_due_date) || "Sin fecha"}</strong></div>
         <div><span>Progreso</span><strong>{progress.percent}%</strong></div>

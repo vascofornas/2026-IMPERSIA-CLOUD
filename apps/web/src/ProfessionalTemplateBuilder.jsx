@@ -5,6 +5,7 @@ const FIELD_TYPES = [
   ["number", "Número"],
   ["date", "Fecha"],
   ["select", "Selección"],
+  ["multiselect", "Selección múltiple"],
   ["boolean", "Sí / no"],
   ["url", "Enlace"],
 ];
@@ -90,7 +91,7 @@ function TemplateForm({ initial, busy, onSubmit, onCancel }) {
         ...draft.definition,
         fields: draft.definition.fields.map(({ options_text, ...field }) => ({
           ...field,
-          options: field.type === "select"
+          options: field.type === "select" || field.type === "multiselect"
             ? String(options_text || "").split(",").map((value) => value.trim()).filter(Boolean)
             : undefined,
         })),
@@ -139,7 +140,7 @@ function TemplateForm({ initial, busy, onSubmit, onCancel }) {
             <select value={field.type} onChange={(event) => updateField(index, "type", event.target.value)}>
               {FIELD_TYPES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
-            {field.type === "select" && (
+            {(field.type === "select" || field.type === "multiselect") && (
               <input
                 aria-label="Opciones"
                 placeholder="Opciones separadas por comas"

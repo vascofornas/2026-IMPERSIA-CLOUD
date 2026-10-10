@@ -20,7 +20,11 @@ La plantilla predeterminada se elige en Perfil, pero la elección final se hace 
 Hay dos puertas de entrada:
 
 1. **Entrada** interpreta el texto. Puede abrir un proyecto o añadirle una tarea, hito, entregable o nota.
-2. **Proyectos** permite crear y completar la ficha manualmente.
+2. **Proyectos** abre una entrevista guiada con el agente de Impersia.
+
+Al crear, la persona explica con sus palabras qué quiere sacar adelante. La IA propone la plantilla y prepara un borrador; después pregunta una cosa cada vez. Las respuestas pueden ser libres, de elección única o de selección múltiple. Por ejemplo, un proyecto de Software puede ser a la vez Web, Aplicación móvil e Infraestructura. Los campos configurables también admiten selección múltiple.
+
+La ficha se actualiza a la vista durante la conversación. Se puede omitir lo que todavía no se sabe y nada se guarda hasta revisar el resumen y pulsar «Crear proyecto». El formulario convencional queda para editar posteriormente datos concretos, no como puerta principal.
 
 La primera pantalla es un índice de tarjetas. Cada tarjeta muestra sector, cliente o asunto, fase, fecha objetivo, piezas y progreso. La ficha completa contiene:
 
@@ -50,7 +54,7 @@ La migración `022_proyectos_profesionales.sql` añade:
 - `users.default_professional_template_id`;
 - `project_details`, ficha uno a uno sobre `items`.
 
-`project_details` conserva plantilla, padre, rol, fase, prioridad, vencimiento, cliente, descripción, tipo de trabajo, tipo de entregable y valores personalizados. Los proyectos antiguos se migran como contenedores bajo Personalizada, sin alterar título, fecha ni estado.
+`project_details` conserva plantilla, padre, rol, fase, prioridad, vencimiento, cliente, descripción, varios tipos de trabajo, tipo de entregable y valores personalizados. Los proyectos antiguos se migran como contenedores bajo Personalizada, sin alterar título, fecha ni estado.
 
 Toda consulta y mutación comprueba `user_id`. Una cuenta no puede usar plantillas ni proyectos padre de otra.
 

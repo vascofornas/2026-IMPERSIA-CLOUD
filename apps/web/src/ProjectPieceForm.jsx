@@ -13,7 +13,7 @@ export default function ProjectPieceForm({ project, initial, initialRole = "task
   const [draft, setDraft] = useState({
     title: initial?.title || "",
     project_role: initial?.project_role || initialRole,
-    work_type: initial?.project_work_type || "",
+    work_types: initial?.project_work_types || (initial?.project_work_type ? [initial.project_work_type] : []),
     deliverable_type: initial?.project_deliverable_type || "",
     stage: initial?.project_stage || project.project_stage || definition.stages?.[0]?.key || "",
     priority: initial?.project_priority || "media",
@@ -27,7 +27,7 @@ export default function ProjectPieceForm({ project, initial, initialRole = "task
     onSubmit({
       title: draft.title.trim(),
       project_role: draft.project_role,
-      work_type: draft.work_type || null,
+      work_types: draft.work_types,
       deliverable_type: draft.project_role === "deliverable" ? draft.deliverable_type || null : null,
       stage: draft.stage || null,
       priority: draft.priority,
@@ -60,13 +60,24 @@ export default function ProjectPieceForm({ project, initial, initialRole = "task
             </select>
           </label>
         ) : (
-          <label>
-            Tipo de trabajo
-            <select value={draft.work_type} onChange={(event) => setDraft({ ...draft, work_type: event.target.value })}>
-              <option value="">Sin indicar</option>
-              {(definition.work_types || []).map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
-            </select>
-          </label>
+          <fieldset className="project-multiple">
+            <legend>Tipos de trabajo</legend>
+            {(definition.work_types || []).map((item) => (
+              <label key={item.key}>
+                <input
+                  type="checkbox"
+                  checked={draft.work_types.includes(item.key)}
+                  onChange={(event) => setDraft({
+                    ...draft,
+                    work_types: event.target.checked
+                      ? [...draft.work_types, item.key]
+                      : draft.work_types.filter((value) => value !== item.key),
+                  })}
+                />
+                {item.label}
+              </label>
+            ))}
+          </fieldset>
         )}
         <label>
           Fase

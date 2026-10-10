@@ -11,6 +11,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
@@ -26,6 +27,7 @@ import dedup
 import health_controls
 import journal
 import professional
+import professional_guide
 import travel
 import wishes
 from classify import (
@@ -298,6 +300,13 @@ class ProfessionalDefaultIn(BaseModel):
     template_id: str
 
 
+class ProfessionalGuideIn(BaseModel):
+    draft: dict = Field(default_factory=dict)
+    answered_keys: list[str] = Field(default_factory=list)
+    question_key: str = Field(min_length=1, max_length=120)
+    answer: Any = None
+
+
 class ProfessionalTemplateDeleteIn(BaseModel):
     replacement_template_id: str | None = None
 
@@ -307,6 +316,7 @@ class ProjectDetailFields(BaseModel):
     parent_project_id: str | None = None
     project_role: str | None = None
     work_type: str | None = None
+    work_types: list[str] | None = None
     deliverable_type: str | None = None
     stage: str | None = None
     priority: str | None = None
@@ -1036,6 +1046,10 @@ def _file_suggestion(
                 "parent_project_id": parent_id,
                 "project_role": role,
                 "work_type": suggestion.get("project_work_type") if suggestion.get("project_work_type") in work_keys else None,
+                "work_types": [
+                    value for value in (suggestion.get("project_work_types") or [])
+                    if value in work_keys
+                ] or ([suggestion["project_work_type"]] if suggestion.get("project_work_type") in work_keys else []),
                 "deliverable_type": suggestion.get("project_deliverable_type") if suggestion.get("project_deliverable_type") in deliverable_keys else None,
                 "stage": suggestion.get("project_stage") if suggestion.get("project_stage") in stage_keys else None,
                 "priority": suggestion.get("project_priority") or "media",
@@ -1408,6 +1422,23 @@ def set_default_professional_template(body: ProfessionalDefaultIn, request: Requ
     return {"ok": True, "template_id": body.template_id}
 
 
+@app.post("/professional-project-guide")
+def professional_project_guide(body: ProfessionalGuideIn, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            result = professional_guide.guide_step(
+                cur,
+                user_id,
+                draft=body.draft,
+                answered_keys=body.answered_keys,
+                question_key=body.question_key,
+                answer=body.answer,
+            )
+        conn.commit()
+    return result
+
+
 @app.delete("/professional-templates/{template_id}")
 def delete_professional_template(
     template_id: str,
@@ -1561,6 +1592,7 @@ def patch_professional_item(item_id: str, body: ProfessionalProjectPatch, reques
                     "parent_project_id": None,
                     "project_role": "project",
                     "work_type": None,
+                    "work_types": [],
                     "deliverable_type": None,
                     "stage": None,
                     "priority": "media",

@@ -4041,6 +4041,171 @@ button.link.secondary {
   grid-column: 1 / -1;
 }
 
+.project-multiple {
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+.project-multiple label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+  margin-top: 7px;
+  font-weight: 500;
+}
+
+.project-multiple input {
+  width: auto;
+}
+
+.project-guide {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(250px, .75fr);
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.project-guide-main,
+.project-guide-preview {
+  border: 1px solid color-mix(in srgb, var(--prof) 22%, var(--line));
+  border-radius: 15px;
+  background: var(--bg);
+}
+
+.project-guide-main {
+  overflow: hidden;
+}
+
+.project-guide-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--prof) 5%, var(--bg));
+}
+
+.project-guide-heading h3 {
+  margin: 4px 0 0;
+}
+
+.project-guide-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 180px;
+  max-height: 420px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.project-guide-message {
+  align-self: flex-start;
+  max-width: 82%;
+  margin: 0;
+  padding: 10px 13px;
+  border-radius: 13px 13px 13px 4px;
+  background: color-mix(in srgb, var(--prof) 8%, var(--bg));
+  line-height: 1.5;
+}
+
+.project-guide-message.user {
+  align-self: flex-end;
+  border-radius: 13px 13px 4px 13px;
+  background: var(--prof);
+  color: white;
+}
+
+.project-guide-message.question {
+  font-weight: 700;
+}
+
+.project-guide-message.thinking {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.project-guide-answer,
+.project-guide-ready {
+  padding: 18px 20px;
+  border-top: 1px solid var(--line);
+}
+
+.project-guide-question {
+  margin: 0 0 10px;
+  font-weight: 700;
+}
+
+.project-guide-answer .actions {
+  margin-top: 12px;
+}
+
+.project-guide-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.project-guide-options button {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.project-guide-options button.on {
+  background: color-mix(in srgb, var(--prof) 12%, var(--bg));
+  border-color: var(--prof);
+  color: var(--prof);
+}
+
+.project-guide-options.multiple button span {
+  margin-right: 6px;
+}
+
+.project-guide-preview {
+  align-self: start;
+  position: sticky;
+  top: 18px;
+  padding: 18px;
+}
+
+.project-guide-preview h3 {
+  margin: 9px 0 15px;
+}
+
+.project-guide-preview dl {
+  margin: 0;
+}
+
+.project-guide-preview dl div {
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+
+.project-guide-preview dt {
+  color: var(--muted);
+  font-size: .75rem;
+}
+
+.project-guide-preview dd {
+  margin: 3px 0 0;
+  font-weight: 700;
+}
+
+.project-guide-description,
+.project-guide-custom {
+  margin: 14px 0 0;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  white-space: pre-wrap;
+}
+
+.project-guide-custom p {
+  margin: 8px 0 0;
+}
+
 .project-piece-sections {
   margin-top: 22px;
 }
@@ -4118,6 +4283,14 @@ button.link.secondary {
 
   .professional-custom-field {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .project-guide {
+    grid-template-columns: 1fr;
+  }
+
+  .project-guide-preview {
+    position: static;
   }
 }
 

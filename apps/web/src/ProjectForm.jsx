@@ -13,6 +13,26 @@ export function CustomField({ field, value, onChange }) {
       </label>
     );
   }
+  if (field.type === "multiselect") {
+    const selected = Array.isArray(value) ? value : [];
+    return (
+      <fieldset className="project-multiple">
+        <legend>{field.label}{field.required ? " *" : ""}</legend>
+        {(field.options || []).map((option) => (
+          <label key={option}>
+            <input
+              type="checkbox"
+              checked={selected.includes(option)}
+              onChange={(event) => onChange(event.target.checked
+                ? [...selected, option]
+                : selected.filter((item) => item !== option))}
+            />
+            {option}
+          </label>
+        ))}
+      </fieldset>
+    );
+  }
   if (field.type === "select") {
     return (
       <label>
@@ -42,7 +62,7 @@ function itemDraft(item, template) {
   return {
     title: item?.title || "",
     template_id: item?.professional_template_id || template?.id || "",
-    work_type: item?.project_work_type || "",
+    work_types: item?.project_work_types || (item?.project_work_type ? [item.project_work_type] : []),
     stage: item?.project_stage || template?.definition?.stages?.[0]?.key || "",
     priority: item?.project_priority || "media",
     due_date: item?.project_due_date || "",
@@ -70,7 +90,7 @@ export default function ProjectForm({ templates, initial, busy, onSubmit, onCanc
       ...current,
       template_id: templateId,
       stage: selected?.definition?.stages?.[0]?.key || "",
-      work_type: "",
+      work_types: [],
       custom_values: {},
     }));
   }
@@ -80,7 +100,7 @@ export default function ProjectForm({ templates, initial, busy, onSubmit, onCanc
     onSubmit({
       title: draft.title.trim(),
       template_id: draft.template_id,
-      work_type: draft.work_type || null,
+      work_types: draft.work_types,
       stage: draft.stage || null,
       priority: draft.priority,
       due_date: draft.due_date || null,
@@ -108,13 +128,24 @@ export default function ProjectForm({ templates, initial, busy, onSubmit, onCanc
           {terms.client || "Cliente"}
           <input maxLength="240" value={draft.client_name} onChange={(event) => setDraft({ ...draft, client_name: event.target.value })} />
         </label>
-        <label>
-          Tipo de trabajo
-          <select value={draft.work_type} onChange={(event) => setDraft({ ...draft, work_type: event.target.value })}>
-            <option value="">Sin indicar</option>
-            {(definition.work_types || []).map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
-          </select>
-        </label>
+        <fieldset className="project-multiple">
+          <legend>Tipos de trabajo</legend>
+          {(definition.work_types || []).map((item) => (
+            <label key={item.key}>
+              <input
+                type="checkbox"
+                checked={draft.work_types.includes(item.key)}
+                onChange={(event) => setDraft({
+                  ...draft,
+                  work_types: event.target.checked
+                    ? [...draft.work_types, item.key]
+                    : draft.work_types.filter((value) => value !== item.key),
+                })}
+              />
+              {item.label}
+            </label>
+          ))}
+        </fieldset>
         <label>
           Fase
           <select value={draft.stage} onChange={(event) => setDraft({ ...draft, stage: event.target.value })}>
