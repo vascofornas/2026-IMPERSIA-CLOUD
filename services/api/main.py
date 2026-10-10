@@ -324,6 +324,9 @@ class ProjectDetailFields(BaseModel):
     client_name: str | None = Field(default=None, max_length=240)
     description: str | None = Field(default=None, max_length=5000)
     custom_values: dict = Field(default_factory=dict)
+    workflow_status: str | None = None
+    sort_order: int | None = Field(default=None, ge=0)
+    role_data: dict = Field(default_factory=dict)
 
 
 class ProfessionalProjectIn(ProjectDetailFields):
@@ -337,6 +340,20 @@ class ProfessionalProjectPatch(ProjectDetailFields):
 
 class ProfessionalPieceIn(ProjectDetailFields):
     title: str = Field(min_length=1, max_length=200)
+
+
+class ProfessionalWorkflowIn(BaseModel):
+    workflow_status: str
+    sort_order: int | None = Field(default=None, ge=0)
+
+
+class ProfessionalRelationIn(BaseModel):
+    target_item_id: str
+    relation_type: str
+
+
+class ProfessionalRelationsIn(BaseModel):
+    relations: list[ProfessionalRelationIn] = Field(default_factory=list, max_length=100)
 
 
 class ItemPatch(TravelDetailFields):
@@ -1541,6 +1558,62 @@ def _professional_suggestion(title: str, payload: dict, *, source: str) -> dict:
     }
 
 
+@app.get("/professional-projects/{project_id}/workspace")
+def get_professional_workspace(project_id: str, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            project = _fetch_item(cur, project_id, user_id)
+            if not project or project.get("module") != "proyectos" or project.get("project_role") != "project":
+                raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+            cur.execute(
+                """
+                SELECT pd.item_id
+                FROM project_details pd
+                JOIN items i ON i.id = pd.item_id
+                WHERE pd.parent_project_id = %s AND i.user_id = %s AND i.module = 'proyectos'
+                ORDER BY pd.sort_order, i.created_at
+                """,
+                (project_id, user_id),
+            )
+            pieces = [_fetch_item(cur, str(row["item_id"]), user_id) for row in cur.fetchall()]
+            relations = professional.fetch_relations(cur, user_id, project_id)
+    by_id = {item["id"]: item for item in pieces if item}
+    outgoing = {}
+    for relation in relations:
+        outgoing.setdefault(relation["from_item_id"], []).append(relation)
+    milestones = {}
+    deliverables = {}
+    for item in pieces:
+        if not item:
+            continue
+        if item.get("project_role") == "milestone":
+            linked = [
+                by_id.get(relation["from_item_id"])
+                for relation in relations
+                if relation["relation_type"] == "supports_milestone" and relation["to_item_id"] == item["id"]
+            ]
+            linked = [row for row in linked if row]
+            done = sum(row.get("project_workflow_status") == "done" for row in linked)
+            milestones[item["id"]] = {"linked": len(linked), "done": done, "percent": round(done * 100 / len(linked)) if linked else 0}
+        if item.get("project_role") == "deliverable":
+            linked = [
+                by_id.get(relation["from_item_id"])
+                for relation in relations
+                if relation["relation_type"] == "supports_deliverable" and relation["to_item_id"] == item["id"]
+            ]
+            linked = [row for row in linked if row]
+            done = sum(row.get("project_workflow_status") in professional.TERMINAL_WORKFLOW for row in linked)
+            deliverables[item["id"]] = {"linked": len(linked), "done": done, "percent": round(done * 100 / len(linked)) if linked else 0}
+    return {
+        "project": project,
+        "pieces": [item for item in pieces if item],
+        "relations": relations,
+        "outgoing": outgoing,
+        "progress": {"milestones": milestones, "deliverables": deliverables},
+    }
+
+
 @app.post("/professional-projects", status_code=201)
 def create_professional_project(body: ProfessionalProjectIn, request: Request):
     user_id = current_user(request)
@@ -1600,6 +1673,9 @@ def patch_professional_item(item_id: str, body: ProfessionalProjectPatch, reques
                     "client_name": None,
                     "description": None,
                     "custom_values": {},
+                    "workflow_status": "active",
+                    "sort_order": 0,
+                    "role_data": {},
                 }
             payload, _ = _project_payload(cur, user_id, body, existing=existing, partial=True)
             title = (body.title or base["title"]).strip()
@@ -1640,9 +1716,70 @@ def patch_professional_status(item_id: str, body: StatusIn, request: Request):
             )
             if not cur.fetchone():
                 raise HTTPException(status_code=404, detail="Contenido profesional no encontrado")
+            details = professional.fetch_details(cur, [item_id]).get(item_id)
+            if details:
+                role = details["project_role"]
+                terminal = {"project": "done", "task": "done", "milestone": "reached", "deliverable": "released", "note": "archived"}[role]
+                workflow = terminal if body.status == "done" else professional.default_workflow(role)
+                cur.execute(
+                    "UPDATE project_details SET workflow_status = %s, updated_at = now() WHERE item_id = %s",
+                    (workflow, item_id),
+                )
             item = _fetch_item(cur, item_id, user_id)
         conn.commit()
     return item
+
+
+@app.patch("/professional-items/{item_id}/workflow")
+def patch_professional_workflow(item_id: str, body: ProfessionalWorkflowIn, request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            details = professional.fetch_details(cur, [item_id]).get(item_id)
+            cur.execute(
+                "SELECT id FROM items WHERE id = %s AND user_id = %s AND module = 'proyectos'",
+                (item_id, user_id),
+            )
+            if not cur.fetchone() or not details:
+                raise HTTPException(status_code=404, detail="Contenido profesional no encontrado")
+            role = details["project_role"]
+            if body.workflow_status not in professional.WORKFLOW_BY_ROLE.get(role, ()):
+                raise HTTPException(status_code=422, detail="Estado no válido para esta pieza")
+            fields = ["workflow_status = %s"]
+            values: list[Any] = [body.workflow_status]
+            if body.sort_order is not None:
+                fields.append("sort_order = %s")
+                values.append(body.sort_order)
+            values.append(item_id)
+            cur.execute(
+                f"UPDATE project_details SET {', '.join(fields)}, updated_at = now() WHERE item_id = %s",
+                tuple(values),
+            )
+            cur.execute(
+                "UPDATE items SET status = %s WHERE id = %s AND user_id = %s",
+                (professional.item_status_for_workflow(body.workflow_status), item_id, user_id),
+            )
+            item = _fetch_item(cur, item_id, user_id)
+        conn.commit()
+    return item
+
+
+@app.put("/professional-items/{item_id}/relations")
+def put_professional_relations(item_id: str, body: ProfessionalRelationsIn, request: Request):
+    user_id = current_user(request)
+    try:
+        with db() as conn:
+            with conn.cursor() as cur:
+                relations = professional.replace_relations(
+                    cur,
+                    user_id,
+                    item_id,
+                    [relation.model_dump() for relation in body.relations],
+                )
+            conn.commit()
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"items": relations}
 
 
 @app.post("/captures", status_code=201)

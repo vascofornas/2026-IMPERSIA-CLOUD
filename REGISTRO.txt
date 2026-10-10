@@ -862,3 +862,6 @@ Conversación de proyectos verificada en producción. La prueba recorrió planti
 
 10 de octubre de 2026, 12:38
 Corregido el avance visual de la conversación al registrar un proyecto. El historial ahora baja automáticamente con cada respuesta del usuario, espera de la IA y pregunta nueva; además reserva espacio inferior para que el último mensaje no quede oculto por el bloque de respuesta. Se suben ProjectGuide.jsx, estilos y build web.
+
+10 de octubre de 2026, 12:56
+Workspace profesional para proyectos Software. Se suben migración 024, professional.py y API para estados propios por rol, orden, datos específicos, lectura agregada y relaciones validadas entre piezas; SoftwareProjectWorkspace.jsx para tablero de tareas con movimiento gráfico, línea de hitos con progreso, entregables/releases y notas técnicas o decisiones; ProjectPieceForm.jsx como panel lateral con campos y vínculos propios; ProyectosBoard.jsx, App.jsx, estilos y build para integrarlo sin cambiar las fichas Jurídico, Economía y Personalizada. Se actualizan definición de producto y docs/11. Build, py_compile, estados por rol, selección múltiple y lint correctos. Queda aplicar 024 y probar relaciones y aislamiento en producción.

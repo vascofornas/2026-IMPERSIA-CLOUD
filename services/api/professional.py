@@ -10,6 +10,15 @@ from datetime import date
 PROJECT_ROLES = frozenset({"project", "task", "milestone", "deliverable", "note"})
 PRIORITIES = frozenset({"baja", "media", "alta"})
 FIELD_TYPES = frozenset({"text", "number", "date", "select", "multiselect", "boolean", "url"})
+RELATION_TYPES = frozenset({"depends_on", "supports_milestone", "supports_deliverable", "documents", "relates_to"})
+WORKFLOW_BY_ROLE = {
+    "project": ("active", "done"),
+    "task": ("pending", "in_progress", "review", "blocked", "done"),
+    "milestone": ("upcoming", "at_risk", "reached"),
+    "deliverable": ("draft", "in_progress", "review", "ready", "released"),
+    "note": ("active", "archived"),
+}
+TERMINAL_WORKFLOW = frozenset({"done", "reached", "released", "archived"})
 
 STARTERS = (
     {
@@ -83,6 +92,9 @@ DETAIL_FIELDS = (
     "client_name",
     "description",
     "custom_values",
+    "workflow_status",
+    "sort_order",
+    "role_data",
 )
 
 
@@ -295,6 +307,42 @@ def validate_custom_values(values, template: dict) -> dict:
     return result
 
 
+def default_workflow(role: str) -> str:
+    return WORKFLOW_BY_ROLE.get(role, ("pending",))[0]
+
+
+def normalize_role_data(values, role: str) -> dict:
+    source = dict(values or {})
+    allowed = {
+        "task": {"acceptance_criteria", "estimate_hours"},
+        "milestone": {"success_criteria"},
+        "deliverable": {"version", "environment", "acceptance_criteria"},
+        "note": {"note_kind"},
+        "project": set(),
+    }.get(role, set())
+    result = {}
+    for key in allowed:
+        value = source.get(key)
+        if value in (None, ""):
+            continue
+        if key == "estimate_hours":
+            try:
+                number = float(value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError("La estimación debe ser un número") from exc
+            if number < 0 or number > 10000:
+                raise ValueError("La estimación no es válida")
+            result[key] = number
+        elif key == "note_kind":
+            kind = str(value).strip().lower()
+            if kind not in {"technical", "decision", "reference", "general"}:
+                raise ValueError("Tipo de nota no válido")
+            result[key] = kind
+        else:
+            result[key] = str(value).strip()[:5000]
+    return result
+
+
 def normalize_detail(data: dict, template: dict, *, existing: dict | None = None, fields_set: set[str] | None = None) -> dict:
     current = existing or {}
     payload = {}
@@ -305,6 +353,18 @@ def normalize_detail(data: dict, template: dict, *, existing: dict | None = None
     if role not in PROJECT_ROLES:
         raise ValueError("Tipo de contenido profesional no válido")
     payload["project_role"] = role
+    workflow = str(payload.get("workflow_status") or default_workflow(role)).strip().lower()
+    if workflow not in WORKFLOW_BY_ROLE[role]:
+        raise ValueError("Estado de flujo no válido para este tipo de contenido")
+    payload["workflow_status"] = workflow
+    try:
+        payload["sort_order"] = max(0, int(payload.get("sort_order") or 0))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Orden no válido") from exc
+    if fields_set is not None and "role_data" not in fields_set:
+        payload["role_data"] = dict(current.get("role_data") or {})
+    else:
+        payload["role_data"] = normalize_role_data(payload.get("role_data"), role)
     priority = str(payload.get("priority") or "media").strip().lower()
     if priority not in PRIORITIES:
         raise ValueError("Prioridad no válida")
@@ -374,7 +434,8 @@ def fetch_details(cur, item_ids: list[str]) -> dict[str, dict]:
         """
         SELECT pd.item_id, pd.template_id, pd.parent_project_id, pd.project_role,
                pd.work_type, pd.work_types, pd.deliverable_type, pd.stage, pd.priority, pd.due_date, pd.client_name,
-               pd.description, pd.custom_values, pt.name AS professional_template_name,
+               pd.description, pd.custom_values, pd.workflow_status, pd.sort_order, pd.role_data,
+               pt.name AS professional_template_name, pt.starter_key AS professional_starter_key,
                pt.terminology AS professional_terminology,
                pt.definition AS professional_definition
         FROM project_details pd
@@ -391,8 +452,8 @@ def upsert_details(cur, item_id: str, payload: dict) -> None:
         """
         INSERT INTO project_details
             (item_id, template_id, parent_project_id, project_role, work_type, work_types, deliverable_type, stage,
-             priority, due_date, client_name, description, custom_values)
-        VALUES (%s, %s, %s, %s, %s, %s::text[], %s, %s, %s, %s, %s, %s, %s::jsonb)
+             priority, due_date, client_name, description, custom_values, workflow_status, sort_order, role_data)
+        VALUES (%s, %s, %s, %s, %s, %s::text[], %s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s, %s::jsonb)
         ON CONFLICT (item_id) DO UPDATE
         SET template_id = EXCLUDED.template_id,
             parent_project_id = EXCLUDED.parent_project_id,
@@ -406,6 +467,9 @@ def upsert_details(cur, item_id: str, payload: dict) -> None:
             client_name = EXCLUDED.client_name,
             description = EXCLUDED.description,
             custom_values = EXCLUDED.custom_values,
+            workflow_status = EXCLUDED.workflow_status,
+            sort_order = EXCLUDED.sort_order,
+            role_data = EXCLUDED.role_data,
             updated_at = now()
         """,
         (
@@ -422,6 +486,9 @@ def upsert_details(cur, item_id: str, payload: dict) -> None:
             payload["client_name"],
             payload["description"],
             json.dumps(payload["custom_values"], ensure_ascii=False),
+            payload["workflow_status"],
+            payload["sort_order"],
+            json.dumps(payload["role_data"], ensure_ascii=False),
         ),
     )
 
@@ -431,6 +498,7 @@ def public_fields(row: dict) -> dict:
     return {
         "professional_template_id": str(row["template_id"]) if row.get("template_id") else None,
         "professional_template_name": row.get("professional_template_name"),
+        "professional_starter_key": row.get("professional_starter_key"),
         "professional_terminology": dict(row.get("professional_terminology") or {}),
         "professional_definition": dict(row.get("professional_definition") or {}),
         "project_parent_id": str(row["parent_project_id"]) if row.get("parent_project_id") else None,
@@ -444,7 +512,101 @@ def public_fields(row: dict) -> dict:
         "project_client_name": row.get("client_name"),
         "project_description": row.get("description"),
         "project_custom_values": dict(row.get("custom_values") or {}),
+        "project_workflow_status": row.get("workflow_status"),
+        "project_sort_order": int(row.get("sort_order") or 0),
+        "project_role_data": dict(row.get("role_data") or {}),
     }
+
+
+def item_status_for_workflow(workflow_status: str) -> str:
+    return "done" if workflow_status in TERMINAL_WORKFLOW else "open"
+
+
+def fetch_relations(cur, user_id: str, project_id: str) -> list[dict]:
+    cur.execute(
+        """
+        SELECT pr.id, pr.project_id, pr.from_item_id, pr.to_item_id, pr.relation_type
+        FROM project_relations pr
+        JOIN items project ON project.id = pr.project_id
+        WHERE pr.project_id = %s AND pr.user_id = %s AND project.user_id = %s
+        ORDER BY pr.created_at, pr.id
+        """,
+        (project_id, user_id, user_id),
+    )
+    return [
+        {
+            "id": str(row["id"]),
+            "project_id": str(row["project_id"]),
+            "from_item_id": str(row["from_item_id"]),
+            "to_item_id": str(row["to_item_id"]),
+            "relation_type": row["relation_type"],
+        }
+        for row in cur.fetchall()
+    ]
+
+
+def replace_relations(cur, user_id: str, item_id: str, relations: list[dict]) -> list[dict]:
+    cur.execute(
+        """
+        SELECT pd.item_id, pd.parent_project_id, pd.project_role
+        FROM project_details pd
+        JOIN items i ON i.id = pd.item_id
+        WHERE pd.item_id = %s AND i.user_id = %s AND i.module = 'proyectos'
+        """,
+        (item_id, user_id),
+    )
+    source = cur.fetchone()
+    if not source or source["project_role"] == "project" or not source["parent_project_id"]:
+        raise ValueError("La pieza profesional no es válida")
+    project_id = str(source["parent_project_id"])
+    normalized = []
+    seen = set()
+    target_ids = [str(item.get("target_item_id") or "") for item in relations if item.get("target_item_id")]
+    target_roles = {}
+    if target_ids:
+        cur.execute(
+            """
+            SELECT pd.item_id, pd.project_role
+            FROM project_details pd
+            JOIN items i ON i.id = pd.item_id
+            WHERE pd.item_id = ANY(%s::uuid[])
+              AND pd.parent_project_id = %s
+              AND i.user_id = %s
+              AND i.module = 'proyectos'
+            """,
+            (target_ids, project_id, user_id),
+        )
+        target_roles = {str(row["item_id"]): row["project_role"] for row in cur.fetchall()}
+    valid_pairs = {
+        "depends_on": ({"task"}, {"task"}),
+        "supports_milestone": ({"task"}, {"milestone"}),
+        "supports_deliverable": ({"task", "milestone"}, {"deliverable"}),
+        "documents": ({"note"}, {"task", "milestone", "deliverable"}),
+        "relates_to": ({"task", "milestone", "deliverable", "note"}, {"task", "milestone", "deliverable", "note"}),
+    }
+    for relation in relations[:100]:
+        relation_type = str(relation.get("relation_type") or "").strip()
+        target_id = str(relation.get("target_item_id") or "").strip()
+        key = (target_id, relation_type)
+        if relation_type not in RELATION_TYPES or not target_id or key in seen or target_id == item_id:
+            continue
+        target_role = target_roles.get(target_id)
+        source_roles, allowed_targets = valid_pairs[relation_type]
+        if source["project_role"] not in source_roles or target_role not in allowed_targets:
+            raise ValueError("Relación no válida para estas piezas")
+        normalized.append((target_id, relation_type))
+        seen.add(key)
+    cur.execute("DELETE FROM project_relations WHERE from_item_id = %s AND user_id = %s", (item_id, user_id))
+    for target_id, relation_type in normalized:
+        cur.execute(
+            """
+            INSERT INTO project_relations (user_id, project_id, from_item_id, to_item_id, relation_type)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (from_item_id, to_item_id, relation_type) DO NOTHING
+            """,
+            (user_id, project_id, item_id, target_id, relation_type),
+        )
+    return fetch_relations(cur, user_id, project_id)
 
 
 def infer_role(text: str) -> str:

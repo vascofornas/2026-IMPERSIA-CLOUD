@@ -37,6 +37,19 @@ La primera pantalla es un índice de tarjetas. Cada tarjeta muestra sector, clie
 
 Las piezas se pueden completar, editar, mover de fase y borrar. Cerrar un proyecto no elimina su contenido.
 
+## Workspace de Software
+
+Los proyectos que usan la plantilla inicial Software tienen un espacio de trabajo propio. No son cuatro listas iguales:
+
+- **Tareas:** tablero por estados Pendiente, En curso, En revisión, Bloqueada y Terminada. Las tarjetas se mueven arrastrando en escritorio o con el selector en móvil. Admiten estimación, criterios de aceptación y dependencias.
+- **Hitos:** línea temporal con fecha, estado y progreso calculado a partir de las tareas relacionadas.
+- **Entregables:** tarjetas de release, documentación o demostración con versión, entorno, estado de publicación y progreso de las piezas vinculadas.
+- **Notas:** panel documental sin checklist, con notas técnicas, decisiones y referencias enlazables a tareas, hitos o entregables.
+
+La parte superior resume tareas terminadas, bloqueos, hitos alcanzados y entregables publicados. Al abrir o crear una pieza aparece un panel lateral; en pantallas pequeñas ocupa el ancho completo.
+
+Las relaciones disponibles son dependencia entre tareas, tarea → hito, tarea/hito → entregable y nota → pieza. Siempre se validan dentro del mismo proyecto y la misma cuenta. No hay asignaciones de equipo en esta versión.
+
 ## Entrada y fronteras
 
 - Trabajo con un resultado y partes relacionadas → Proyectos.
@@ -55,6 +68,8 @@ La migración `022_proyectos_profesionales.sql` añade:
 - `project_details`, ficha uno a uno sobre `items`.
 
 `project_details` conserva plantilla, padre, rol, fase, prioridad, vencimiento, cliente, descripción, varios tipos de trabajo, tipo de entregable y valores personalizados. Los proyectos antiguos se migran como contenedores bajo Personalizada, sin alterar título, fecha ni estado.
+
+La migración `024_workspace_software.sql` añade estado de flujo, orden y datos específicos del rol. `project_relations` guarda los enlaces entre piezas y los elimina en cascada al borrar contenido.
 
 Toda consulta y mutación comprueba `user_id`. Una cuenta no puede usar plantillas ni proyectos padre de otra.
 

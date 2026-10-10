@@ -4212,6 +4212,347 @@ button.link.secondary {
   margin: 8px 0 0;
 }
 
+/* Workspace profesional de Software */
+.software-workspace { margin-top: 24px; }
+
+.software-dashboard {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.software-dashboard > div {
+  display: grid;
+  gap: 2px;
+  padding: 15px;
+  border: 1px solid color-mix(in srgb, var(--prof) 18%, var(--line));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--prof) 4%, var(--bg));
+}
+
+.software-dashboard span,
+.software-dashboard small {
+  color: var(--muted);
+  font-size: .76rem;
+}
+
+.software-dashboard strong { font-size: 1.65rem; }
+
+.software-dashboard .warn {
+  border-color: color-mix(in srgb, #b45309 40%, var(--line));
+  background: color-mix(in srgb, #f59e0b 8%, var(--bg));
+}
+
+.software-workspace-tabs {
+  display: flex;
+  gap: 5px;
+  padding: 5px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--prof) 3%, var(--bg));
+}
+
+.software-workspace-tabs button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1 0 auto;
+  background: transparent;
+  color: var(--ink);
+  border-color: transparent;
+}
+
+.software-workspace-tabs button.on {
+  background: var(--bg);
+  color: var(--prof);
+  border-color: color-mix(in srgb, var(--prof) 24%, var(--line));
+  box-shadow: 0 2px 7px color-mix(in srgb, var(--ink) 7%, transparent);
+}
+
+.software-workspace-tabs button span {
+  min-width: 1.5rem;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--prof) 10%, var(--bg));
+  font-size: .72rem;
+}
+
+.software-panel {
+  margin-top: 14px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--prof) 18%, var(--line));
+  border-radius: 14px;
+  background: var(--bg);
+}
+
+.software-panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.software-panel-heading h3,
+.software-panel-heading p { margin: 0; }
+
+.software-panel-heading p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+.software-kanban {
+  display: flex;
+  gap: 11px;
+  padding-bottom: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+
+.software-kanban-column {
+  flex: 0 0 270px;
+  min-height: 280px;
+  padding: 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--prof) 4%, var(--bg));
+  scroll-snap-align: start;
+}
+
+.software-kanban-column.status-blocked { background: color-mix(in srgb, #f59e0b 7%, var(--bg)); }
+.software-kanban-column.status-done { background: color-mix(in srgb, #16a34a 6%, var(--bg)); }
+
+.software-kanban-column > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 4px 10px;
+}
+
+.software-kanban-column > header h4 {
+  margin: 0;
+  font-size: .84rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.software-kanban-column > header span {
+  display: grid;
+  place-items: center;
+  min-width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 800;
+}
+
+.software-kanban-column > div { display: grid; gap: 9px; }
+
+.software-task-card,
+.software-release-card,
+.software-note-card,
+.software-milestone {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--bg);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--ink) 5%, transparent);
+}
+
+.software-task-card {
+  cursor: grab;
+  border-left: 4px solid #64748b;
+}
+
+.software-task-card:active { cursor: grabbing; }
+.software-task-card.priority-alta { border-left-color: #dc2626; }
+.software-task-card.priority-baja { border-left-color: #16a34a; }
+.software-task-card.blocked { border-color: color-mix(in srgb, #b45309 52%, var(--line)); }
+
+.software-card-head,
+.software-card-meta,
+.software-card-actions,
+.software-release-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.software-card-head,
+.software-card-meta,
+.software-release-top {
+  color: var(--muted);
+  font-size: .73rem;
+}
+
+.software-task-card h4,
+.software-release-card h4,
+.software-note-card h4,
+.software-milestone h4 {
+  margin: 9px 0 6px;
+  font-size: .96rem;
+}
+
+.software-task-card > p,
+.software-release-card > p,
+.software-note-card > p,
+.software-milestone > p {
+  margin: 6px 0;
+  font-size: .82rem;
+  line-height: 1.45;
+}
+
+.software-task-card > select {
+  margin-top: 11px;
+  padding: 7px 9px;
+  font-size: .78rem;
+}
+
+.software-priority,
+.software-eyebrow,
+.software-release-top > span {
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-weight: 800;
+}
+
+.software-priority.alta { color: #b91c1c; }
+.software-priority.baja { color: #15803d; }
+
+.software-card-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 9px;
+}
+
+.software-card-links span,
+.software-link-chip {
+  display: inline-flex;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--prof) 8%, var(--bg));
+  color: var(--prof);
+  font-size: .68rem;
+  font-weight: 700;
+}
+
+.software-card-actions {
+  justify-content: flex-start;
+  margin-top: 10px;
+}
+
+.software-column-empty,
+.software-empty {
+  margin: 8px 0;
+  padding: 18px 10px;
+  border: 1px dashed var(--line);
+  border-radius: 9px;
+  color: var(--muted);
+  text-align: center;
+  font-size: .78rem;
+}
+
+.software-milestone-rail {
+  position: relative;
+  display: flex;
+  gap: 15px;
+  padding: 20px 4px 8px;
+  overflow-x: auto;
+}
+
+.software-milestone-rail::before {
+  position: absolute;
+  top: 29px;
+  right: 20px;
+  left: 20px;
+  height: 2px;
+  background: color-mix(in srgb, var(--prof) 25%, var(--line));
+  content: "";
+}
+
+.software-milestone {
+  position: relative;
+  flex: 0 0 260px;
+  margin-top: 16px;
+  padding-top: 22px;
+}
+
+.software-milestone-dot {
+  position: absolute;
+  top: -25px;
+  left: 18px;
+  width: 15px;
+  height: 15px;
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  background: var(--prof);
+  box-shadow: 0 0 0 2px var(--prof);
+}
+
+.software-milestone.status-at_risk .software-milestone-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px #f59e0b;
+}
+
+.software-milestone.status-reached .software-milestone-dot {
+  background: #16a34a;
+  box-shadow: 0 0 0 2px #16a34a;
+}
+
+.software-release-grid,
+.software-notes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.software-release-card { border-top: 5px solid var(--prof); }
+.software-release-card.status-ready { border-top-color: #0891b2; }
+.software-release-card.status-released { border-top-color: #16a34a; }
+
+.software-release-version {
+  color: var(--prof);
+  font-weight: 800;
+}
+
+.software-note-card {
+  border-left: 5px solid #64748b;
+  background: color-mix(in srgb, #64748b 4%, var(--bg));
+}
+
+.software-note-card.kind-technical { border-left-color: #2563eb; }
+.software-note-card.kind-decision { border-left-color: #9333ea; }
+.software-note-card.kind-reference { border-left-color: #0891b2; }
+
+.software-piece-editor {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  right: 0;
+  width: min(560px, 94vw);
+  height: 100vh;
+  margin: 0;
+  padding: 24px;
+  overflow-y: auto;
+  border-radius: 0;
+  box-shadow: -18px 0 40px color-mix(in srgb, #000 20%, transparent);
+}
+
+.software-piece-editor .project-form-grid { grid-template-columns: 1fr; }
+.software-piece-editor .project-wide { grid-column: auto; }
+
+.project-relations-field {
+  max-height: 190px;
+  overflow-y: auto;
+}
+
 .project-piece-sections {
   margin-top: 22px;
 }
@@ -4298,6 +4639,10 @@ button.link.secondary {
   .project-guide-preview {
     position: static;
   }
+
+  .software-dashboard {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 700px) {
@@ -4339,5 +4684,32 @@ button.link.secondary {
 
   .project-piece-actions {
     grid-column: 2;
+  }
+
+  .software-panel {
+    margin-right: -4px;
+    margin-left: -4px;
+    padding: 13px;
+  }
+
+  .software-panel-heading {
+    flex-direction: column;
+  }
+
+  .software-panel-heading > button {
+    width: 100%;
+  }
+
+  .software-release-grid,
+  .software-notes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .software-kanban-column {
+    flex-basis: min(82vw, 280px);
+  }
+
+  .software-piece-editor {
+    width: 100vw;
   }
 }

@@ -446,6 +446,27 @@ function Home({
     return item;
   }
 
+  const loadProfessionalWorkspace = useCallback(
+    (projectId) => call(`/professional-projects/${projectId}/workspace`),
+    [],
+  );
+
+  async function updateProfessionalWorkflow(itemId, body) {
+    const item = await call(`/professional-items/${itemId}/workflow`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+    setItems((current) => current.map((row) => row.id === item.id ? item : row));
+    return item;
+  }
+
+  async function updateProfessionalRelations(itemId, relations) {
+    return call(`/professional-items/${itemId}/relations`, {
+      method: "PUT",
+      body: JSON.stringify({ relations }),
+    });
+  }
+
   function onHealthControlCreated(control) {
     setHealthControls((prev) => [control, ...prev.filter((c) => c.id !== control.id)]);
     setNotice("Control creado. Cuando toque, usa Registrar ahora aquí o en Hoy.");
@@ -1011,6 +1032,9 @@ function Home({
                 createPiece={createProfessionalPiece}
                 updateItem={updateProfessionalItem}
                 updateStatus={updateProfessionalStatus}
+                loadWorkspace={loadProfessionalWorkspace}
+                updateWorkflow={updateProfessionalWorkflow}
+                updateRelations={updateProfessionalRelations}
                 askRemove={askRemove}
                 setError={setError}
               />

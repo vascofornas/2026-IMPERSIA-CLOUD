@@ -3,6 +3,7 @@ import { Icon } from "./icons.jsx";
 import ProjectForm from "./ProjectForm.jsx";
 import ProjectGuide from "./ProjectGuide.jsx";
 import ProjectPieceForm, { PROJECT_ROLES } from "./ProjectPieceForm.jsx";
+import SoftwareProjectWorkspace from "./SoftwareProjectWorkspace.jsx";
 
 const ROLE_LABELS = Object.fromEntries(PROJECT_ROLES);
 const PRIORITY_LABELS = { baja: "Baja", media: "Media", alta: "Alta" };
@@ -117,6 +118,9 @@ export default function ProyectosBoard({
   createPiece,
   updateItem,
   updateStatus,
+  loadWorkspace,
+  updateWorkflow,
+  updateRelations,
   askRemove,
   setError,
 }) {
@@ -130,6 +134,7 @@ export default function ProyectosBoard({
   const [busyItemId, setBusyItemId] = useState(null);
   const [templateFilter, setTemplateFilter] = useState("");
   const [showClosed, setShowClosed] = useState(false);
+  const [workspace, setWorkspace] = useState(null);
 
   useEffect(() => {
     let live = true;
@@ -147,7 +152,19 @@ export default function ProyectosBoard({
     [items, showClosed, templateFilter],
   );
   const selected = projectsFrom(items).find((item) => item.id === selectedId) || null;
-  const pieces = selected ? piecesFor(items, selected.id) : [];
+  const pieces = selected ? (workspace?.pieces || piecesFor(items, selected.id)) : [];
+
+  useEffect(() => {
+    let live = true;
+    if (!selectedId) {
+      setWorkspace(null);
+      return undefined;
+    }
+    loadWorkspace(selectedId)
+      .then((data) => { if (live) setWorkspace(data); })
+      .catch((error) => setError(error.message));
+    return () => { live = false; };
+  }, [items, loadWorkspace, selectedId, setError]);
 
   async function run(action, done) {
     setBusy(true);
@@ -167,6 +184,32 @@ export default function ProyectosBoard({
     setError("");
     try {
       await updateStatus(item.id, item.status === "done" ? "open" : "done");
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setBusyItemId(null);
+    }
+  }
+
+  async function savePiece(payload) {
+    const { relations, ...itemPayload } = payload;
+    const saved = editingPiece
+      ? await updateItem(editingPiece.id, itemPayload)
+      : await createPiece(selected.id, itemPayload);
+    await updateRelations(saved.id, relations || []);
+    setWorkspace(await loadWorkspace(selected.id));
+    return saved;
+  }
+
+  async function movePiece(item, workflowStatus, sortOrder = item.project_sort_order || 0) {
+    setBusyItemId(item.id);
+    setError("");
+    try {
+      await updateWorkflow(item.id, {
+        workflow_status: workflowStatus,
+        sort_order: sortOrder,
+      });
+      setWorkspace(await loadWorkspace(selected.id));
     } catch (error) {
       setError(error.message);
     } finally {
@@ -221,6 +264,8 @@ export default function ProyectosBoard({
   const terms = selected.professional_terminology || {};
   const progress = progressFor(pieces);
   const grouped = Object.fromEntries(PROJECT_ROLES.map(([role]) => [role, pieces.filter((item) => item.project_role === role)]));
+  const selectedTemplate = templates.find((item) => item.id === selected.professional_template_id);
+  const isSoftware = selected.professional_starter_key === "software" || selectedTemplate?.starter_key === "software";
 
   return (
     <div className="projects-board project-detail">
@@ -293,16 +338,30 @@ export default function ProyectosBoard({
           project={selected}
           initial={editingPiece}
           initialRole={addingPieceRole || "task"}
+          workspacePieces={pieces}
+          relations={workspace?.relations || []}
+          software={isSoftware}
           busy={busy}
           onCancel={() => { setAddingPieceRole(null); setEditingPiece(null); }}
           onSubmit={(payload) => run(
-            () => editingPiece ? updateItem(editingPiece.id, payload) : createPiece(selected.id, payload),
+            () => savePiece(payload),
             () => { setAddingPieceRole(null); setEditingPiece(null); },
           )}
         />
       )}
 
-      <div className="project-piece-sections">
+      {isSoftware ? (
+        <SoftwareProjectWorkspace
+          project={selected}
+          pieces={pieces}
+          relations={workspace?.relations || []}
+          progress={workspace?.progress || { milestones: {}, deliverables: {} }}
+          onAdd={(role) => { setEditingPiece(null); setAddingPieceRole(role); }}
+          onEdit={(item) => { setAddingPieceRole(null); setEditingPiece(item); }}
+          onDelete={askRemove}
+          onMove={movePiece}
+        />
+      ) : <div className="project-piece-sections">
         {PROJECT_ROLES.map(([role, label]) => (
           <section className="project-piece-section" key={role}>
             <div className="project-piece-section-head">
@@ -326,7 +385,7 @@ export default function ProyectosBoard({
             ) : <p className="private project-section-empty">Todavía no hay contenido.</p>}
           </section>
         ))}
-      </div>
+      </div>}
     </div>
   );
 }
