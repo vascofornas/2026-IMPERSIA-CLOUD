@@ -871,3 +871,6 @@ Workspace Software desplegado y probado de punta a punta. Proyecto con dos tarea
 
 10 de octubre de 2026, 19:38
 Gestión visual de versiones en el workspace Software. La versión pertenece al entregable/release, no se duplica en cada tarea o hito. Las tareas muestran su versión vinculada; el tablero filtra por release o por «Sin versión»; los hitos muestran la entrega relacionada y cada release abre el trabajo que contiene. Git conserva commits, ramas y tags. Se suben SoftwareProjectWorkspace.jsx, estilos, build web y docs/11.
+
+11 de octubre de 2026, 13:56
+Ficha «Proyecto Impersia» completada en producción con datos reales del producto. Se conservan cliente Faro.red, prioridad alta y fecha objetivo 31 de octubre de 2026. Fase actualizada a Desarrollo; tipos Producto, Web, Aplicación móvil e Infraestructura; descripción del producto; repositorio GitHub; stack React/Vite, FastAPI, PostgreSQL, nginx y OpenRouter; entorno Producción. No hay cambio de código.
