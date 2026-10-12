@@ -4745,3 +4745,50 @@ button.link.secondary {
     width: 100vw;
   }
 }
+
+.reuniones-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.85fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.reuniones-tools {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.reuniones-form {
+  position: sticky;
+  top: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel, var(--bg));
+}
+
+.reuniones-form-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.reuniones-form-head h2 { margin: 0; }
+
+.reuniones-undated { margin-top: 22px; }
+
+.reuniones-form textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+}
+
+@media (max-width: 800px) {
+  .reuniones-layout { grid-template-columns: 1fr; }
+  .reuniones-form { position: static; }
+}

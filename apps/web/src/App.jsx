@@ -26,6 +26,7 @@ import DiarioBoard from "./DiarioBoard.jsx";
 import DeseosBoard from "./DeseosBoard.jsx";
 import ProfessionalTemplateBuilder from "./ProfessionalTemplateBuilder.jsx";
 import ProyectosBoard from "./ProyectosBoard.jsx";
+import ReunionesBoard from "./ReunionesBoard.jsx";
 import { pendingControls } from "./healthControls.js";
 import { hasHoyBienestarContent, isHabitRoutine } from "./habitos.js";
 import { ensureAlertWorker, postBrowserNotification } from "./notifications.js";
@@ -363,6 +364,30 @@ function Home({
     const item = await call(`/wish-items/${itemId}`, { method: "PATCH", body: JSON.stringify(body) });
     setItems((prev) => prev.map((row) => row.id === item.id ? item : row));
     setNotice("Deseo actualizado.");
+    return item;
+  }
+
+  async function createMeeting(body) {
+    const item = await call("/meetings", { method: "POST", body: JSON.stringify(body) });
+    setItems((current) => [item, ...current.filter((row) => row.id !== item.id)]);
+    setNotice("Reunión guardada.");
+    return item;
+  }
+
+  async function updateMeeting(itemId, body) {
+    const item = await call(`/meetings/${itemId}`, { method: "PATCH", body: JSON.stringify(body) });
+    setItems((current) => current.map((row) => row.id === item.id ? item : row));
+    setNotice("Reunión actualizada.");
+    return item;
+  }
+
+  async function updateMeetingStatus(itemId, status) {
+    const item = await call(`/meetings/${itemId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    setItems((current) => current.map((row) => row.id === item.id ? item : row));
+    setNotice(status === "done" ? "Reunión marcada como hecha." : "Reunión vuelta a prevista.");
     return item;
   }
 
@@ -1039,6 +1064,31 @@ function Home({
                 setError={setError}
               />
             </div>
+          ) : current.id === "reuniones" ? (
+            <div className="module-reuniones">
+              <ReunionesBoard
+                items={items.filter((item) => item.module === "reuniones")}
+                projects={items.filter((item) => item.module === "proyectos" && item.project_role === "project")}
+                createMeeting={createMeeting}
+                updateMeeting={updateMeeting}
+                updateStatus={updateMeetingStatus}
+                askRemove={askRemove}
+                setError={setError}
+                renderCalendar={(onOpen) => (
+                  <CalendarBoard
+                    items={items.filter((item) => item.module === "reuniones" && item.starts_at)}
+                    onOpenItem={onOpen}
+                    editing={null}
+                    setEditing={() => {}}
+                    startEdit={() => {}}
+                    startEditOneDay={() => {}}
+                    saveEdit={() => {}}
+                    askRemove={askRemove}
+                    onToggleStatus={() => {}}
+                  />
+                )}
+              />
+            </div>
           ) : (
             <div className="panes">
               <section>
@@ -1216,7 +1266,7 @@ const CALENDAR_VIEWS = [
   { id: "mes", label: "Mes" },
 ];
 
-function CalendarBoard({ items, editing, setEditing, startEdit, startEditOneDay, saveEdit, askRemove, onToggleStatus }) {
+function CalendarBoard({ items, editing, setEditing, startEdit, startEditOneDay, saveEdit, askRemove, onToggleStatus, onOpenItem }) {
   const today = new Date();
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   const [view, setView] = useState("mes");
@@ -1284,6 +1334,7 @@ function CalendarBoard({ items, editing, setEditing, startEdit, startEditOneDay,
           saveEdit={saveEdit}
           askRemove={askRemove}
           onToggleStatus={onToggleStatus}
+          onOpenItem={onOpenItem}
         />
       ) : (
         <div className={`month-grid ${view}`}>
@@ -1298,7 +1349,7 @@ function CalendarBoard({ items, editing, setEditing, startEdit, startEditOneDay,
             return (
               <div className={classes.join(" ")} key={key}>
                 <button type="button" className="num" onClick={() => openDay(date)}>{date.getDate()}</button>
-                {shown.map((item) => <Chip item={item} key={item.occurrenceKey || item.id} onPick={openDay} />)}
+                {shown.map((item) => <Chip item={item} key={item.occurrenceKey || item.id} onPick={onOpenItem ? null : openDay} onOpenItem={onOpenItem} />)}
                 {list.length > shown.length && (
                   <button type="button" className="more" onClick={() => openDay(date)}>+{list.length - shown.length}</button>
                 )}
@@ -1311,8 +1362,22 @@ function CalendarBoard({ items, editing, setEditing, startEdit, startEditOneDay,
   );
 }
 
-function DayColumn({ items, editing, setEditing, startEdit, startEditOneDay, saveEdit, askRemove, onToggleStatus }) {
-  if (!items.length) return <p className="private">Este día no hay nada con fecha.</p>;
+function DayColumn({ items, editing, setEditing, startEdit, startEditOneDay, saveEdit, askRemove, onToggleStatus, onOpenItem }) {
+  if (!items.length) return <p className="private">{onOpenItem ? "Este día no hay reuniones." : "Este día no hay nada con fecha."}</p>;
+  if (onOpenItem) {
+    return (
+      <div className="cards">
+        {items.map((item) => (
+          <article className={item.status === "done" ? "card done" : "card"} key={item.occurrenceKey || item.id}>
+            <p className="when">{item.time_known ? clockOf(item.starts_at) : "Sin hora"}</p>
+            <p className="title">{item.title}</p>
+            <p className="private">{[item.meeting_client_name, item.meeting_project_title, item.status === "done" ? "Hecha" : "Prevista"].filter(Boolean).join(" · ")}</p>
+            <button type="button" onClick={() => onOpenItem(item)}><Icon name="editar" /> Abrir ficha</button>
+          </article>
+        ))}
+      </div>
+    );
+  }
   return (
     <ItemList
       items={items}
@@ -1327,7 +1392,7 @@ function DayColumn({ items, editing, setEditing, startEdit, startEditOneDay, sav
   );
 }
 
-function Chip({ item, onPick }) {
+function Chip({ item, onPick, onOpenItem }) {
   const className = chipClass(item);
   const title = chipTitle(item);
   const body = (
@@ -1336,6 +1401,13 @@ function Chip({ item, onPick }) {
       <span>{chipText(item)}</span>
     </>
   );
+  if (onOpenItem) {
+    return (
+      <button type="button" className={className} title={title} onClick={() => onOpenItem(item)}>
+        {body}
+      </button>
+    );
+  }
   if (onPick) {
     return (
       <button type="button" className={className} title={title} onClick={() => onPick(new Date(item.starts_at))}>
@@ -1902,6 +1974,16 @@ function ItemList({ items, editing, setEditing, startEdit, startEditOneDay, save
                 <p className="private">{item.travel_address || item.travel_place}</p>
               )}
               {item.source === "travel" && item.travel_notes && <p className="private">{item.travel_notes}</p>}
+              {item.module === "reuniones" && (
+                <p className="private">
+                  {[
+                    item.meeting_kind === "seguimiento" ? "Seguimiento" : "Cita de trabajo",
+                    item.meeting_client_name,
+                    item.meeting_project_title,
+                    item.status === "done" ? "Hecha" : "Prevista",
+                  ].filter(Boolean).join(" · ")}
+                </p>
+              )}
               <p className="meta">
                 {item.source === "google" ? (
                   <span className="tag m-google"><GoogleMark /> Google</span>

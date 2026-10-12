@@ -76,10 +76,10 @@ export const AXES = [
       {
         id: "reuniones",
         label: "Reuniones",
-        blurb: "Citas de trabajo, llamadas y lo que quedó dicho.",
+        blurb: "Calendario laboral: citas, seguimientos y lo que quedó dicho. El hueco también se ve en el día de la Agenda.",
         examples: [
           ["Llamada con el proveedor", "martes, 11:00"],
-          ["Acta: decidir el alcance de Foros", ""],
+          ["Seguimiento del alcance", "cliente y proyecto"],
         ],
       },
       {

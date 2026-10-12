@@ -25,6 +25,7 @@ from classify import (
     split_compra_titles,
 )
 import llm
+import meetings
 import professional
 import wishes
 
@@ -75,6 +76,7 @@ Responde SOLO JSON válido con una clave "items": lista de 1 a 4 objetos. Cada o
 - journal_kind: entrada|animo|reflexion|gratitud, mood y energy de 1 a 5, journal_tags como lista (solo si module=diario)
 - wish_kind: lugar|cosa|experiencia|otro; wish_reason, wish_place, wish_url, wish_estimated_price, wish_currency, wish_priority (baja|media|alta) y wish_notes (solo si module=deseos)
 - project_role: project|task|milestone|deliverable|note; project_hint, project_stage, project_priority (baja|media|alta), project_work_types (lista, admite varios), project_deliverable_type, project_client_name, project_description y project_custom_values (solo si module=proyectos)
+- meeting_kind: cita|seguimiento; meeting_client, meeting_participants, meeting_place, meeting_url y meeting_project_hint (solo si module=reuniones). No inventes participantes, lugar ni enlace.
 - family_kind, leisure_kind, reminder_kind, supply_kind cuando aplique
 - medical_for, medical_place, family_for, family_name, family_place, leisure_with, leisure_place, casa_place, casa_notes, reminder_notes, family_notes: texto o null
 - role (opcional): "task" | "birthday_event" — task = aviso/tarea con la fecha principal de la frase; birthday_event = cumpleaños anual en la fecha literal mencionada (9 nov…)
@@ -412,7 +414,7 @@ def _post_refine(out: dict, raw: str, baseline: dict) -> dict:
             _clear_agenda_fields(result)
             _clear_casa_fields(result)
 
-    return result
+    return meetings.fill_suggestion(result, raw)
 
 
 def _looks_like_diary_narrative(low: str) -> bool:
@@ -740,6 +742,16 @@ def _apply_llm_spec(baseline: dict, parsed: dict, title_raw: str) -> dict:
         out["project_priority"] = priority if priority in professional.PRIORITIES else "media"
         custom = parsed.get("project_custom_values")
         out["project_custom_values"] = custom if isinstance(custom, dict) else {}
+    elif module == "reuniones":
+        _clear_agenda_fields(out)
+        _clear_casa_fields(out)
+        _clear_habit_fields(out)
+        _clear_travel_fields(out)
+        out["agenda_type"] = None
+        out["meeting_kind"] = parsed.get("meeting_kind")
+        for key in ("meeting_client", "meeting_participants", "meeting_place", "meeting_url", "meeting_project_hint"):
+            out[key] = parsed.get(key)
+        meetings.fill_suggestion(out, title_raw)
     else:
         _clear_agenda_fields(out)
         _clear_casa_fields(out)

@@ -874,3 +874,6 @@ Gestión visual de versiones en el workspace Software. La versión pertenece al 
 
 11 de octubre de 2026, 13:56
 Ficha «Proyecto Impersia» completada en producción con datos reales del producto. Se conservan cliente Faro.red, prioridad alta y fecha objetivo 31 de octubre de 2026. Fase actualizada a Desarrollo; tipos Producto, Web, Aplicación móvil e Infraestructura; descripción del producto; repositorio GitHub; stack React/Vite, FastAPI, PostgreSQL, nginx y OpenRouter; entorno Producción. No hay cambio de código.
+
+12 de octubre de 2026, 18:38
+Reuniones, calendario laboral, versión 1. Se suben migración 025 y meetings.py para la ficha (tipo, cliente, proyecto, participantes, lugar, enlace y lo dicho); la API para crear, cambiar y marcar hecha; archive.py para que Entrada archive la cita y enlace un proyecto solo si el texto lo nombra. En la web, ReunionesBoard.jsx abre mes, semana y día solo con reuniones, y la ficha al pulsar una cita. La Agenda sigue mostrando el hueco. Quedan fuera actas formales, series y calendario compartido. Se actualizan definición, roadmap, archivo, docs/11 y docs/12, App.jsx, estilos y el build web.

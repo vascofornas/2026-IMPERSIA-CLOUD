@@ -14,7 +14,7 @@ El esqueleto de las pantallas ya está, con ejemplos. A partir de aquí se perfe
 2. **Profesional.** Proyectos, Reuniones, Segunda memoria, Ideas.
 3. **Social.** Muro, Listas y rutas, Círculos, Espacios.
 
-**Estado (octubre de 2026):** el eje Vida personal está completo en su versión actual. En Profesional, Proyectos y la base de plantillas sectoriales configurables están completos; siguen Reuniones, Segunda memoria e Ideas.
+**Estado (octubre de 2026):** el eje Vida personal está completo en su versión actual. En Profesional, Proyectos y Reuniones (calendario laboral, ficha y enlace al proyecto) están en su versión 1; siguen Segunda memoria e Ideas.
 
 El primero es Agenda. Junta lo que entra por Entrada con Google Calendar, si la persona lo conecta. Impersia lee ese calendario y lo muestra en Agenda y en Hoy, marcado como Google. Lo escrito en Entrada se queda en Impersia. Escribir de vuelta en Google llega cuando esta lectura ya se use. La vista de Agenda se abre en el mes. También se puede ver la semana o un solo día. Entra cualquier entrada con fecha, de cualquier eje, más Google. Cada cajón tiene su color y su icono. Google lleva su marca. Hoy sigue siendo la lista del día.
 
@@ -106,7 +106,7 @@ Cada módulo se construye sobre `items` y el archivador común. Agenda, Casa, H�
 
 Orden siguiente:
 
-1. Reuniones, enlazadas con cliente y proyecto.
+1. Reuniones, enlazadas con cliente y proyecto. Hecho en la versión 1: calendario laboral y ficha. Las actas formales siguen fuera.
 2. Segunda memoria, con `pgvector`.
 3. Ideas, con promoción a proyecto.
 4. Módulos del eje Social.

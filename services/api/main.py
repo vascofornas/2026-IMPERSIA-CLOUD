@@ -26,6 +26,7 @@ import archive
 import dedup
 import health_controls
 import journal
+import meetings
 import professional
 import professional_guide
 import travel
@@ -288,6 +289,20 @@ class WishListIn(BaseModel):
 class WishListPatch(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=120)
     description: str | None = Field(default=None, max_length=1000)
+
+
+class MeetingIn(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    day: str | None = None
+    time: str | None = None
+    meeting_kind: str | None = None
+    client_name: str | None = Field(default=None, max_length=240)
+    project_id: str | None = None
+    participants: str | None = Field(default=None, max_length=1000)
+    place: str | None = Field(default=None, max_length=300)
+    url: str | None = Field(default=None, max_length=1000)
+    outcome: str | None = Field(default=None, max_length=5000)
+    status: str | None = None
 
 
 class ProfessionalTemplateIn(BaseModel):
@@ -990,7 +1005,7 @@ def _file_suggestion(
         row = dedup.merge_existing(cur, user_id, capture_id, suggestion, existing)
         item = (
             _fetch_item(cur, str(row["id"]), user_id)
-            if suggestion.get("module") in {"deseos", "proyectos"}
+            if suggestion.get("module") in {"deseos", "proyectos", "reuniones"}
             else _public_item(row)
         )
         item["dedupe_action"] = "merged"
@@ -1078,6 +1093,11 @@ def _file_suggestion(
             template,
         )
         professional.upsert_details(cur, str(row["id"]), payload)
+        item = _fetch_item(cur, str(row["id"]), user_id)
+        return item, False
+    if suggestion.get("module") == "reuniones":
+        payload = meetings.payload_from_text(cur, user_id, raw_text or title_val, suggestion)
+        meetings.upsert_details(cur, str(row["id"]), payload)
         item = _fetch_item(cur, str(row["id"]), user_id)
         return item, False
     return _public_item(row), False
@@ -1303,6 +1323,125 @@ def patch_wish_status(item_id: str, body: StatusIn, request: Request):
             )
             if not cur.fetchone():
                 raise HTTPException(status_code=404, detail="Deseo no encontrado")
+            item = _fetch_item(cur, item_id, user_id)
+        conn.commit()
+    return item
+
+
+def _meeting_when(day: str | None, clock: str | None):
+    if not day or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day.strip()):
+        raise HTTPException(status_code=422, detail="La reunión necesita un día válido")
+    raw_time = (clock or "").strip()
+    if raw_time and not re.fullmatch(r"\d{2}:\d{2}", raw_time):
+        raise HTTPException(status_code=422, detail="La hora no es válida")
+    if raw_time:
+        return _as_madrid(f"{day.strip()}T{raw_time}"), True
+    return _when_saving(f"{day.strip()}T00:00", False), False
+
+
+def _meeting_payload(cur, user_id: str, body: MeetingIn) -> dict:
+    project_id = (body.project_id or "").strip() or None
+    try:
+        project_id = meetings.owned_project_id(cur, user_id, project_id)
+        return meetings.normalize_payload(
+            {
+                "meeting_kind": body.meeting_kind,
+                "client_name": body.client_name,
+                "project_id": project_id,
+                "participants": body.participants,
+                "place": body.place,
+                "url": body.url,
+                "outcome": body.outcome,
+            }
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.post("/meetings", status_code=201)
+def create_meeting(body: MeetingIn, request: Request):
+    user_id = current_user(request)
+    starts_at, time_known = _meeting_when(body.day, body.time)
+    status = body.status if body.status in {"open", "done"} else "open"
+    with db() as conn:
+        with conn.cursor() as cur:
+            payload = _meeting_payload(cur, user_id, body)
+            suggestion = {
+                "kind": "event",
+                "axis": "professional",
+                "module": "reuniones",
+                "title": body.title.strip(),
+                "starts_at": starts_at,
+                "repeats": None,
+                "time_known": time_known,
+                "alert_minutes_before": 15 if time_known else None,
+                "source": "reuniones_ui",
+            }
+            row = _insert_item(cur, user_id, None, suggestion)
+            if status == "done":
+                cur.execute("UPDATE items SET status = 'done' WHERE id = %s", (row["id"],))
+            meetings.upsert_details(cur, str(row["id"]), payload)
+            item = _fetch_item(cur, str(row["id"]), user_id)
+        conn.commit()
+    return item
+
+
+@app.patch("/meetings/{item_id}")
+def patch_meeting(item_id: str, body: MeetingIn, request: Request):
+    user_id = current_user(request)
+    starts_at, time_known = _meeting_when(body.day, body.time)
+    if body.status not in {None, "open", "done"}:
+        raise HTTPException(status_code=422, detail="El estado tiene que ser prevista o hecha")
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id FROM items WHERE id = %s AND user_id = %s AND module = 'reuniones'",
+                (item_id, user_id),
+            )
+            if not cur.fetchone():
+                raise HTTPException(status_code=404, detail="Reunión no encontrada")
+            payload = _meeting_payload(cur, user_id, body)
+            cur.execute(
+                """
+                UPDATE items
+                SET title = %s, starts_at = %s, time_known = %s,
+                    alert_minutes_before = %s,
+                    status = COALESCE(%s, status)
+                WHERE id = %s AND user_id = %s
+                """,
+                (
+                    body.title.strip(),
+                    starts_at,
+                    time_known,
+                    15 if time_known else None,
+                    body.status if body.status in {"open", "done"} else None,
+                    item_id,
+                    user_id,
+                ),
+            )
+            meetings.upsert_details(cur, item_id, payload)
+            item = _fetch_item(cur, item_id, user_id)
+        conn.commit()
+    return item
+
+
+@app.patch("/meetings/{item_id}/status")
+def patch_meeting_status(item_id: str, body: StatusIn, request: Request):
+    user_id = current_user(request)
+    if body.status not in {"open", "done"}:
+        raise HTTPException(status_code=422, detail="El estado tiene que ser prevista o hecha")
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE items SET status = %s
+                WHERE id = %s AND user_id = %s AND module = 'reuniones'
+                RETURNING id
+                """,
+                (body.status, item_id, user_id),
+            )
+            if not cur.fetchone():
+                raise HTTPException(status_code=404, detail="Reunión no encontrada")
             item = _fetch_item(cur, item_id, user_id)
         conn.commit()
     return item
@@ -2470,6 +2609,15 @@ def patch_item(item_id: str, body: ItemPatch, request: Request):
                         professional.upsert_details(cur, item_id, payload)
                 else:
                     cur.execute("DELETE FROM project_details WHERE item_id = %s", (item_id,))
+                if body.module == "reuniones":
+                    if not meetings.fetch_details(cur, [item_id]).get(item_id):
+                        meetings.upsert_details(
+                            cur,
+                            item_id,
+                            meetings.payload_from_text(cur, user_id, body.title, {}),
+                        )
+                else:
+                    cur.execute("DELETE FROM meeting_details WHERE item_id = %s", (item_id,))
                 item = _fetch_item(cur, item_id, user_id)
                 archive.maybe_learn_from_patch(cur, user_id, raw_text=raw_text, before=before, after=item)
         conn.commit()
@@ -2670,11 +2818,13 @@ def list_items(request: Request, limit: int = 500):
             journal_details = journal.fetch_details(cur, item_ids)
             wish_details = wishes.fetch_details(cur, item_ids)
             project_details = professional.fetch_details(cur, item_ids)
+            meeting_details = meetings.fetch_details(cur, item_ids)
             for row in rows:
                 row.update(travel_details.get(str(row["id"]), {}))
                 row.update(journal_details.get(str(row["id"]), {}))
                 row.update(wish_details.get(str(row["id"]), {}))
                 row.update(project_details.get(str(row["id"]), {}))
+                row.update(meeting_details.get(str(row["id"]), {}))
     return [_public_item(row, exceptions.get(str(row["id"]), [])) for row in rows]
 
 
@@ -2747,6 +2897,9 @@ def _fetch_item(cur, item_id: str, user_id: str) -> dict | None:
     project_detail = professional.fetch_details(cur, [item_id]).get(str(item_id))
     if project_detail:
         row.update(project_detail)
+    meeting_detail = meetings.fetch_details(cur, [item_id]).get(str(item_id))
+    if meeting_detail:
+        row.update(meeting_detail)
     exceptions = _fetch_exceptions(cur, user_id, [item_id])
     return _public_item(row, exceptions.get(item_id, []))
 
@@ -2823,6 +2976,7 @@ def _public_item(row: dict, exceptions: list | None = None) -> dict:
         **journal.public_fields(row),
         **wishes.public_fields(row),
         **professional.public_fields(row),
+        **meetings.public_fields(row),
         "shopping_list_id": str(row["shopping_list_id"]) if row.get("shopping_list_id") else None,
         "status": row.get("status") or "open",
         "privacy": row["privacy"],

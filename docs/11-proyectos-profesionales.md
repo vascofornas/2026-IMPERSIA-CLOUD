@@ -79,7 +79,7 @@ Toda consulta y mutación comprueba `user_id`. Una cuenta no puede usar plantill
 
 Esta entrega cierra Proyectos y la base adaptable del eje Profesional. Después:
 
-- Reuniones reutilizará cliente, proyecto y vocabulario.
+- Reuniones ya reutiliza el cliente y el proyecto abierto de la cuenta. Véase [12-reuniones.md](12-reuniones.md).
 - Segunda memoria incorporará recuperación semántica.
 - Ideas podrá promoverse a proyecto escogiendo plantilla.
 

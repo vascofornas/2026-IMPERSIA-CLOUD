@@ -123,7 +123,7 @@ Referencia para el prompt del modelo y para validación. **Subtipo** = variant p
 | Módulo | Subtipos | meta principal | Patrón de UI |
 | --- | --- | --- | --- |
 | **proyectos** | contenedor, tarea, hito, entrega, nota | plantilla, proyecto padre, fase, tipo, deadline, prioridad, campos sectoriales | tarjetas + ficha adaptable |
-| **reuniones** | cita, acta, seguimiento | participantes, lugar, enlace | agenda compartida + notas post |
+| **reuniones** | cita, seguimiento | cliente, proyecto, participantes, lugar, enlace, lo dicho | calendario laboral (hecho) |
 | **memoria** | apunte, lectura, guia, referencia | fuente, tags, embedding_id | búsqueda semántica (pgvector) |
 | **ideas** | borrador, propuesta, hipotesis | sin contenedor obligatorio | inbox ligero → promover a proyecto |
 
