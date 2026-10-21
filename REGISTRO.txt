@@ -880,3 +880,6 @@ Reuniones, calendario laboral, versión 1. Se suben migración 025 y meetings.py
 
 12 de octubre de 2026, 18:44
 Reuniones probado en producción. Migración 025, health y los archivos web nuevos correctos. Una cuenta creó la ficha, la marcó hecha conservando lo dicho y, por Entrada, enlazó «Faro Portal» al nombrarlo. Otra cuenta no pudo usar ese proyecto. Enlace sin http rechazado. Se borraron las dos cuentas de prueba. En Proyecto Impersia quedaron el hito alcanzado, la release 2026.10.12, la tarea hecha y la nota de decisión, relacionadas entre sí.
+
+21 de octubre de 2026, 11:30
+Propuesta Impersia Builder (documento único imprimible). Se añade docs/13-propuesta-impersia-builder.md con la apuesta Builder: señales desde repo y reuniones, cola de acciones con aprobación, playbooks, proyecto vivo, MVP, riesgos y hoja de decisión A/B/C. No cambia aún la definición de producto vigente hasta que Modesto marque la decisión. Sin despliegue.
