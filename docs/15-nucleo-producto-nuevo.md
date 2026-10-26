@@ -13,8 +13,14 @@ Decisión **26 oct 2026**, opción acordada con Modesto: **producto nuevo, códi
 
 - Carpeta: **`apps/nucleo/`**
 - URL: **https://impersia.cloud/nucleo/**
-- Alcance v1: **Entrada sola** — escribes, archiva con la API existente, ves **dónde quedó** y cuándo saldrá en Hoy. Sin menú de módulos viejos.
-- Infra compartida (invisible): auth por cookie, `POST /captures`, PostgreSQL, API en `api.impersia.cloud`.
+- Alcance v1: **soltar y confiar** — una pantalla de escritura, confirmación humana al guardar. Sin menú, sin nombres de módulos del OS viejo en la UI.
+- Infra compartida (invisible): auth por cookie, `POST /captures`, PostgreSQL, API en `api.impersia.cloud`. El usuario **no** debe ver enlaces, badges ni textos del producto congelado.
+
+## Reglas de experiencia (anti-parche)
+
+- Prohibido en la interfaz: «app anterior», «Núcleo» como etiqueta, «Entrada/Archivar», logo del cuaderno legacy, «la misma cuenta que antes».
+- Lenguaje del producto nuevo: **soltar**, **recogido**, **te lo devolvemos**.
+- Legacy solo en documentación interna y en `/app/` para quien entre a mano; no se promociona desde Núcleo.
 
 ## Qué viene después (sin fechas rígidas)
 

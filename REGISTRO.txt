@@ -892,3 +892,6 @@ Entrada alineada con la promesa. Tras archivar se muestra «Dónde quedó»: mó
 
 26 de octubre de 2026, 11:20
 Opción 1 acordada: producto nuevo y apps/web congelada (solo mantenimiento crítico). Núcleo v1 en apps/nucleo: Entrada sola, misma API y cuenta, sin menú legacy. Documento docs/15-nucleo-producto-nuevo.md. Nginx: ruta /nucleo/. Legacy sigue en /app/. Sin tocar más módulos viejos para nuevas funciones.
+
+26 de octubre de 2026, 11:35
+Núcleo deja de parecer parche. UI nueva: una pantalla «¿Qué llevas en la cabeza?», botón Soltar, confirmación Recogido; sin enlace a /app/, sin badge Núcleo ni logo cuaderno. Tipografía y layout distintos del OS viejo. docs/15: reglas anti-parche en experiencia. Build nucleo y despliegue.

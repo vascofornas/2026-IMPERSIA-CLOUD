@@ -1,22 +1,22 @@
-const MODULE_LABELS = {
-  agenda: "Agenda",
-  casa: "Casa",
-  habitos: "Bienestar y hábitos",
-  viajes: "Viajes y experiencias",
-  diario: "Diario",
-  deseos: "Deseos",
-  proyectos: "Proyectos",
-  reuniones: "Reuniones",
-  memoria: "Segunda memoria",
-  ideas: "Ideas",
-  muro: "Muro",
-  listas: "Listas",
-  circulos: "Círculos",
-  espacios: "Espacios",
+const WHERE = {
+  agenda: "tu agenda",
+  casa: "lo de casa",
+  habitos: "tus rutinas",
+  viajes: "un viaje",
+  diario: "tu diario",
+  deseos: "tus deseos",
+  proyectos: "tu trabajo",
+  reuniones: "una reunión",
+  memoria: "tus apuntes",
+  ideas: "tus ideas",
+  muro: "tu muro",
+  listas: "una lista",
+  circulos: "un círculo",
+  espacios: "un espacio compartido",
 };
 
-function labelOf(id) {
-  return MODULE_LABELS[id] || id;
+function whereOf(module) {
+  return WHERE[module] || "tu espacio";
 }
 
 function dayKey(value) {
@@ -39,16 +39,16 @@ function whenShort(item) {
   });
 }
 
-/** Dónde quedó y cuándo lo verá en Hoy (docs/14). */
+/** Confirmación humana tras guardar (docs/14). */
 export function trustLineForItem(item, now = new Date()) {
-  const mod = labelOf(item.module);
-  const title = (item.title || "Entrada").trim();
+  const place = whereOf(item.module);
+  const title = (item.title || "Lo que acabas de soltar").trim();
   const shortTitle = title.length > 72 ? `${title.slice(0, 69)}…` : title;
 
   if (!item.starts_at) {
     return {
       title: shortTitle,
-      detail: `Quedó en ${mod}. Sin fecha: lo encuentras en ${mod} cuando lo necesites. Hoy vendrá en Núcleo.`,
+      detail: `Recogido en ${place}. Cuando lo necesites, estará ahí — no hace falta apuntarlo en otro sitio.`,
     };
   }
 
@@ -58,7 +58,7 @@ export function trustLineForItem(item, now = new Date()) {
   if (sameDay) {
     return {
       title: shortTitle,
-      detail: `Quedó en ${mod}. Lo verás en Hoy hoy (${when}).`,
+      detail: `Recogido en ${place}. Hoy te lo devolvemos (${when}).`,
     };
   }
 
@@ -66,12 +66,12 @@ export function trustLineForItem(item, now = new Date()) {
   if (future) {
     return {
       title: shortTitle,
-      detail: `Quedó en ${mod}. Aparecerá en Hoy el ${when}.`,
+      detail: `Recogido en ${place}. Te lo devolvemos el ${when}.`,
     };
   }
 
   return {
     title: shortTitle,
-    detail: `Quedó en ${mod}. Fecha: ${when}. Revisa Hoy cuando esté listo en Núcleo.`,
+    detail: `Recogido en ${place}. Fecha: ${when}.`,
   };
 }
