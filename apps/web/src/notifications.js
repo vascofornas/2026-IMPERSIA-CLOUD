@@ -12,7 +12,7 @@ export async function ensureAlertWorker() {
   }
   if (!swReady) {
     swReady = navigator.serviceWorker
-      .register("/app/sw.js", { scope: "/app/" })
+      .register("/os/sw.js", { scope: "/os/" })
       .then(() => navigator.serviceWorker.ready)
       .catch(() => null);
   }

@@ -901,3 +901,6 @@ Sesión independiente para Núcleo. API: cookie impersia_nucleo_session cuando l
 
 26 de octubre de 2026, 14:18
 Frontera de proyecto nuevo. Lo soltado en Núcleo ya no pasa por archive ni items del OS: migración 026 nucleo_releases, POST /nucleo/releases, UI sin «quedó en Proyectos/Reuniones». docs/16 explica OS congelado vs producto activo. Próximo trabajo: Hoy y devolución sobre nucleo_releases, no copiar /app/.
+
+26 de octubre de 2026, 14:25
+Puertas de entrada corregidas. impersia.cloud/ y /app/ llevan al producto nuevo (/nucleo/). OS legacy solo en /os/; /app/ muestra aviso de congelado con enlaces. Nginx sin caché agresiva en /nucleo/. Texto visible en la app: producto nuevo, no alimenta el OS antiguo.

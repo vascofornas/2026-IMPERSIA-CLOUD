@@ -159,6 +159,7 @@ function Suelta({ email, onLeave }) {
       </header>
 
       <div className="stage">
+        <p className="fresh">Producto nuevo · lo de aquí no va al OS antiguo</p>
         <p className="prompt">¿Qué llevas en la cabeza?</p>
         <textarea
           ref={areaRef}

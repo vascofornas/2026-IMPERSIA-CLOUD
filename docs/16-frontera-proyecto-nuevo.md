@@ -7,7 +7,7 @@ Modesto notó que, aunque la pantalla se sienta nueva, **seguía siendo trabajo 
 | | **Impersia OS** (congelado) | **Proyecto nuevo** (activo) |
 |---|---|---|
 | Código UI | `apps/web/` | `apps/nucleo/` |
-| URL | `/app/` | `/nucleo/` |
+| URL | `/os/` (antes `/app/`) | `/nucleo/` — **impersia.cloud abre aquí** |
 | Datos al escribir | `captures` → `items` (Agenda, Casa, Proyectos…) | `nucleo_releases` |
 | Archivador | `archive.py`, clasificador, módulos | **No se usa** |
 | Regla | Solo mantenimiento crítico | Aquí crece la promesa (`docs/14`) |

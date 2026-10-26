@@ -179,6 +179,15 @@ button.linkish.block {
   padding: clamp(2rem, 8vh, 5rem) 1.5rem 4rem;
 }
 
+.fresh {
+  margin: 0 0 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
 .prompt {
   font-family: Literata, Georgia, serif;
   font-size: clamp(1.5rem, 4vw, 2.25rem);
