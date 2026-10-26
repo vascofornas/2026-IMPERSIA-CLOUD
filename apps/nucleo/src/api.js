@@ -14,11 +14,17 @@ function readableError(data) {
   return "No se ha podido completar";
 }
 
+const NUCLEO_HEADERS = {
+  "Content-Type": "application/json",
+  "X-Impersia-Product": "nucleo",
+};
+
 export async function call(path, options = {}) {
+  const { headers: extraHeaders, ...rest } = options;
   const response = await fetch(API + path, {
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    ...options,
+    headers: { ...NUCLEO_HEADERS, ...extraHeaders },
+    ...rest,
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {

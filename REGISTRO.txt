@@ -895,3 +895,6 @@ Opción 1 acordada: producto nuevo y apps/web congelada (solo mantenimiento crí
 
 26 de octubre de 2026, 11:35
 Núcleo deja de parecer parche. UI nueva: una pantalla «¿Qué llevas en la cabeza?», botón Soltar, confirmación Recogido; sin enlace a /app/, sin badge Núcleo ni logo cuaderno. Tipografía y layout distintos del OS viejo. docs/15: reglas anti-parche en experiencia. Build nucleo y despliegue.
+
+26 de octubre de 2026, 14:10
+Sesión independiente para Núcleo. API: cookie impersia_nucleo_session cuando la petición lleva X-Impersia-Product: nucleo; legacy sigue con impersia_session. apps/nucleo envía la cabecera en todas las llamadas. Así /nucleo/ pide entrar aunque /app/ siga abierto. Misma cuenta y datos de usuario; solo la sesión del navegador es otra.

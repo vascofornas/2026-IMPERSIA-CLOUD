@@ -70,7 +70,7 @@ app.add_middleware(
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
-    allow_headers=["Content-Type"],
+    allow_headers=["Content-Type", "X-Impersia-Product"],
 )
 
 KINDS = {"note", "task", "event"}
@@ -83,7 +83,14 @@ REMINDER_KIND = {"itv", "seguro", "impuesto", "documento", "hogar", "otro"}
 CASA_KIND = {"compra", "mantenimiento", "suministro", "domestica", "inventario", "otro"}
 SUPPLY_KIND = {"luz", "agua", "gas", "internet", "otro"}
 LOOKS = {"claro", "papel", "mar", "cielo", "oliva", "arena", "violeta", "tinta", "noche", "grafito"}
-COOKIE = "impersia_session"
+COOKIE_LEGACY = "impersia_session"
+COOKIE_NUCLEO = "impersia_nucleo_session"
+SESSION_COOKIES = {"legacy": COOKIE_LEGACY, "nucleo": COOKIE_NUCLEO}
+
+
+def session_cookie_name(request: Request) -> str:
+    product = (request.headers.get("x-impersia-product") or "legacy").strip().lower()
+    return SESSION_COOKIES.get(product, COOKIE_LEGACY)
 
 ITEM_SELECT = """
     id, kind, axis, module, title, starts_at, repeats, time_known, alert_minutes_before,
@@ -147,14 +154,16 @@ def read_token(token: str) -> str | None:
 
 
 def current_user(request: Request) -> str:
-    user_id = read_token(request.cookies.get(COOKIE, ""))
+    cookie = session_cookie_name(request)
+    user_id = read_token(request.cookies.get(cookie, ""))
     if not user_id:
         raise HTTPException(status_code=401, detail="Necesitas entrar")
     return user_id
 
 
 def optional_user(request: Request) -> tuple[str | None, str | None]:
-    user_id = read_token(request.cookies.get(COOKIE, ""))
+    cookie = session_cookie_name(request)
+    user_id = read_token(request.cookies.get(cookie, ""))
     if not user_id:
         return None, None
     try:
@@ -186,9 +195,9 @@ def public_account(
     return account
 
 
-def set_session(response: Response, user_id: str) -> None:
+def set_session(response: Response, user_id: str, cookie_name: str) -> None:
     response.set_cookie(
-        COOKIE,
+        cookie_name,
         make_token(user_id),
         max_age=14 * 86400,
         httponly=True,
@@ -533,7 +542,7 @@ def register(body: Credentials, response: Response, request: Request):
             meta={"reason": "duplicate"},
         )
         raise HTTPException(status_code=409, detail="Ese correo ya tiene cuenta")
-    set_session(response, user_id)
+    set_session(response, user_id, session_cookie_name(request))
     events.log_from_request(
         request,
         "auth.register.success",
@@ -562,7 +571,7 @@ def login(body: Credentials, response: Response, request: Request):
         )
         raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
     user_id = str(row["id"])
-    set_session(response, user_id)
+    set_session(response, user_id, session_cookie_name(request))
     events.log_from_request(
         request,
         "auth.login.success",
@@ -582,7 +591,7 @@ def login(body: Credentials, response: Response, request: Request):
 @app.post("/auth/logout")
 def logout(response: Response, request: Request):
     user_id, email = optional_user(request)
-    response.delete_cookie(COOKIE, domain=".impersia.cloud", path="/")
+    response.delete_cookie(session_cookie_name(request), domain=".impersia.cloud", path="/")
     events.log_from_request(
         request,
         "auth.logout",
