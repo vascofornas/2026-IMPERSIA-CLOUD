@@ -904,3 +904,6 @@ Frontera de proyecto nuevo. Lo soltado en Núcleo ya no pasa por archive ni item
 
 26 de octubre de 2026, 14:25
 Puertas de entrada corregidas. impersia.cloud/ y /app/ llevan al producto nuevo (/nucleo/). OS legacy solo en /os/; /app/ muestra aviso de congelado con enlaces. Nginx sin caché agresiva en /nucleo/. Texto visible en la app: producto nuevo, no alimenta el OS antiguo.
+
+26 de octubre de 2026, 14:30
+De cero de verdad. Núcleo deja de ser la estrategia (docs/17). Nuevo árbol greenfield/: Suelta, API y tablas suelta_users/suelta_notes sin users ni archive del OS. Trabajo activo solo ahí; este repo legacy congelado salvo caídas. Sin despliegue de greenfield hasta acordar URL y repo Git aparte.

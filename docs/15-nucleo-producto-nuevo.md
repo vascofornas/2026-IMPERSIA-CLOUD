@@ -1,5 +1,7 @@
 # Núcleo: producto nuevo (código viejo congelado)
 
+**Abandonado como enfoque** (26 oct 2026). Ver **`docs/17-empezar-de-cero.md`** y carpeta **`greenfield/`**.
+
 Decisión **26 oct 2026**, opción acordada con Modesto: **producto nuevo, código viejo congelado**.
 
 ## Qué está congelado
