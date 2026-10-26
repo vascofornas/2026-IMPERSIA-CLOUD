@@ -889,3 +889,6 @@ Promesa norte de producto acordada en conversación. Impersia no compite como un
 
 26 de octubre de 2026, 11:15
 Entrada alineada con la promesa. Tras archivar se muestra «Dónde quedó»: módulo, cuándo sale en Hoy y enlace para corregir sin reescribir. Texto de la pantalla y avisos insisten en que no hace falta un segundo apunte. Se quita el listado enorme de todo lo archivado en Entrada. Se suben docs/14-promesa-impersia.md, archiveTrust.js, App.jsx, estilos y build web.
+
+26 de octubre de 2026, 11:20
+Opción 1 acordada: producto nuevo y apps/web congelada (solo mantenimiento crítico). Núcleo v1 en apps/nucleo: Entrada sola, misma API y cuenta, sin menú legacy. Documento docs/15-nucleo-producto-nuevo.md. Nginx: ruta /nucleo/. Legacy sigue en /app/. Sin tocar más módulos viejos para nuevas funciones.
