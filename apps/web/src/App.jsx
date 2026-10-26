@@ -41,6 +41,7 @@ import {
   taskRepeatEditorState,
   taskRepeatsFromEditor,
 } from "./repeats.js";
+import { trustLineForItem } from "./archiveTrust.js";
 import { AXES, findModule, labelOf } from "./structure.js";
 import { travelCalendarItems } from "./travel.js";
 
@@ -215,6 +216,7 @@ function Home({
   const [archiving, setArchiving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [lastArchived, setLastArchived] = useState([]);
   const [shoppingList, setShoppingList] = useState(null);
   const screen = useHash();
 
@@ -524,9 +526,12 @@ function Home({
       }
       setItems(next);
       setText("");
+      setLastArchived(fresh);
       const merged = deduped > 0 || fresh.some((item) => item.dedupe_action === "merged");
       if (merged) {
-        setNotice("Ya lo tenías guardado. No se ha creado un duplicado en Agenda ni en el calendario.");
+        setNotice("Ya lo tenías guardado. No hace falta apuntarlo en otro sitio.");
+      } else if (fresh.length) {
+        setNotice(fresh.length === 1 ? "Archivado. No hace falta guardarlo en otro sitio." : `${fresh.length} cosas archivadas. No hace falta guardarlas en otro sitio.`);
       }
       checkAlerts(next);
     } catch (err) {
@@ -859,7 +864,7 @@ function Home({
       {screen === "entrada" && (
         <>
           <h1>Entrada</h1>
-          <p className="lead">Escribe lo que tengas en la cabeza. Impersia lo archiva en su eje. Si no es el sitio, lo cambias.</p>
+          <p className="lead">Suéltalo aquí una vez. Impersia lo archiva y mañana lo verás en Hoy si lleva fecha. Si el sitio no cuadra, corrígelo — no hace falta un segundo apunte en otra app.</p>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -874,8 +879,24 @@ function Home({
             {archiving && <p className="private entrada-status">Impersia está archivando. Puede tardar unos segundos con IA.</p>}
           </div>
           {notice && <p className="notice entrada-notice" role="status">{notice}</p>}
-          <h2>Archivado</h2>
-          <ItemList items={items} editing={editing} setEditing={setEditing} startEdit={startEdit} startEditOneDay={startEditOneDay} saveEdit={saveEdit} askRemove={askRemove} onToggleStatus={toggleStatus} />
+          {lastArchived.length > 0 && (
+            <section className="entrada-trust" aria-live="polite">
+              <h2>Dónde quedó</h2>
+              <ul className="entrada-trust-list">
+                {lastArchived.map((item) => {
+                  const line = trustLineForItem(item);
+                  return (
+                    <li key={item.id}>
+                      <p className="entrada-trust-title"><Icon name={item.module} /> {line.title}</p>
+                      <p className="private">{line.detail}</p>
+                      <button type="button" className="link" onClick={() => startEdit(item)}>Corregir módulo o fecha</button>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="private"><a href="#hoy">Ir a Hoy</a> para lo de hoy y lo próximo.</p>
+            </section>
+          )}
         </>
       )}
       {screen === "hoy" && (

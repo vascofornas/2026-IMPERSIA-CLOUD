@@ -4788,6 +4788,45 @@ button.link.secondary {
   resize: vertical;
 }
 
+.entrada-trust {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mark) 6%, var(--bg));
+}
+
+.entrada-trust h2 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+}
+
+.entrada-trust-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.entrada-trust-list li + li {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.entrada-trust-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+
+.entrada-trust-title .icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
 @media (max-width: 800px) {
   .reuniones-layout { grid-template-columns: 1fr; }
   .reuniones-form { position: static; }

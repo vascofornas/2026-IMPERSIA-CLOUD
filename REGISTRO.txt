@@ -883,3 +883,9 @@ Reuniones probado en producción. Migración 025, health y los archivos web nuev
 
 21 de octubre de 2026, 11:30
 Propuesta Impersia Builder (documento único imprimible). Se añade docs/13-propuesta-impersia-builder.md con la apuesta Builder: señales desde repo y reuniones, cola de acciones con aprobación, playbooks, proyecto vivo, MVP, riesgos y hoja de decisión A/B/C. No cambia aún la definición de producto vigente hasta que Modesto marque la decisión. Sin despliegue.
+
+26 de octubre de 2026, 11:08
+Promesa norte de producto acordada en conversación. Impersia no compite como una app más: una sola Entrada, archivado fiable y devolución en Hoy y calendario, sin plan B en Notes u otras apps de apunte. Se añade docs/14-promesa-impersia.md con alcance, límites, regla de fallo y prueba de siete días. Manda sobre propuestas que trataban Impersia como alternativa entre muchas herramientas. Sin cambio de código en este paso.
+
+26 de octubre de 2026, 11:15
+Entrada alineada con la promesa. Tras archivar se muestra «Dónde quedó»: módulo, cuándo sale en Hoy y enlace para corregir sin reescribir. Texto de la pantalla y avisos insisten en que no hace falta un segundo apunte. Se quita el listado enorme de todo lo archivado en Entrada. Se suben docs/14-promesa-impersia.md, archiveTrust.js, App.jsx, estilos y build web.
