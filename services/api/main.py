@@ -22,6 +22,7 @@ from psycopg.rows import dict_row
 
 from admin_events import router as admin_events_router
 from admin_llm import router as admin_llm_router
+from nucleo_api import router as nucleo_router
 import archive
 import dedup
 import health_controls
@@ -62,6 +63,7 @@ def _is_blocked_health_reading(suggestion: dict) -> bool:
 app = FastAPI(title="Impersia API")
 app.include_router(admin_llm_router)
 app.include_router(admin_events_router)
+app.include_router(nucleo_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

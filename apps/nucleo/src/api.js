@@ -32,10 +32,3 @@ export async function call(path, options = {}) {
   }
   return data;
 }
-
-export function normalizeCaptureResult(result) {
-  if (result && Array.isArray(result.items)) {
-    return { items: result.items, deduped: Number(result.deduped) || 0 };
-  }
-  return { items: [], deduped: 0 };
-}

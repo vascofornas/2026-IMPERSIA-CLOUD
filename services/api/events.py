@@ -9,7 +9,7 @@ from typing import Any
 import psycopg
 from psycopg.rows import dict_row
 
-PRODUCTS = frozenset({"web_app", "admin", "comercial", "api", "ios", "android"})
+PRODUCTS = frozenset({"web_app", "admin", "comercial", "api", "ios", "android", "nucleo"})
 CLIENT_ACTIONS = frozenset({"screen.view", "session.start"})
 
 

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { call, normalizeCaptureResult } from "./api.js";
-import { trustLineForItem } from "./trust.js";
+import { call } from "./api.js";
 
 function Mark() {
   return (
@@ -8,6 +7,21 @@ function Mark() {
       Impersia
     </p>
   );
+}
+
+function formatWhen(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString("es-ES", {
+      weekday: "long",
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
 }
 
 export default function App() {
@@ -93,7 +107,7 @@ function Suelta({ email, onLeave }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [saved, setSaved] = useState([]);
+  const [saved, setSaved] = useState(null);
   const areaRef = useRef(null);
 
   useEffect(() => {
@@ -105,18 +119,14 @@ function Suelta({ email, onLeave }) {
     if (!raw || busy) return;
     setBusy(true);
     setError("");
-    setSaved([]);
+    setSaved(null);
     try {
-      const result = await call("/captures", {
+      const row = await call("/nucleo/releases", {
         method: "POST",
         body: JSON.stringify({ text: raw }),
       });
-      const { items, deduped } = normalizeCaptureResult(result);
-      setSaved(items.map((item) => trustLineForItem(item)));
+      setSaved(row);
       setText("");
-      if (deduped > 0 && items.length === 0) {
-        setError("Eso ya lo teníamos. No hace falta repetirlo en otro sitio.");
-      }
       areaRef.current?.focus();
     } catch (err) {
       setError(err.message);
@@ -169,17 +179,14 @@ function Suelta({ email, onLeave }) {
         </div>
         {error && <p className="error">{error}</p>}
 
-        {saved.length > 0 && (
+        {saved && (
           <section className="echo" aria-live="polite">
             <p className="echo-title">Recogido</p>
-            <ul>
-              {saved.map((line, i) => (
-                <li key={i}>
-                  <span className="echo-head">{line.title}</span>
-                  <span className="echo-body">{line.detail}</span>
-                </li>
-              ))}
-            </ul>
+            <p className="echo-head">{saved.text}</p>
+            <p className="echo-body">
+              Queda contigo aquí, {formatWhen(saved.created_at)}. Te lo devolveremos cuando toque — sin tener que
+              apuntarlo en otro sitio.
+            </p>
           </section>
         )}
       </div>

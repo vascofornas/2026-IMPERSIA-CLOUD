@@ -898,3 +898,6 @@ Núcleo deja de parecer parche. UI nueva: una pantalla «¿Qué llevas en la cab
 
 26 de octubre de 2026, 14:10
 Sesión independiente para Núcleo. API: cookie impersia_nucleo_session cuando la petición lleva X-Impersia-Product: nucleo; legacy sigue con impersia_session. apps/nucleo envía la cabecera en todas las llamadas. Así /nucleo/ pide entrar aunque /app/ siga abierto. Misma cuenta y datos de usuario; solo la sesión del navegador es otra.
+
+26 de octubre de 2026, 14:18
+Frontera de proyecto nuevo. Lo soltado en Núcleo ya no pasa por archive ni items del OS: migración 026 nucleo_releases, POST /nucleo/releases, UI sin «quedó en Proyectos/Reuniones». docs/16 explica OS congelado vs producto activo. Próximo trabajo: Hoy y devolución sobre nucleo_releases, no copiar /app/.

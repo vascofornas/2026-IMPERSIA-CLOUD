@@ -14,7 +14,8 @@ Decisión **26 oct 2026**, opción acordada con Modesto: **producto nuevo, códi
 - Carpeta: **`apps/nucleo/`**
 - URL: **https://impersia.cloud/nucleo/**
 - Alcance v1: **soltar y confiar** — una pantalla de escritura, confirmación humana al guardar. Sin menú, sin nombres de módulos del OS viejo en la UI.
-- Infra compartida (invisible): mismos usuarios en PostgreSQL, `POST /captures`, API en `api.impersia.cloud`. El usuario **no** debe ver enlaces, badges ni textos del producto congelado.
+- Infra compartida (invisible): mismos usuarios en PostgreSQL, API en `api.impersia.cloud`. El usuario **no** debe ver enlaces, badges ni textos del producto congelado.
+- **Datos propios:** `POST /nucleo/releases` → tabla `nucleo_releases`. No usa `archive.py` ni `items` del OS. Ver **`docs/16-frontera-proyecto-nuevo.md`**.
 - **Sesión aparte:** cookie `impersia_nucleo_session` (cabecera `X-Impersia-Product: nucleo`). Entrar en `/app/` no abre sesión en `/nucleo/`; hay que entrar otra vez. Misma cuenta y contraseña si quieres; datos de capturas siguen en el mismo usuario.
 
 ## Reglas de experiencia (anti-parche)
