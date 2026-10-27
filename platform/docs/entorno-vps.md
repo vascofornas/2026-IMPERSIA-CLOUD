@@ -53,7 +53,7 @@ El Mac **no** es el sitio donde hay que tener Postgres levantado para validar el
 | OS legacy | `services/api`, `apps/web` | Congelado; no ampliar |
 | **platform** | `platform/` | Escritorio pyme (doc 23); migraciones en `platform/services/api/migrations/` |
 
-Cuando exista API `platform`, conviene **servicio systemd propio** o puerto distinto; hasta entonces solo SQL en el mismo PostgreSQL con esquema `platform`.
+API **platform:** systemd `impersia-platform-api` (puerto **8001**), nginx `https://api.impersia.cloud/platform/`. Web app: `https://impersia.cloud/app/`.
 
 ---
 

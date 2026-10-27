@@ -6,12 +6,16 @@ Código **nuevo** del escritorio pyme ([doc 23](../docs/23-ecosistema-impersia-c
 
 Comercial (`apps/comercial/`) + **web app** + **admin** + **Flutter** → [docs/cuatro-superficies.md](./docs/cuatro-superficies.md). Rutas previstas: `platform/apps/web`, `platform/apps/admin`, `platform/apps/mobile`.
 
-## Contenido (fase 0)
+## Contenido
 
 | Ruta | Qué es |
 |------|--------|
 | [docs/modelo-datos.md](./docs/modelo-datos.md) | Entidades, relaciones y mapa a bloques A–D |
-| `services/api/migrations/` | SQL aplicable en PostgreSQL (esquema `platform`) |
+| `services/api/` | API FastAPI (`/health`, auth, panel, contactos, actividades) |
+| `apps/web/` | Web app → `https://impersia.cloud/app/` |
+| `services/api/migrations/` | SQL (esquema `platform`) |
+
+API pública: `https://api.impersia.cloud/platform/` (cookie de sesión).
 
 ## Entorno
 

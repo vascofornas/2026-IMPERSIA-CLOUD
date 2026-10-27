@@ -991,3 +991,6 @@ Modesto: «sube y aplica siempre en el VPS». Subida a GitHub: docs 18–23 (piv
 
 27 de octubre de 2026 (tarde, XV)
 Hábito producto: siempre web comercial + web app + panel admin + Flutter. platform/docs/cuatro-superficies.md; doc 23, platform/README, doc 02 arquitectura y regla .cursor actualizados. Código platform/apps/* pendiente de fases.
+
+27 de octubre de 2026 (tarde, XVI)
+Fase 1 platform: API (auth, panel, contactos, actividades) puerto 8001; web app en /app/; nginx y systemd impersia-platform-api. Despliegue en VPS tras push.
