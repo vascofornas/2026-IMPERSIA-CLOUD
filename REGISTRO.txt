@@ -994,3 +994,6 @@ Hábito producto: siempre web comercial + web app + panel admin + Flutter. platf
 
 27 de octubre de 2026 (tarde, XVI)
 Fase 1 platform: API (auth, panel, contactos, actividades) puerto 8001; web app en /app/; nginx y systemd impersia-platform-api. Despliegue en VPS tras push.
+
+27 de octubre de 2026 (tarde, XVII)
+Desplegado commit 983be41 en VPS: impersia-platform-api activo, /platform/health ok, https://impersia.cloud/app/ 200. /app/ sustituye redirect a núcleo; comercial en / sin redirect automático.
