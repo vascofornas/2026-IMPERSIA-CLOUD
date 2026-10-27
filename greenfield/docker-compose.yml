@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: suelta
+      POSTGRES_PASSWORD: suelta
+      POSTGRES_DB: suelta
+    ports:
+      - "5433:5432"
+    volumes:
+      - suelta_pg:/var/lib/postgresql/data
+      - ./services/api/migrations/001_suelta.sql:/docker-entrypoint-initdb.d/001_suelta.sql:ro
+
+volumes:
+  suelta_pg:

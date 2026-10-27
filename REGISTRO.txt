@@ -907,3 +907,84 @@ Puertas de entrada corregidas. impersia.cloud/ y /app/ llevan al producto nuevo 
 
 26 de octubre de 2026, 14:30
 De cero de verdad. Núcleo deja de ser la estrategia (docs/17). Nuevo árbol greenfield/: Suelta, API y tablas suelta_users/suelta_notes sin users ni archive del OS. Trabajo activo solo ahí; este repo legacy congelado salvo caídas. Sin despliegue de greenfield hasta acordar URL y repo Git aparte.
+
+26 de octubre de 2026, 14:35
+Retirado «horizonte» / calendario en greenfield: nadie lo pidió; arrastraba el OS. API vuelve a guardar solo texto; docs/17 prohíbe asumir calendario, Hoy y módulos hasta diseño explícito.
+
+26 de octubre de 2026, 14:48
+Greenfield fase 1: ciclo mínimo promesa. Entrada + feedback al guardar + Hoy (lista, no calendario). API returns_at y GET /hoy; fechas en español solo para decidir día de Hoy. docs/18. Sin OS legacy. Localhost para probar antes de prueba 7 días.
+
+26 de octubre de 2026, 15:00
+Reglas de fecha sin preguntar al usuario. Sin palabra de día en el texto → Sin día (returns_at nulo), no llenar Hoy. Fecha dd/mm ya pasada en el año → siguiente ocurrencia (p. ej. 15/3 → marzo próximo). GET /sin-dia y bloque en la web entre Hoy y Entrada. dates_es.py, main.py, App.jsx, styles.css.
+
+26 de octubre de 2026, 15:10
+Aclaración: las frases de prueba del chat no se guardan; solo las que guardas en localhost. Lo ya guardado con fecha futura no se veía (solo Hoy/Sin día). GET /proximos y bloque «Para otro día» para que todo lo escrito siga visible.
+
+26 de octubre de 2026, 15:18
+Pantalla vacía con datos en base: API en 8010 era vieja (/sin-dia 404) y Promise.all vaciaba también Hoy. Carga por rutas independientes en App.jsx. API greenfield reiniciada con código actual.
+
+26 de octubre de 2026, 15:25
+UI inviable: quitados bloques Hoy/Sin día con textos de ejemplo. Entrada arriba; GET /recientes y tarjetas «Lo que guardaste» con cuándo sale en Hoy. docs/18 alineado.
+
+26 de octubre de 2026, 15:32
+Layout en dos zonas: Entrada | Hoy + Guardado (columnas desde 720px). Separar lo de hoy del archivo reciente. App.jsx y styles.css; docs/18.
+
+26 de octubre de 2026, 15:38
+Tres columnas iguales desde 900px: Entrada | Hoy | Guardado, cada una con scroll propio en Hoy/Guardado. docs/18.
+
+26 de octubre de 2026, 15:45
+Identidad visual por columna: Entrada (papel/serif/naranja), Hoy (banda verde + tarjetas blancas con franja), Guardado (ficha con chip de fecha). styles.css, App.jsx NoteList por variant.
+
+26 de octubre de 2026, 15:52
+Hoy: cabecera verde fija sin solapar cards (sin gradiente). Orden: Hoy por created_at desc; Guardado por returns_at asc, sin día al final. API devuelve returns_at en /recientes.
+
+26 de octubre de 2026, 16:05
+Varios días en una frase («jueves y viernes»): return_days en BD, hoy_on_dates, Hoy con ANY(return_days). Migración 003. Reparseo de notas ya guardadas.
+
+26 de octubre de 2026, 16:15
+Quejas borrado/duplicados: el reparseo quitó fechas a textos sin día (p. ej. comprar leche → Sin día). Duplicado real «taller viernes» (doble guardado). Corregido: anti-duplicado 3 min, typo viernos, «más tarde»→hoy, un duplicado borrado, fechas recalculadas (Marcos jueves+viernes).
+
+27 de octubre de 2026
+docs/19-vacio-automatizacion-pyme-espana.md: razones basadas en Barómetro Gigas 2026 (Ipsos), prensa y Cloud Nation; vacío cloud/IA en pyme, implicaciones para plantear producto; sin cifras inventadas.
+
+27 de octubre de 2026 (tarde)
+docs/20-mapa-pyme-y-hoja-de-ruta-v1.md: mapa por capas del software pyme, competidor real (WhatsApp/Excel/Notes), criterios v1 producción atractiva, fases A–G y checklist inmediato. Enlace docs 14, 18, 19.
+
+27 de octubre de 2026 (tarde, II)
+Pymes de referencia en doc 20: La Sombra (piloto), Faro.red (madre dev/cliente), Taller Ribera ficticia (automoción, contraste no-digital). Celdas ✏️ pendientes de validación por Modesto.
+
+27 de octubre de 2026 (tarde, III)
+Corrección doc 20: Faro.red = un solo autónomo (Modesto), no pyme con equipo.
+
+27 de octubre de 2026 (tarde, IV)
+docs/21-objetivo-alcance-estructura.md: documento rector (objetivo, alcance por fases, fuera de alcance, estructura repo/datos/deploy, orden de trabajo). Enlaces desde doc 17 y greenfield/README.md. Pausa explícita de ampliación de código hasta estabilizar fase 1 según doc 21 §4.
+
+27 de octubre de 2026 (tarde, V)
+Doc 21 §0: proyecto 100 % nuevo = solo greenfield; OS/núcleo/archive/items no se reutilizan; monorepo y VPS son contenedor/infra, no herencia de código.
+
+27 de octubre de 2026 (tarde, VI)
+Doc 21 §2.5: encaje explícito greenfield = Fase 1 (sí); promesa doc 14 completa / ERP (no aún). No tirar greenfield; completar cierre fase 1.
+
+27 de octubre de 2026 (tarde, VII)
+Pivot producto: Modesto no quiere OS ni greenfield ni Impersia como apuntes/Hoy. docs/22-pivot-sin-apuntes-hoy.md; greenfield y doc 21 congelados/superseded. Producto nuevo sin definir hasta nueva promesa.
+
+27 de octubre de 2026 (tarde, VIII)
+Nueva promesa: docs/23-ecosistema-impersia-cloud.md — hub pyme (contactos, actividades, panel), automatizaciones (eventos, webhooks, plantillas n8n), facturación mínima/export; paridad mínima con lo que la mayoría monta a mano, no clon ERP v1. Código nuevo en platform/ (propuesta), sin OS ni greenfield.
+
+27 de octubre de 2026 (tarde, IX)
+Doc 23 ampliado: Impersia como software de productividad principal casi único (escritorio, agenda, documentos, canales, facturación operativa). v1 = primer tramo creíble; prueba semana Faro / 30 días pyme.
+
+27 de octubre de 2026 (tarde, X)
+Competidor de referencia para paridad v1: Holded (ERP pyme España). Doc 23: tabla núcleo vs pospuesto; diferencial automatización/n8n.
+
+27 de octubre de 2026 (tarde, XI)
+Decisión facturación v1: Modesto elige export a gestoría o software del cliente (p. ej. Holded), no emisión legal obligatoria en Impersia. Doc 23 bloque D actualizado (borrador comercial, export, ref. externa). Fase 0 modelo sin entidad “factura emitida” como núcleo.
+
+27 de octubre de 2026 (tarde, XII)
+Modesto: «adelante con el modelo». Creado platform/: README, docs/modelo-datos.md (entidades A–D, diagrama), migrations/001_core.sql (esquema PostgreSQL platform). Sin API ni web aún. Docs 22 y 23 enlazan platform.
+
+27 de octubre de 2026 (tarde, XIII)
+Modesto prefiere trabajar siempre en el VPS (no local). platform/docs/entorno-vps.md; regla .cursor/como-trabajar y platform/README alineados. VPS aún sin carpeta platform hasta push de main.
+
+27 de octubre de 2026 (tarde, XIV)
+Modesto: «sube y aplica siempre en el VPS». Subida a GitHub: docs 18–23 (pivot, ecosistema), platform/ (modelo + migración 001_core), greenfield congelado, REGISTRO y reglas. En VPS: git pull en /opt/impersia-os y psql migración esquema platform.

@@ -1,5 +1,7 @@
 # Empezar de cero (acuerdo 26 oct 2026)
 
+**Objetivo, alcance y estructura actuales:** [doc 21](./21-objetivo-alcance-estructura.md) (documento rector).
+
 Modesto quiere **un proyecto nuevo de verdad**, no otra pantalla dentro del Impersia OS ni un “Núcleo” que comparta cuentas, base de datos de usuarios, API de archivado y marca.
 
 ## Qué queda archivado (no es el trabajo activo)
@@ -20,13 +22,15 @@ Carpeta **`greenfield/`** en la raíz (mismo disco por ahora; **repo Git nuevo**
 | Código | `apps/web`, `apps/nucleo`, `services/api` | Solo `greenfield/**` |
 | Usuarios | Tabla `users` del OS | Tabla **`suelta_users`** (vacía al inicio) |
 | Datos al escribir | `items`, `captures`, `nucleo_releases` | **`suelta_notes`** (solo texto y fecha) |
-| Marca en UI | Impersia OS | Nombre de trabajo **Suelta** (provisional) |
+| Marca en UI | Impersia OS | **Impersia** (producto nuevo; tablas `suelta_*` solo nombre técnico interno) |
 | Promesa de producto | `docs/14-promesa-impersia.md` sigue siendo el norte | Se cumple aquí, sin copiar pantallas viejas |
 
 ## Regla para el asistente
 
 Si la tarea **importa, lee o escribe** el OS legacy o `nucleo_releases` / `archive.py` → **parar** y mover la idea a `greenfield/`.
 
+**No asumir** del OS ni de `docs/14` hecho aún: calendario, rejilla de días, Hoy, módulos, Agenda, «horizonte» semanal, archivador. En greenfield solo lo que se diseñe y apruebe explícitamente.
+
 ## Próximo paso humano
 
-Abrir **`greenfield/`** como si fuera otro proyecto (otra ventana de Cursor o foco mental). Entrar con **cuenta nueva** en Suelta cuando esté desplegado; no reutilizar el correo del OS salvo que tú lo elijas expresamente.
+Abrir **`greenfield/`** como si fuera otro proyecto (otra ventana de Cursor o foco mental). Entrar con **cuenta nueva**; no reutilizar el correo del OS salvo que tú lo elijas expresamente.

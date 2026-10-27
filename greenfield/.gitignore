@@ -1,0 +1,3 @@
+services/api/.env
+services/api/.venv/
+apps/web/node_modules/

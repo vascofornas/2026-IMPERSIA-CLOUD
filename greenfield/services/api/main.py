@@ -6,6 +6,8 @@ import hmac
 import json
 import os
 import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import psycopg
 from psycopg import errors as pg_errors
@@ -14,8 +16,33 @@ from fastapi.middleware.cors import CORSMiddleware
 from psycopg.rows import dict_row
 from pydantic import BaseModel, EmailStr, Field
 
-app = FastAPI(title="Suelta API")
+from dates_es import TZ, feedback_after_save, hoy_on_dates, when_label
+
+app = FastAPI(title="Impersia greenfield API")
 COOKIE = "suelta_session"
+
+
+def _in_hoy_today(returns_at, return_days=None) -> bool:
+    today = datetime.now(TZ).date()
+    if return_days:
+        return today in return_days
+    if returns_at is None:
+        return False
+    return returns_at.astimezone(TZ).date() == today
+
+
+def _note_payload(row) -> dict:
+    days = list(row["return_days"]) if row.get("return_days") else None
+    ra = row["returns_at"]
+    return {
+        "id": str(row["id"]),
+        "body": row["body"],
+        "created_at": row["created_at"].isoformat(),
+        "returns_at": ra.isoformat() if ra else None,
+        "return_days": [d.isoformat() for d in days] if days else [],
+        "when_label": when_label(ra, return_days=days),
+        "in_hoy_today": _in_hoy_today(ra, days),
+    }
 
 app.add_middleware(
     CORSMiddleware,
@@ -163,20 +190,161 @@ def logout(response: Response):
     return {"ok": True}
 
 
+@app.get("/recientes")
+def recientes(request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, body, created_at, returns_at, return_days
+                FROM suelta_notes
+                WHERE user_id = %s
+                ORDER BY created_at DESC
+                LIMIT 50
+                """,
+                (user_id,),
+            )
+            rows = cur.fetchall()
+    return {"items": [_note_payload(r) for r in rows]}
+
+
+@app.get("/sin-dia")
+def sin_dia(request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, body, created_at
+                FROM suelta_notes
+                WHERE user_id = %s AND returns_at IS NULL
+                ORDER BY created_at DESC
+                LIMIT 30
+                """,
+                (user_id,),
+            )
+            rows = cur.fetchall()
+    return {
+        "items": [
+            {
+                "id": str(r["id"]),
+                "body": r["body"],
+                "created_at": r["created_at"].isoformat(),
+            }
+            for r in rows
+        ]
+    }
+
+
+@app.get("/proximos")
+def proximos(request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, body, created_at, returns_at
+                FROM suelta_notes
+                WHERE user_id = %s
+                  AND returns_at IS NOT NULL
+                  AND (returns_at AT TIME ZONE 'Europe/Madrid')::date
+                      > (now() AT TIME ZONE 'Europe/Madrid')::date
+                ORDER BY returns_at ASC, created_at DESC
+                LIMIT 50
+                """,
+                (user_id,),
+            )
+            rows = cur.fetchall()
+    return {
+        "items": [
+            {
+                "id": str(r["id"]),
+                "body": r["body"],
+                "created_at": r["created_at"].isoformat(),
+                "returns_on": r["returns_at"].date().isoformat(),
+            }
+            for r in rows
+        ]
+    }
+
+
+@app.get("/hoy")
+def hoy(request: Request):
+    user_id = current_user(request)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, body, created_at, returns_at, return_days
+                FROM suelta_notes
+                WHERE user_id = %s
+                  AND (
+                    (
+                      return_days IS NOT NULL
+                      AND (now() AT TIME ZONE 'Europe/Madrid')::date = ANY(return_days)
+                    )
+                    OR (
+                      return_days IS NULL
+                      AND returns_at IS NOT NULL
+                      AND (returns_at AT TIME ZONE 'Europe/Madrid')::date
+                          = (now() AT TIME ZONE 'Europe/Madrid')::date
+                    )
+                  )
+                ORDER BY created_at DESC
+                """,
+                (user_id,),
+            )
+            rows = cur.fetchall()
+    return {
+        "items": [
+            {
+                "id": str(r["id"]),
+                "body": r["body"],
+                "created_at": r["created_at"].isoformat(),
+            }
+            for r in rows
+        ]
+    }
+
+
 @app.post("/notes", status_code=201)
 def create_note(body: NoteIn, request: Request):
     user_id = current_user(request)
     text = body.body.strip()
+    days = hoy_on_dates(text)
+    return_days = days if days else None
+    hoy_at = (
+        datetime.combine(min(days), datetime.min.time(), tzinfo=TZ) if days else None
+    )
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO suelta_notes (user_id, body) VALUES (%s, %s) RETURNING id, body, created_at",
+                """
+                SELECT id, body, created_at, returns_at, return_days
+                FROM suelta_notes
+                WHERE user_id = %s
+                  AND body = %s
+                  AND created_at > now() - interval '3 minutes'
+                ORDER BY created_at DESC
+                LIMIT 1
+                """,
                 (user_id, text),
             )
-            row = cur.fetchone()
+            dup = cur.fetchone()
+            if dup:
+                row = dup
+            else:
+                cur.execute(
+                    """
+                    INSERT INTO suelta_notes (user_id, body, returns_at, return_days)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING id, body, created_at, returns_at, return_days
+                    """,
+                    (user_id, text, hoy_at, return_days),
+                )
+                row = cur.fetchone()
         conn.commit()
-    return {
-        "id": str(row["id"]),
-        "body": row["body"],
-        "created_at": row["created_at"].isoformat(),
-    }
+    payload = _note_payload(row)
+    payload["feedback"] = feedback_after_save(return_days, row["returns_at"])
+    return payload

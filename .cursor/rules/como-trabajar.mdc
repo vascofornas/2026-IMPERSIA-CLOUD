@@ -29,14 +29,14 @@ El diario único es `REGISTRO.txt`, en la raíz. Cada paso se añade al final: f
 
 ## Repositorio al día
 
-El Mac escribe. GitHub es la copia buena. El VPS solo descarga, no se edita el proyecto allí.
-Al cerrar un paso con **código o web que deba verse en impersia.cloud**, haz tú el ciclo completo: anota en `REGISTRO.txt`, commit, push a `main` y despliegue en el VPS. **No preguntes** «¿subo y despliega?»; es el cierre normal del trabajo.
+GitHub es la copia buena del código. **Ejecución y pruebas del producto:** siempre en el **VPS** (Modesto prefiere no depender del Mac/local). Ver `platform/docs/entorno-vps.md`.
+Al cerrar un paso con **código o web que deba verse en impersia.cloud**, haz tú el ciclo completo: anota en `REGISTRO.txt`, commit, push a `main`, actualizar `/opt/impersia-os` en el VPS y comprobar allí (migraciones, API, web). **No preguntes** «¿subo y despliega?»; es el cierre normal del trabajo.
 Antes de cada subida, explica en `REGISTRO.txt` qué archivos van y por qué, en frases claras.
 No subas secretos, la base de datos ni certificados.
 
 ### Despliegue en el VPS (Impersia)
 
-Clon: `/opt/impersia-os`. Tras `git fetch` + `git reset --hard origin/main`: aplicar migraciones SQL nuevas en `services/api/migrations/` con `psql` y env de `/etc/impersia/api.env`; `systemctl restart impersia-api`; comprobar `/health`. La web app va en el mismo repo (`apps/web/dist`); Caddy la sirve al actualizar el clon.
+Clon: `/opt/impersia-os`. Tras `git fetch` + `git reset --hard origin/main`: migraciones legacy en `services/api/migrations/`; migraciones **platform** en `platform/services/api/migrations/` (esquema `platform`); `psql` con `/etc/impersia/api.env`; `systemctl restart impersia-api` cuando toque la API legacy; comprobar en el VPS. Producto nuevo: `platform/` (doc 23).
 
 ## VPS de IONOS
 
