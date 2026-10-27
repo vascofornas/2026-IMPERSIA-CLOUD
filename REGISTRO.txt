@@ -988,3 +988,6 @@ Modesto prefiere trabajar siempre en el VPS (no local). platform/docs/entorno-vp
 
 27 de octubre de 2026 (tarde, XIV)
 Modesto: «sube y aplica siempre en el VPS». Subida a GitHub: docs 18–23 (pivot, ecosistema), platform/ (modelo + migración 001_core), greenfield congelado, REGISTRO y reglas. En VPS: git pull en /opt/impersia-os y psql migración esquema platform.
+
+27 de octubre de 2026 (tarde, XV)
+Hábito producto: siempre web comercial + web app + panel admin + Flutter. platform/docs/cuatro-superficies.md; doc 23, platform/README, doc 02 arquitectura y regla .cursor actualizados. Código platform/apps/* pendiente de fases.

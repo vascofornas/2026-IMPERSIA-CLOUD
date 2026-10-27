@@ -49,6 +49,8 @@ Si la respuesta es no, falta alcance — aunque sigan existiendo gestoría (lega
 
 Código nuevo en **`platform/`** (propuesta). **Cero** OS legacy y **cero** greenfield.
 
+**Hábito de entrega (Modesto):** siempre **cuatro superficies** — web comercial, web app, panel de administración y apps **Flutter**. Detalle: [`platform/docs/cuatro-superficies.md`](../platform/docs/cuatro-superficies.md).
+
 ---
 
 ## “Paridad con la mayoría” (traducción honesta)

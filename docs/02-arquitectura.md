@@ -45,16 +45,21 @@ El modelo de lenguaje se contrata por API. No corre dentro del VPS. Cada captura
 
 ## Forma del repositorio
 
+**Hábito Modesto:** cuatro superficies siempre (comercial, web app, admin, Flutter). Producto activo **platform** (doc 23): [`platform/docs/cuatro-superficies.md`](./platform/docs/cuatro-superficies.md).
+
 ```
-apps/comercial/     Next.js, export estático
-apps/web/           Vite + React + TypeScript
-apps/mobile/        Flutter
-services/api/       FastAPI
-infra/              Compose, Caddyfile, copias
-docs/               Definición, arquitectura y ruta
+apps/comercial/           Web comercial (marca)
+platform/apps/web/        Web app pyme (activo, por crear)
+platform/apps/admin/      Admin platform (por crear)
+platform/apps/mobile/     Flutter iOS/Android (por crear)
+platform/services/api/    API FastAPI + migraciones esquema platform
+apps/web/, apps/admin/    OS legacy — congelado
+services/api/             API OS legacy — congelado
+infra/                    Compose, Caddyfile, copias
+docs/                     Definición, arquitectura y ruta
 ```
 
-Un solo repositorio. Un solo contrato HTTP para web y móvil.
+Un solo repositorio. Un solo contrato HTTP para web app, admin y móvil.
 
 ## Datos de la versión 1
 

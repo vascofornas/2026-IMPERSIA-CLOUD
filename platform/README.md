@@ -2,6 +2,10 @@
 
 Código **nuevo** del escritorio pyme ([doc 23](../docs/23-ecosistema-impersia-cloud.md)). **Sin** importar ni reutilizar `apps/web`, `services/api` legacy, ni `greenfield/`.
 
+## Cuatro superficies (siempre)
+
+Comercial (`apps/comercial/`) + **web app** + **admin** + **Flutter** → [docs/cuatro-superficies.md](./docs/cuatro-superficies.md). Rutas previstas: `platform/apps/web`, `platform/apps/admin`, `platform/apps/mobile`.
+
 ## Contenido (fase 0)
 
 | Ruta | Qué es |
