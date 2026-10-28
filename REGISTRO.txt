@@ -1000,3 +1000,6 @@ Desplegado commit 983be41 en VPS: impersia-platform-api activo, /platform/health
 
 28 de octubre de 2026
 Pivot total Modesto: empezar de cero. Producto cliente = web app ejecutable en local (Mac/Windows/Linux), no SaaS ni móvil por ahora. Web comercial sigue en VPS. Prioridad agentes IA (locales + OpenRouter). docs/24-pivot-local-agentes-ia.md; doc 23 y platform/ congelados. Código nuevo previsto en local/ (sin crear aún).
+
+28 de octubre de 2026 (II)
+IA v1: Ollama primero (privacidad, datos no salen del equipo); OpenRouter opcional en v1.1 con aviso explícito. Doc 24 actualizado.

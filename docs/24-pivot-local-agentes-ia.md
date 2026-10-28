@@ -65,6 +65,15 @@ La app local debe permitir **configuración explícita**:
 
 Secretos (API keys) **solo en el equipo del cliente**, nunca en el repo ni en GitHub.
 
+### Orden v1 (acordado 28 oct 2026 — Modesto)
+
+1. **Ollama primero** — inferencia en la máquina del cliente; los textos del negocio **no salen** del equipo por defecto. Mejor historia de **seguridad y privacidad** (pyme, gestoría, datos sensibles) y coherente con “producto local”.
+2. **OpenRouter después** — conector opcional, activado **a propósito** (aviso claro: los mensajes salen a internet vía terceros). Sirve para modelos grandes o cuando Ollama no basta; no es el camino por defecto en v1.
+
+En código: v1 = pantalla de ajustes Ollama (URL `http://127.0.0.1:11434`, modelo) + **un agente** probado; OpenRouter en v1.1 con toggle y clave en almacén local.
+
+**Nota:** Ollama no es “mágicamente seguro” (malware local, backups, port mal expuesto); la app debe usar solo localhost y no reenviar a Impersia.cloud.
+
 ---
 
 ## VPS Impersia (rol reducido)
