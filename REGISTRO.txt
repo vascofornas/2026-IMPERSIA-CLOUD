@@ -1006,3 +1006,9 @@ IA v1: Ollama primero (privacidad, datos no salen del equipo); OpenRouter opcion
 
 28 de octubre de 2026 (III)
 Confirmado: motor local v1 = Ollama (decidido). Otras APIs OpenAI-compatible solo URL manual; OpenRouter pospuesto.
+
+28 de octubre de 2026 (IV)
+Ollama en Mac: Cloud off, modelos en SSD /Volumes/ssd_modes/ollama-models-impersia. Sin LLM descargado aún.
+
+28 de octubre de 2026 (V)
+llama3.2:3b en SSD. Creado local/: API SQLite + chat Ollama + agente por defecto, web Vite, run-mac.sh. Probado API ↔ Ollama en Mac.

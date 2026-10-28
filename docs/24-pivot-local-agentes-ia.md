@@ -78,6 +78,8 @@ En código: v1 = ajustes Ollama (URL y modelo) + **un agente** probado; OpenRout
 
 **Nota:** Ollama no es “mágicamente seguro” (malware local, backups, port mal expuesto); la app debe usar solo localhost y no reenviar a Impersia.cloud.
 
+**Modelos en SSD (Faro):** ruta Ollama `/Volumes/ssd_modes/ollama-models-impersia` — Cloud desactivado en ajustes.
+
 ---
 
 ## VPS Impersia (rol reducido)
@@ -88,14 +90,11 @@ En código: v1 = ajustes Ollama (URL y modelo) + **un agente** probado; OpenRout
 
 ---
 
-## Propuesta de repo (sin código hasta acuerdo)
+## Repo
 
 ```
 apps/comercial/          ← activo (marca, promesa local + IA)
-local/                   ← producto cliente (nuevo, cero imports OS/platform/greenfield)
-  apps/web/              UI
-  services/api/          API local + agentes
-  packaging/             scripts Mac / Win / Linux (fase 2)
+local/                   ← producto cliente (API + UI, `./local/run-mac.sh`)
 docs/24-...              este documento
 ```
 
