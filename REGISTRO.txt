@@ -1012,3 +1012,6 @@ Ollama en Mac: Cloud off, modelos en SSD /Volumes/ssd_modes/ollama-models-impers
 
 28 de octubre de 2026 (V)
 llama3.2:3b en SSD. Creado local/: API SQLite + chat Ollama + agente por defecto, web Vite, run-mac.sh. Probado API ↔ Ollama en Mac.
+
+28 de octubre de 2026 (VI)
+Modesto probó Impersia local en navegador (Ollama conectado, chat OK). Pausa acordada: se deja así por ahora. Siguiente cuando retome: editar agentes, más producto pyme o empaquetado sin Terminal.
