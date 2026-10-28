@@ -997,3 +997,6 @@ Fase 1 platform: API (auth, panel, contactos, actividades) puerto 8001; web app 
 
 27 de octubre de 2026 (tarde, XVII)
 Desplegado commit 983be41 en VPS: impersia-platform-api activo, /platform/health ok, https://impersia.cloud/app/ 200. /app/ sustituye redirect a núcleo; comercial en / sin redirect automático.
+
+28 de octubre de 2026
+Pivot total Modesto: empezar de cero. Producto cliente = web app ejecutable en local (Mac/Windows/Linux), no SaaS ni móvil por ahora. Web comercial sigue en VPS. Prioridad agentes IA (locales + OpenRouter). docs/24-pivot-local-agentes-ia.md; doc 23 y platform/ congelados. Código nuevo previsto en local/ (sin crear aún).

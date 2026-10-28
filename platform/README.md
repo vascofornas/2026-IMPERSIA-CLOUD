@@ -1,6 +1,8 @@
-# platform — producto Impersia.cloud (activo)
+# platform — escritorio pyme SaaS (congelado 28 oct 2026)
 
-Código **nuevo** del escritorio pyme ([doc 23](../docs/23-ecosistema-impersia-cloud.md)). **Sin** importar ni reutilizar `apps/web`, `services/api` legacy, ni `greenfield/`.
+> Promesa activa: [doc 24](../docs/24-pivot-local-agentes-ia.md). No ampliar; despliegue VPS histórico.
+
+Código del experimento SaaS ([doc 23](../docs/23-ecosistema-impersia-cloud.md)). **Sin** importar ni reutilizar `apps/web`, `services/api` legacy, ni `greenfield/`.
 
 ## Cuatro superficies (siempre)
 

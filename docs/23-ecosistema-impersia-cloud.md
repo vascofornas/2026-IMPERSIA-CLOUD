@@ -1,5 +1,7 @@
 # Ecosistema Impersia.cloud — promesa y v1 en producción
 
+> **Estado (28 oct 2026):** **Superseded** como promesa activa por [doc 24 — Local + agentes IA](./24-pivot-local-agentes-ia.md). Se conserva contexto pyme y benchmark Holded.
+
 **Sustituye** la promesa apuntes/Hoy ([doc 14](./14-promesa-impersia.md) como producto, [doc 22](./22-pivot-sin-apuntes-hoy.md) como corte).  
 **Contexto mercado:** [doc 19](./19-vacio-automatizacion-pyme-espana.md), mapa [doc 20](./20-mapa-pyme-y-hoja-de-ruta-v1.md).
 

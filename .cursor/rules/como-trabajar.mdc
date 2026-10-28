@@ -22,7 +22,7 @@ Lo que puedes hacer tú (leer, escribir, decidir, comprobar) lo haces entero. No
 - Si el alcance es grande, corta una versión 1 y escribe qué espera.
 - Para probar que algo funciona, compruébalo de punta a punta.
 - El logo del proyecto se crea antes de seguir con la identidad visual. El símbolo oficial es `apps/comercial/logo.svg`.
-- Cada producto Impersia lleva **cuatro superficies**: web comercial, web app, panel de administración y apps móviles **Flutter** (misma API). Mapa: `platform/docs/cuatro-superficies.md`.
+- **Fase actual (doc 24):** web **comercial** (VPS) + **web app local** (Mac/Win/Linux) con **agentes IA** (local + OpenRouter). Sin Flutter ni SaaS cliente en la nube. Mapa histórico cuatro superficies: `platform/docs/cuatro-superficies.md`.
 
 ## Registro
 

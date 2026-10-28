@@ -24,18 +24,16 @@ Este documento **manda** sobre [doc 21](./21-objetivo-alcance-estructura.md) y [
 
 ---
 
-## Producto nuevo (siguiente promesa)
+## Producto activo (actualizado 28 oct 2026)
 
-**Definido en:** [doc 23 — Ecosistema Impersia.cloud](./23-ecosistema-impersia-cloud.md) (hub pyme + automatizaciones, v1 paridad mínima).
-
-Código activo en **`platform/`** (fase 0: modelo de datos). No escribir producto en `greenfield/` ni en el OS.
+**Definido en:** [doc 24 — Local + agentes IA](./24-pivot-local-agentes-ia.md). Web comercial en VPS; producto cliente = **app web local** (`local/`, por crear). [Doc 23](./23-ecosistema-impersia-cloud.md) y **`platform/`** quedan **congelados**.
 
 ---
 
 ## Regla para el asistente
 
 - No proponer Entrada, Hoy, Guardado, `return_days`, ni reutilizar pantallas greenfield.
-- No desplegar greenfield a impersia.cloud como producto principal.
-- Cualquier desarrollo nuevo sigue [doc 23](./23-ecosistema-impersia-cloud.md); no apuntes/Hoy.
+- No ampliar `platform/` ni SaaS `/app/` como producto principal.
+- Desarrollo nuevo: **`local/`** + **`apps/comercial/`** según [doc 24](./24-pivot-local-agentes-ia.md).
 
 ---
