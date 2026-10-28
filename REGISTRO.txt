@@ -1003,3 +1003,6 @@ Pivot total Modesto: empezar de cero. Producto cliente = web app ejecutable en l
 
 28 de octubre de 2026 (II)
 IA v1: Ollama primero (privacidad, datos no salen del equipo); OpenRouter opcional en v1.1 con aviso explícito. Doc 24 actualizado.
+
+28 de octubre de 2026 (III)
+Confirmado: motor local v1 = Ollama (decidido). Otras APIs OpenAI-compatible solo URL manual; OpenRouter pospuesto.
