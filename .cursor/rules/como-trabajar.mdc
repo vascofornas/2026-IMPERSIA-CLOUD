@@ -22,7 +22,7 @@ Lo que puedes hacer tú (leer, escribir, decidir, comprobar) lo haces entero. No
 - Si el alcance es grande, corta una versión 1 y escribe qué espera.
 - Para probar que algo funciona, compruébalo de punta a punta.
 - El logo del proyecto se crea antes de seguir con la identidad visual. El símbolo oficial es `apps/comercial/logo.svg`.
-- **Fase actual (doc 24):** web **comercial** (VPS) + **web app local** (Mac/Win/Linux) con **agentes IA** (local + OpenRouter). Sin Flutter ni SaaS cliente en la nube. Mapa histórico cuatro superficies: `platform/docs/cuatro-superficies.md`.
+- **Fase actual (docs 25 a 29):** Impersia.cloud es la casa de los productos. En la oferta están **Participación en ferias**, **Congresos**, **Seminarios** y **Cursos** (impartir o asistir). Del Impersia anterior solo se conservan los **agentes IA** de `local/` (Ollama). Código nuevo en `productos/`. No ampliar OS, platform, greenfield ni la app local como centro personal. La primera ficha a construir es la de ferias. La web comercial no se reescribe hasta que esa ficha exista.
 
 ## Registro
 

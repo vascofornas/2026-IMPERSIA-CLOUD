@@ -1015,3 +1015,21 @@ llama3.2:3b en SSD. Creado local/: API SQLite + chat Ollama + agente por defecto
 
 28 de octubre de 2026 (VI)
 Modesto probó Impersia local en navegador (Ollama conectado, chat OK). Pausa acordada: se deja así por ahora. Siguiente cuando retome: editar agentes, más producto pyme o empaquetado sin Terminal.
+
+30 de octubre de 2026
+Modesto: Impersia.cloud pasa a ser la casa de los productos de software (ferias, congresos, seminarios, cursos y los que vengan). Capenergy es el cliente de partida, no el dueño. Del Impersia anterior no se continúa nada; solo se conservan los agentes IA ya probados en local/ (Ollama, ficha y chat). Escrito en docs/25-impersia-casa-de-productos.md. Doc 24 queda superado salvo esa pieza. README y regla .cursor alineados. Código viejo no se borra. Aún no hay carpeta productos/ ni cambio en la web. Siguiente: ficha de un acto, probada con un acto real de Capenergy.
+
+30 de octubre de 2026 (II)
+Modesto da el ok: Participación en ferias entra en la oferta de Impersia.cloud. Ficha con nueve apartados (feria, participación, equipo, material, tareas, agenda, contactos, gastos, cierre) y tres perfiles (Administrador, Equipo, Visitante). En el stand, QR a la página del visitante; el panel interno no se publica. Escrito en docs/26-participacion-en-ferias.md. Doc 25, README y regla .cursor alineados. Congresos, seminarios y cursos quedan fuera. La web comercial no se toca hasta que exista la ficha. Aún no hay carpeta productos/.
+
+30 de octubre de 2026 (III)
+Modesto confirma Congresos en la oferta. Un producto, tres papeles: asistir, patrocinar u organizar. Asistir y patrocinar pueden ir juntos; organizar abre programa, ponentes, inscripciones y patrocinadores ajenos. Escrito en docs/27-congresos.md. Doc 25, README y regla .cursor alineados. Se construye después de la ficha de ferias. Seminarios y cursos siguen fuera. La web comercial no se toca.
+
+30 de octubre de 2026 (IV)
+Modesto confirma Seminarios en la oferta, con perfiles. La empresa dirige la sesión y la repite en varias ciudades. Perfiles: Administrador, Ponente y Asistente. Escrito en docs/28-seminarios.md. Doc 25, README y regla .cursor alineados. Se construye después de la ficha de ferias. Los cursos siguen fuera. La web comercial no se toca.
+
+30 de octubre de 2026 (V)
+Modesto: ahora cursos. Entran en la oferta con dos papeles: impartir (temario, ediciones, alumnos, diploma) o asistir (empleado, coste, certificado). Perfiles: Administrador, Docente, Alumno y Empleado. Escrito en docs/29-cursos.md. Doc 25, README y regla .cursor alineados. Se construye después de la ficha de ferias. La web comercial no se toca.
+
+30 de octubre de 2026 (VI)
+Modesto: lo dejamos así por ahora. Oferta escrita y cerrada: ferias (doc 26), congresos (doc 27), seminarios (doc 28) y cursos (doc 29). No se añade un quinto producto. No se construye la ficha de ferias ni se toca la web comercial hasta que se retome. Falta, cuando se retome, el nombre de una feria real de Capenergy.

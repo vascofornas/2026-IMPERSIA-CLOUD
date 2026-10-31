@@ -1,5 +1,7 @@
 # Decisión 28 oct 2026 — De cero: local para clientes, comercial en la nube, IA first
 
+**Superada el 30 oct 2026 por el [doc 25](./25-impersia-casa-de-productos.md).** Sigue vigente solo la pieza de agentes IA (Ollama, ficha de agente y chat en `local/`). El resto de este documento es historia.
+
 **Modesto (acuerdo en conversación):** quiere **empezar de cero por completo** respecto a la dirección [doc 23](./23-ecosistema-impersia-cloud.md) (escritorio pyme SaaS en la nube). El producto que se **entrega al cliente** no es una web app alojada en Impersia, sino una **aplicación web ejecutable en local** (Mac, Windows, Linux). **Prioridad:** uso y **configuración precisa** de **agentes de IA** (modelos **locales** y/o **OpenRouter**).
 
 Este documento **manda** sobre doc 23, [platform/](../platform/) desplegado y el hábito temporal de las [cuatro superficies](../platform/docs/cuatro-superficies.md) para **código y producto activo**.

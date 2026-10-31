@@ -1,29 +1,9 @@
-# Impersia OS
+# Impersia.cloud
 
-Centro de control personal, profesional y social. Todo entra por Entrada. La IA lo archiva en su eje y su módulo. La persona puede corregirlo después. Privado hasta que se decida lo contrario.
+**Versión:** `0.2.0` (ver `VERSION` y `package.json` en la raíz).
 
-Este repositorio es Impersia OS. La documentación de agencia, VPS de clientes y automatizaciones queda fuera de este producto.
+Casa de productos de software. En la oferta están **Participación en ferias**, **Congresos**, **Seminarios** y **Cursos**. Capenergy es el cliente de partida; el producto es de Impersia.
 
-## Superficies
+Del Impersia anterior solo se conservan los agentes de IA (Ollama, en `local/`).
 
-| Superficie | Dónde vive | Para qué |
-| --- | --- | --- |
-| Web comercial | VPS IONOS | Explicar el producto y dar de alta |
-| Web app | VPS IONOS | Uso diario en el navegador |
-| API y PostgreSQL | VPS IONOS | Verdad del sistema |
-| Apps móviles | App Store y Google Play | El mismo uso, en Flutter |
-
-Flutter no se ejecuta en el VPS. Las apps llaman a la API por HTTPS.
-
-## Documentos
-
-- [Definición de producto](docs/01-definicion-de-producto.md)
-- [Arquitectura en IONOS](docs/02-arquitectura.md)
-- [Ruta de desarrollo](docs/03-roadmap.md)
-- [Archivo inteligente](docs/04-archivo-inteligente.md) — clasificación con modelo y aprendizaje por correcciones
-
-El PDF `impersia 2026.pdf` es la visión de partida (PRD 1.0). Estos documentos la convierten en un plan construible.
-
-## Versión 1, en una frase
-
-Una persona escribe en Entrada y la frase queda archivada sola. Después puede editarla. Los ejes son los de `impersia 2026.pdf`.
+La casa de productos está en [docs/25-impersia-casa-de-productos.md](docs/25-impersia-casa-de-productos.md). La oferta, en [docs/26-participacion-en-ferias.md](docs/26-participacion-en-ferias.md), [docs/27-congresos.md](docs/27-congresos.md), [docs/28-seminarios.md](docs/28-seminarios.md) y [docs/29-cursos.md](docs/29-cursos.md). Los docs 01–24 y el PDF `impersia 2026.pdf` son la historia.
